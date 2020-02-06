@@ -85,7 +85,7 @@ message Message {
 message ConnectRequest {
     string token = 1;
     bytes data = 2;
-    repeated SubscribeRequest subs = 3;
+    map<string, SubscribeRequest> subs = 3;
 }
 
 message ConnectResult {

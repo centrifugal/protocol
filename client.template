@@ -94,7 +94,7 @@ message Message {
 message ConnectRequest {
     string token = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "token"]{{end}};
     bytes data = 2{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data,omitempty", (gogoproto.nullable) = false]{{end}};
-    repeated SubscribeRequest subs = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "subs,omitempty"]{{end}};
+    map<string, SubscribeRequest> subs = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "subs,omitempty"]{{end}};
 }
 
 message ConnectResult {

@@ -85,6 +85,7 @@ message Message {
 message ConnectRequest {
     string token = 1;
     bytes data = 2;
+    repeated SubscribeRequest subs = 3;
 }
 
 message ConnectResult {
@@ -93,6 +94,7 @@ message ConnectResult {
     bool expires = 3;
     uint32 ttl = 4;
     bytes data = 5;
+    map<string, SubscribeResult> subs = 6;
 }
 
 message RefreshRequest {

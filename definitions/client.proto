@@ -43,6 +43,7 @@ enum PushType {
     LEAVE = 2;
     UNSUB = 3;
     MESSAGE = 4;
+    SUB = 5;
 }
 
 message Push {
@@ -76,6 +77,14 @@ message Leave {
 
 message Unsub {
     bool resubscribe =1;
+}
+
+message Sub {
+    bool recoverable = 1;
+    uint32 seq = 2;
+    uint32 gen = 3;
+    string epoch = 4;   
+    repeated Publication publications = 5;
 }
 
 message Message {

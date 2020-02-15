@@ -202,6 +202,7 @@ message PingResult {
 
 message RPCRequest{
     bytes data = 1{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data", (gogoproto.nullable) = false]{{end}};
+    string method = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "method,omitempty"]{{end}};
 }
 
 message RPCResult {

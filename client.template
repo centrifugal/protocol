@@ -93,7 +93,6 @@ message Sub {
     uint32 seq = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "seq,omitempty"]{{end}};
     uint32 gen = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "gen,omitempty"]{{end}};
     string epoch = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};   
-    repeated Publication publications = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "publications,omitempty"]{{end}};
 }
 
 message Message {

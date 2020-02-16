@@ -84,7 +84,6 @@ message Sub {
     uint32 seq = 2;
     uint32 gen = 3;
     string epoch = 4;   
-    repeated Publication publications = 5;
 }
 
 message Message {

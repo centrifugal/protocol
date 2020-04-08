@@ -65,6 +65,7 @@ message Publication {
     string uid = 3;
     bytes data = 4;
     ClientInfo info = 5;
+    uint64 offset = 6;
 }
 
 message Join {
@@ -83,7 +84,8 @@ message Sub {
     bool recoverable = 1;
     uint32 seq = 2;
     uint32 gen = 3;
-    string epoch = 4;   
+    string epoch = 4;
+    uint64 offset = 5;
 }
 
 message Message {
@@ -123,6 +125,7 @@ message SubscribeRequest {
     uint32 seq = 4;
     uint32 gen = 5;
     string epoch = 6;
+    uint64 offset = 7;
 }
 
 message SubscribeResult {
@@ -134,6 +137,7 @@ message SubscribeResult {
     string epoch = 6;   
     repeated Publication publications = 7;
     bool recovered = 8;
+    uint64 offset = 9;
 }
 
 message SubRefreshRequest {

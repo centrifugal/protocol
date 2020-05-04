@@ -102,7 +102,7 @@ message Message {
 }
 
 message ConnectRequest {
-    string token = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "token"]{{end}};
+    string token = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "token,omitempty"]{{end}};
     bytes data = 2{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data,omitempty", (gogoproto.nullable) = false]{{end}};
     map<string, SubscribeRequest> subs = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "subs,omitempty"]{{end}};
 }
@@ -205,6 +205,7 @@ message PingResult {
 
 message RPCRequest{
     bytes data = 1{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data", (gogoproto.nullable) = false]{{end}};
+    string method = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "method,omitempty"]{{end}};
 }
 
 message RPCResult {

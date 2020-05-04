@@ -196,6 +196,7 @@ message PingResult {
 
 message RPCRequest{
     bytes data = 1;
+    string method = 2;
 }
 
 message RPCResult {

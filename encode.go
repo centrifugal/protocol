@@ -141,9 +141,16 @@ func (e *JSONReplyEncoder) Encode(r *Reply) error {
 	return nil
 }
 
+var nl = []byte("\n")
+
 // Finish ...
 func (e *JSONReplyEncoder) Finish() []byte {
 	data := e.buffer.Bytes()
+	if bytes.HasSuffix(data, nl) {
+		dataCopy := make([]byte, len(data)-len(nl))
+		copy(dataCopy, data[:len(data)-len(nl)])
+		return dataCopy
+	}
 	dataCopy := make([]byte, len(data))
 	copy(dataCopy, data)
 	return dataCopy

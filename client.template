@@ -193,14 +193,15 @@ message PresenceStatsResult {
 
 message HistoryRequest {
     string channel = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "channel"]{{end}};
-    bool with_filter = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "with_filter,omitempty"]{{end}};
+    bool use_since = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "use_since,omitempty"]{{end}};
     uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
     string epoch = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
-    int32 limit = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "limit,omitempty"]{{end}};
+    bool use_limit = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "use_limit,omitempty"]{{end}};
+    int32 limit = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "limit,omitempty"]{{end}};
 }
 
 message HistoryResult {
-    repeated Publication publications = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "publications"]{{end}};
+    repeated Publication publications = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "publications,omitempty"]{{end}};
     string epoch = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
     uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
 }

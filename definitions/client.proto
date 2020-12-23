@@ -183,10 +183,11 @@ message PresenceStatsResult {
 
 message HistoryRequest {
     string channel = 1;
-    bool with_filter = 2;
+    bool use_since = 2;
     uint64 offset = 3;
     string epoch = 4;
-    int32 limit = 5;
+    bool use_limit = 5;
+    int32 limit = 6;
 }
 
 message HistoryResult {

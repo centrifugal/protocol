@@ -181,10 +181,17 @@ message PresenceStatsResult {
 
 message HistoryRequest {
     string channel = 1;
+    bool with_since = 2;
+    uint64 offset = 3;
+    string epoch = 4;
+    bool with_limit = 5;
+    int32 limit = 6;
 }
 
 message HistoryResult {
     repeated Publication publications = 1;
+    string epoch = 2;
+    uint64 offset = 3;
 }
 
 message PingRequest {

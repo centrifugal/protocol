@@ -191,10 +191,17 @@ message PresenceStatsResult {
 
 message HistoryRequest {
     string channel = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "channel"]{{end}};
+    bool with_since = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "with_since,omitempty"]{{end}};
+    uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
+    string epoch = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
+    bool with_limit = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "with_limit,omitempty"]{{end}};
+    int32 limit = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "limit,omitempty"]{{end}};
 }
 
 message HistoryResult {
     repeated Publication publications = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "publications"]{{end}};
+    string epoch = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
+    uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
 }
 
 message PingRequest {

@@ -201,9 +201,9 @@ message HistoryRequest {
 }
 
 message HistoryResult {
-    repeated Publication publications = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "publications,omitempty"]{{end}};
-    string epoch = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
-    uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
+    repeated Publication publications = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "publications"]{{end}};
+    string epoch = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch"]{{end}};
+    uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset"]{{end}};
 }
 
 message PingRequest {

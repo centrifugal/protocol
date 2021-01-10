@@ -93,6 +93,7 @@ message Sub {
     uint32 gen = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "gen,omitempty"]{{end}};
     string epoch = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
     uint64 offset = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
+    bool positioned = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "positioned,omitempty"]{{end}};
 }
 
 message Message {
@@ -147,6 +148,7 @@ message SubscribeResult {
     repeated Publication publications = 7{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "publications,omitempty"]{{end}};
     bool recovered = 8{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "recovered,omitempty"]{{end}};
     uint64 offset = 9{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
+    bool positioned = 10{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "positioned,omitempty"]{{end}};
 }
 
 message SubRefreshRequest {
@@ -191,10 +193,17 @@ message PresenceStatsResult {
 
 message HistoryRequest {
     string channel = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "channel"]{{end}};
+    bool use_since = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "use_since,omitempty"]{{end}};
+    uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
+    string epoch = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
+    bool use_limit = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "use_limit,omitempty"]{{end}};
+    int32 limit = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "limit,omitempty"]{{end}};
 }
 
 message HistoryResult {
     repeated Publication publications = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "publications"]{{end}};
+    string epoch = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch"]{{end}};
+    uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset"]{{end}};
 }
 
 message PingRequest {

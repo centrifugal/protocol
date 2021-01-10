@@ -83,6 +83,7 @@ message Sub {
     uint32 gen = 3;
     string epoch = 4;
     uint64 offset = 5;
+    bool positioned = 6;
 }
 
 message Message {
@@ -137,6 +138,7 @@ message SubscribeResult {
     repeated Publication publications = 7;
     bool recovered = 8;
     uint64 offset = 9;
+    bool positioned = 10;
 }
 
 message SubRefreshRequest {
@@ -181,10 +183,17 @@ message PresenceStatsResult {
 
 message HistoryRequest {
     string channel = 1;
+    bool use_since = 2;
+    uint64 offset = 3;
+    string epoch = 4;
+    bool use_limit = 5;
+    int32 limit = 6;
 }
 
 message HistoryResult {
     repeated Publication publications = 1;
+    string epoch = 2;
+    uint64 offset = 3;
 }
 
 message PingRequest {

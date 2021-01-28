@@ -103,7 +103,7 @@ message Message {
 
 message Disconnect {
     uint32 code = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "code,omitempty"]{{end}};
-    string message = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "message,omitempty"]{{end}};
+    string reason = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "reason,omitempty"]{{end}};
     bool reconnect = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "reconnect,omitempty"]{{end}};
 }
 

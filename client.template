@@ -51,6 +51,7 @@ enum PushType {
     UNSUB = 3{{if env.Getenv "GOGO"}} [(gogoproto.enumvalue_customname) = "PushTypeUnsub"]{{end}};
     MESSAGE = 4{{if env.Getenv "GOGO"}} [(gogoproto.enumvalue_customname) = "PushTypeMessage"]{{end}};
     SUB = 5{{if env.Getenv "GOGO"}} [(gogoproto.enumvalue_customname) = "PushTypeSub"]{{end}};
+    DISCONNECT = 6{{if env.Getenv "GOGO"}} [(gogoproto.enumvalue_customname) = "PushTypeDisconnect"]{{end}};
 }
 
 message Push {
@@ -98,6 +99,12 @@ message Sub {
 
 message Message {
     bytes data = 1{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data", (gogoproto.nullable) = false]{{end}};
+}
+
+message Disconnect {
+    uint32 code = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "code,omitempty"]{{end}};
+    string message = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "message,omitempty"]{{end}};
+    bool reconnect = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "reconnect,omitempty"]{{end}};
 }
 
 message ConnectRequest {

@@ -41,6 +41,7 @@ enum PushType {
     UNSUB = 3;
     MESSAGE = 4;
     SUB = 5;
+    DISCONNECT = 6;
 }
 
 message Push {
@@ -88,6 +89,12 @@ message Sub {
 
 message Message {
     bytes data = 1;
+}
+
+message Disconnect {
+    uint32 code = 1;
+    string message = 2;
+    bool reconnect = 3;
 }
 
 message ConnectRequest {

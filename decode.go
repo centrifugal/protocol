@@ -36,6 +36,7 @@ type PushDecoder interface {
 	DecodeMessage([]byte) (*Message, error)
 	DecodeUnsub([]byte) (*Unsub, error)
 	DecodeSub([]byte) (*Sub, error)
+	DecodeDisconnect([]byte) (*Disconnect, error)
 }
 
 // JSONPushDecoder ...
@@ -117,6 +118,16 @@ func (e *JSONPushDecoder) DecodeSub(data []byte) (*Sub, error) {
 	return &m, nil
 }
 
+// DecodeSub ...
+func (e *JSONPushDecoder) DecodeDisconnect(data []byte) (*Disconnect, error) {
+	var m Disconnect
+	err := json.Unmarshal(data, &m)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
 // ProtobufPushDecoder ...
 type ProtobufPushDecoder struct {
 }
@@ -189,6 +200,16 @@ func (e *ProtobufPushDecoder) DecodeUnsub(data []byte) (*Unsub, error) {
 // DecodeSub ...
 func (e *ProtobufPushDecoder) DecodeSub(data []byte) (*Sub, error) {
 	var m Sub
+	err := m.Unmarshal(data)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+// DecodeSub ...
+func (e *ProtobufPushDecoder) DecodeDisconnect(data []byte) (*Disconnect, error) {
+	var m Disconnect
 	err := m.Unmarshal(data)
 	if err != nil {
 		return nil, err

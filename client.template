@@ -100,6 +100,19 @@ message Message {
     bytes data = 1{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data", (gogoproto.nullable) = false]{{end}};
 }
 
+message Connect {
+    string client = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "client,omitempty"]{{end}};
+    string version = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "version,omitempty"]{{end}};
+    bytes data = 3{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data,omitempty", (gogoproto.nullable) = false]{{end}};
+    map<string, SubscribeResult> subs = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "subs,omitempty"]{{end}};
+}
+
+message Disconnect {
+    uint32 code = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "code,omitempty"]{{end}};
+    string reason = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "reason,omitempty"]{{end}};
+    bool reconnect = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "reconnect,omitempty"]{{end}};
+}
+
 message ConnectRequest {
     string token = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "token,omitempty"]{{end}};
     bytes data = 2{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data,omitempty", (gogoproto.nullable) = false]{{end}};

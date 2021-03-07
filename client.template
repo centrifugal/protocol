@@ -51,6 +51,8 @@ enum PushType {
     UNSUB = 3{{if env.Getenv "GOGO"}} [(gogoproto.enumvalue_customname) = "PushTypeUnsub"]{{end}};
     MESSAGE = 4{{if env.Getenv "GOGO"}} [(gogoproto.enumvalue_customname) = "PushTypeMessage"]{{end}};
     SUB = 5{{if env.Getenv "GOGO"}} [(gogoproto.enumvalue_customname) = "PushTypeSub"]{{end}};
+    CONN = 6{{if env.Getenv "GOGO"}} [(gogoproto.enumvalue_customname) = "PushTypeConn"]{{end}};
+    DISCONNECT = 7{{if env.Getenv "GOGO"}} [(gogoproto.enumvalue_customname) = "PushTypeDisconnect"]{{end}};
 }
 
 message Push {

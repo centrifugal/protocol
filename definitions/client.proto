@@ -41,6 +41,8 @@ enum PushType {
     UNSUB = 3;
     MESSAGE = 4;
     SUB = 5;
+    CONN = 6;
+    DISCONNECT = 7;
 }
 
 message Push {

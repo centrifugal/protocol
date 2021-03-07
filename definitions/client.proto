@@ -92,7 +92,7 @@ message Message {
     bytes data = 1;
 }
 
-message Connect {
+message Conn {
     string client = 1;
     string version = 2;
     bytes data = 3;

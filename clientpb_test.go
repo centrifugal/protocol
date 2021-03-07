@@ -636,15 +636,15 @@ func TestMessageMarshalTo(t *testing.T) {
 	}
 }
 
-func TestConnectProto(t *testing.T) {
+func TestConnProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConnect(popr, false)
+	p := NewPopulatedConn(popr, false)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Connect{}
+	msg := &Conn{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -667,10 +667,10 @@ func TestConnectProto(t *testing.T) {
 	}
 }
 
-func TestConnectMarshalTo(t *testing.T) {
+func TestConnMarshalTo(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConnect(popr, false)
+	p := NewPopulatedConn(popr, false)
 	size := p.Size()
 	dAtA := make([]byte, size)
 	for i := range dAtA {
@@ -680,7 +680,7 @@ func TestConnectMarshalTo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Connect{}
+	msg := &Conn{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -2234,16 +2234,16 @@ func TestMessageJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestConnectJSON(t *testing.T) {
+func TestConnJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConnect(popr, true)
+	p := NewPopulatedConn(popr, true)
 	marshaler := github_com_gogo_protobuf_jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Connect{}
+	msg := &Conn{}
 	err = github_com_gogo_protobuf_jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -2992,12 +2992,12 @@ func TestMessageProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestConnectProtoText(t *testing.T) {
+func TestConnProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConnect(popr, true)
+	p := NewPopulatedConn(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.MarshalTextString(p)
-	msg := &Connect{}
+	msg := &Conn{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -3006,12 +3006,12 @@ func TestConnectProtoText(t *testing.T) {
 	}
 }
 
-func TestConnectProtoCompactText(t *testing.T) {
+func TestConnProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConnect(popr, true)
+	p := NewPopulatedConn(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.CompactTextString(p)
-	msg := &Connect{}
+	msg := &Conn{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -3934,10 +3934,10 @@ func TestMessageSize(t *testing.T) {
 	}
 }
 
-func TestConnectSize(t *testing.T) {
+func TestConnSize(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConnect(popr, true)
+	p := NewPopulatedConn(popr, true)
 	size2 := github_com_gogo_protobuf_proto.Size(p)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {

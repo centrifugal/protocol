@@ -132,49 +132,24 @@ func (e *ProtobufPushEncoder) EncodeDisconnect(message *Disconnect) ([]byte, err
 
 // ReplyEncoder ...
 type ReplyEncoder interface {
-	Reset()
-	Encode(*Reply) error
-	Finish() []byte
+	Encode(*Reply) ([]byte, error)
 }
 
 // JSONReplyEncoder ...
-type JSONReplyEncoder struct {
-	buffer bytes.Buffer
-}
+type JSONReplyEncoder struct{}
 
 // NewJSONReplyEncoder ...
 func NewJSONReplyEncoder() *JSONReplyEncoder {
 	return &JSONReplyEncoder{}
 }
 
-// Reset ...
-func (e *JSONReplyEncoder) Reset() {
-	e.buffer.Reset()
-}
-
 // Encode ...
-func (e *JSONReplyEncoder) Encode(r *Reply) error {
-	data, err := json.Marshal(r)
-	if err != nil {
-		return err
-	}
-	e.buffer.Write(data)
-	e.buffer.WriteString("\n")
-	return nil
-}
-
-// Finish ...
-func (e *JSONReplyEncoder) Finish() []byte {
-	data := e.buffer.Bytes()
-	dataCopy := make([]byte, len(data))
-	copy(dataCopy, data)
-	return dataCopy
+func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
+	return json.Marshal(r)
 }
 
 // ProtobufReplyEncoder ...
-type ProtobufReplyEncoder struct {
-	buffer bytes.Buffer
-}
+type ProtobufReplyEncoder struct{}
 
 // NewProtobufReplyEncoder ...
 func NewProtobufReplyEncoder() *ProtobufReplyEncoder {
@@ -182,25 +157,78 @@ func NewProtobufReplyEncoder() *ProtobufReplyEncoder {
 }
 
 // Encode ...
-func (e *ProtobufReplyEncoder) Encode(r *Reply) error {
-	replyBytes, err := r.Marshal()
-	if err != nil {
-		return err
+func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
+	return r.Marshal()
+}
+
+// DataEncoder ...
+type DataEncoder interface {
+	Reset()
+	Encode([]byte) error
+	Finish() []byte
+}
+
+// JSONDataEncoder ...
+type JSONDataEncoder struct {
+	count  int
+	buffer bytes.Buffer
+}
+
+// NewJSONDataEncoder ...
+func NewJSONDataEncoder() *JSONDataEncoder {
+	return &JSONDataEncoder{}
+}
+
+// Reset ...
+func (e *JSONDataEncoder) Reset() {
+	e.count = 0
+	e.buffer.Reset()
+}
+
+// Encode ...
+func (e *JSONDataEncoder) Encode(data []byte) error {
+	if e.count > 0 {
+		e.buffer.WriteString("\n")
 	}
+	e.buffer.Write(data)
+	e.count++
+	return nil
+}
+
+// Finish ...
+func (e *JSONDataEncoder) Finish() []byte {
+	data := e.buffer.Bytes()
+	dataCopy := make([]byte, len(data))
+	copy(dataCopy, data)
+	return dataCopy
+}
+
+// ProtobufDataEncoder ...
+type ProtobufDataEncoder struct {
+	buffer bytes.Buffer
+}
+
+// NewProtobufDataEncoder ...
+func NewProtobufDataEncoder() *ProtobufDataEncoder {
+	return &ProtobufDataEncoder{}
+}
+
+// Encode ...
+func (e *ProtobufDataEncoder) Encode(data []byte) error {
 	bs := make([]byte, 8)
-	n := binary.PutUvarint(bs, uint64(len(replyBytes)))
+	n := binary.PutUvarint(bs, uint64(len(data)))
 	e.buffer.Write(bs[:n])
-	e.buffer.Write(replyBytes)
+	e.buffer.Write(data)
 	return nil
 }
 
 // Reset ...
-func (e *ProtobufReplyEncoder) Reset() {
+func (e *ProtobufDataEncoder) Reset() {
 	e.buffer.Reset()
 }
 
 // Finish ...
-func (e *ProtobufReplyEncoder) Finish() []byte {
+func (e *ProtobufDataEncoder) Finish() []byte {
 	data := e.buffer.Bytes()
 	dataCopy := make([]byte, len(data))
 	copy(dataCopy, data)

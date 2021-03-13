@@ -22,38 +22,51 @@ func GetPushEncoder(protoType Type) PushEncoder {
 	return NewProtobufPushEncoder()
 }
 
-var (
-	jsonReplyEncoderPool     sync.Pool
-	protobufReplyEncoderPool sync.Pool
-)
-
 // GetReplyEncoder ...
 func GetReplyEncoder(protoType Type) ReplyEncoder {
 	if protoType == TypeJSON {
-		e := jsonReplyEncoderPool.Get()
-		if e == nil {
-			return NewJSONReplyEncoder()
-		}
-		protoTypeoder := e.(ReplyEncoder)
-		protoTypeoder.Reset()
-		return protoTypeoder
+		return NewJSONReplyEncoder()
 	}
-	e := protobufReplyEncoderPool.Get()
-	if e == nil {
-		return NewProtobufReplyEncoder()
-	}
-	protoTypeoder := e.(ReplyEncoder)
-	protoTypeoder.Reset()
-	return protoTypeoder
+	return NewProtobufReplyEncoder()
 }
 
 // PutReplyEncoder ...
 func PutReplyEncoder(protoType Type, e ReplyEncoder) {
+
+}
+
+var (
+	jsonDataEncoderPool     sync.Pool
+	protobufDataEncoderPool sync.Pool
+)
+
+// GetDataEncoder ...
+func GetDataEncoder(protoType Type) DataEncoder {
 	if protoType == TypeJSON {
-		jsonReplyEncoderPool.Put(e)
+		e := jsonDataEncoderPool.Get()
+		if e == nil {
+			return NewJSONDataEncoder()
+		}
+		protoEncoder := e.(DataEncoder)
+		protoEncoder.Reset()
+		return protoEncoder
+	}
+	e := protobufDataEncoderPool.Get()
+	if e == nil {
+		return NewProtobufDataEncoder()
+	}
+	protoEncoder := e.(DataEncoder)
+	protoEncoder.Reset()
+	return protoEncoder
+}
+
+// PutDataEncoder ...
+func PutDataEncoder(protoType Type, e DataEncoder) {
+	if protoType == TypeJSON {
+		jsonDataEncoderPool.Put(e)
 		return
 	}
-	protobufReplyEncoderPool.Put(e)
+	protobufDataEncoderPool.Put(e)
 }
 
 // GetCommandDecoder ...

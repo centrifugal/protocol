@@ -16,11 +16,14 @@ type PushEncoder interface {
 	EncodePublication(*Publication) ([]byte, error)
 	EncodeJoin(*Join) ([]byte, error)
 	EncodeLeave(*Leave) ([]byte, error)
-	EncodeUnsub(*Unsub) ([]byte, error)
-	EncodeSub(*Sub) ([]byte, error)
-	EncodeConn(*Conn) ([]byte, error)
+	EncodeUnsubscribe(*Unsubscribe) ([]byte, error)
+	EncodeSubscribe(*Subscribe) ([]byte, error)
+	EncodeConnect(*Connect) ([]byte, error)
 	EncodeDisconnect(*Disconnect) ([]byte, error)
 }
+
+var _ PushEncoder = (*JSONPushEncoder)(nil)
+var _ PushEncoder = (*ProtobufPushEncoder)(nil)
 
 // JSONPushEncoder ...
 type JSONPushEncoder struct {
@@ -57,17 +60,17 @@ func (e *JSONPushEncoder) EncodeLeave(message *Leave) ([]byte, error) {
 }
 
 // EncodeUnsub ...
-func (e *JSONPushEncoder) EncodeUnsub(message *Unsub) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeUnsubscribe(message *Unsubscribe) ([]byte, error) {
 	return json.Marshal(message)
 }
 
 // EncodeSub ...
-func (e *JSONPushEncoder) EncodeSub(message *Sub) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeSubscribe(message *Subscribe) ([]byte, error) {
 	return json.Marshal(message)
 }
 
 // EncodeConn ...
-func (e *JSONPushEncoder) EncodeConn(message *Conn) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
 	return json.Marshal(message)
 }
 
@@ -111,17 +114,17 @@ func (e *ProtobufPushEncoder) EncodeLeave(message *Leave) ([]byte, error) {
 }
 
 // EncodeUnsub ...
-func (e *ProtobufPushEncoder) EncodeUnsub(message *Unsub) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeUnsubscribe(message *Unsubscribe) ([]byte, error) {
 	return message.Marshal()
 }
 
 // EncodeSub ...
-func (e *ProtobufPushEncoder) EncodeSub(message *Sub) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeSubscribe(message *Subscribe) ([]byte, error) {
 	return message.Marshal()
 }
 
 // EncodeConn ...
-func (e *ProtobufPushEncoder) EncodeConn(message *Conn) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
 	return message.Marshal()
 }
 

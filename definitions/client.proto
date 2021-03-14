@@ -8,18 +8,18 @@ message Error {
 }
 
 enum MethodType {
-    CONNECT = 0;
-    SUBSCRIBE = 1;
-    UNSUBSCRIBE = 2;
-    PUBLISH = 3;
-    PRESENCE = 4;
-    PRESENCE_STATS = 5;
-    HISTORY = 6;
-    PING = 7;
-    SEND = 8;
-    RPC = 9;
-    REFRESH = 10;
-    SUB_REFRESH = 11;
+    METHOD_TYPE_CONNECT = 0;
+    METHOD_TYPE_SUBSCRIBE = 1;
+    METHOD_TYPE_UNSUBSCRIBE = 2;
+    METHOD_TYPE_PUBLISH = 3;
+    METHOD_TYPE_PRESENCE = 4;
+    METHOD_TYPE_PRESENCE_STATS = 5;
+    METHOD_TYPE_HISTORY = 6;
+    METHOD_TYPE_PING = 7;
+    METHOD_TYPE_SEND = 8;
+    METHOD_TYPE_RPC = 9;
+    METHOD_TYPE_REFRESH = 10;
+    METHOD_TYPE_SUB_REFRESH = 11;
 }
 
 message Command {
@@ -35,14 +35,14 @@ message Reply {
 }
 
 enum PushType {
-    PUBLICATION = 0;
-    JOIN = 1;
-    LEAVE = 2;
-    UNSUB = 3;
-    MESSAGE = 4;
-    SUB = 5;
-    CONN = 6;
-    DISCONNECT = 7;
+    PUSH_TYPE_PUBLICATION = 0;
+    PUSH_TYPE_JOIN = 1;
+    PUSH_TYPE_LEAVE = 2;
+    PUSH_TYPE_UNSUBSCRIBE = 3;
+    PUSH_TYPE_MESSAGE = 4;
+    PUSH_TYPE_SUBSCRIBE = 5;
+    PUSH_TYPE_CONNECT = 6;
+    PUSH_TYPE_DISCONNECT = 7;
 }
 
 message Push {
@@ -75,11 +75,11 @@ message Leave {
     ClientInfo info = 1;
 }
 
-message Unsub {
+message Unsubscribe {
     bool resubscribe =1;
 }
 
-message Sub {
+message Subscribe {
     bool recoverable = 1;
     uint32 seq = 2;
     uint32 gen = 3;
@@ -92,7 +92,7 @@ message Message {
     bytes data = 1;
 }
 
-message Conn {
+message Connect {
     string client = 1;
     string version = 2;
     bytes data = 3;

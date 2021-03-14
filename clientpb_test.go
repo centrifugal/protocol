@@ -468,15 +468,15 @@ func TestLeaveMarshalTo(t *testing.T) {
 	}
 }
 
-func TestUnsubProto(t *testing.T) {
+func TestUnsubscribeProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedUnsub(popr, false)
+	p := NewPopulatedUnsubscribe(popr, false)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Unsub{}
+	msg := &Unsubscribe{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -499,10 +499,10 @@ func TestUnsubProto(t *testing.T) {
 	}
 }
 
-func TestUnsubMarshalTo(t *testing.T) {
+func TestUnsubscribeMarshalTo(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedUnsub(popr, false)
+	p := NewPopulatedUnsubscribe(popr, false)
 	size := p.Size()
 	dAtA := make([]byte, size)
 	for i := range dAtA {
@@ -512,7 +512,7 @@ func TestUnsubMarshalTo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Unsub{}
+	msg := &Unsubscribe{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -524,15 +524,15 @@ func TestUnsubMarshalTo(t *testing.T) {
 	}
 }
 
-func TestSubProto(t *testing.T) {
+func TestSubscribeProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedSub(popr, false)
+	p := NewPopulatedSubscribe(popr, false)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Sub{}
+	msg := &Subscribe{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -555,10 +555,10 @@ func TestSubProto(t *testing.T) {
 	}
 }
 
-func TestSubMarshalTo(t *testing.T) {
+func TestSubscribeMarshalTo(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedSub(popr, false)
+	p := NewPopulatedSubscribe(popr, false)
 	size := p.Size()
 	dAtA := make([]byte, size)
 	for i := range dAtA {
@@ -568,7 +568,7 @@ func TestSubMarshalTo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Sub{}
+	msg := &Subscribe{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -636,15 +636,15 @@ func TestMessageMarshalTo(t *testing.T) {
 	}
 }
 
-func TestConnProto(t *testing.T) {
+func TestConnectProto(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConn(popr, false)
+	p := NewPopulatedConnect(popr, false)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Conn{}
+	msg := &Connect{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -667,10 +667,10 @@ func TestConnProto(t *testing.T) {
 	}
 }
 
-func TestConnMarshalTo(t *testing.T) {
+func TestConnectMarshalTo(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConn(popr, false)
+	p := NewPopulatedConnect(popr, false)
 	size := p.Size()
 	dAtA := make([]byte, size)
 	for i := range dAtA {
@@ -680,7 +680,7 @@ func TestConnMarshalTo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Conn{}
+	msg := &Connect{}
 	if err := github_com_gogo_protobuf_proto.Unmarshal(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -2180,16 +2180,16 @@ func TestLeaveJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestUnsubJSON(t *testing.T) {
+func TestUnsubscribeJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedUnsub(popr, true)
+	p := NewPopulatedUnsubscribe(popr, true)
 	marshaler := github_com_gogo_protobuf_jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Unsub{}
+	msg := &Unsubscribe{}
 	err = github_com_gogo_protobuf_jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -2198,16 +2198,16 @@ func TestUnsubJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestSubJSON(t *testing.T) {
+func TestSubscribeJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedSub(popr, true)
+	p := NewPopulatedSubscribe(popr, true)
 	marshaler := github_com_gogo_protobuf_jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Sub{}
+	msg := &Subscribe{}
 	err = github_com_gogo_protobuf_jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -2234,16 +2234,16 @@ func TestMessageJSON(t *testing.T) {
 		t.Fatalf("seed = %d, %#v !Json Equal %#v", seed, msg, p)
 	}
 }
-func TestConnJSON(t *testing.T) {
+func TestConnectJSON(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConn(popr, true)
+	p := NewPopulatedConnect(popr, true)
 	marshaler := github_com_gogo_protobuf_jsonpb.Marshaler{}
 	jsondata, err := marshaler.MarshalToString(p)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
-	msg := &Conn{}
+	msg := &Connect{}
 	err = github_com_gogo_protobuf_jsonpb.UnmarshalString(jsondata, msg)
 	if err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
@@ -2908,12 +2908,12 @@ func TestLeaveProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestUnsubProtoText(t *testing.T) {
+func TestUnsubscribeProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedUnsub(popr, true)
+	p := NewPopulatedUnsubscribe(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.MarshalTextString(p)
-	msg := &Unsub{}
+	msg := &Unsubscribe{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -2922,12 +2922,12 @@ func TestUnsubProtoText(t *testing.T) {
 	}
 }
 
-func TestUnsubProtoCompactText(t *testing.T) {
+func TestUnsubscribeProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedUnsub(popr, true)
+	p := NewPopulatedUnsubscribe(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.CompactTextString(p)
-	msg := &Unsub{}
+	msg := &Unsubscribe{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -2936,12 +2936,12 @@ func TestUnsubProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestSubProtoText(t *testing.T) {
+func TestSubscribeProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedSub(popr, true)
+	p := NewPopulatedSubscribe(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.MarshalTextString(p)
-	msg := &Sub{}
+	msg := &Subscribe{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -2950,12 +2950,12 @@ func TestSubProtoText(t *testing.T) {
 	}
 }
 
-func TestSubProtoCompactText(t *testing.T) {
+func TestSubscribeProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedSub(popr, true)
+	p := NewPopulatedSubscribe(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.CompactTextString(p)
-	msg := &Sub{}
+	msg := &Subscribe{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -2992,12 +2992,12 @@ func TestMessageProtoCompactText(t *testing.T) {
 	}
 }
 
-func TestConnProtoText(t *testing.T) {
+func TestConnectProtoText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConn(popr, true)
+	p := NewPopulatedConnect(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.MarshalTextString(p)
-	msg := &Conn{}
+	msg := &Connect{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -3006,12 +3006,12 @@ func TestConnProtoText(t *testing.T) {
 	}
 }
 
-func TestConnProtoCompactText(t *testing.T) {
+func TestConnectProtoCompactText(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConn(popr, true)
+	p := NewPopulatedConnect(popr, true)
 	dAtA := github_com_gogo_protobuf_proto.CompactTextString(p)
-	msg := &Conn{}
+	msg := &Connect{}
 	if err := github_com_gogo_protobuf_proto.UnmarshalText(dAtA, msg); err != nil {
 		t.Fatalf("seed = %d, err = %v", seed, err)
 	}
@@ -3868,10 +3868,10 @@ func TestLeaveSize(t *testing.T) {
 	}
 }
 
-func TestUnsubSize(t *testing.T) {
+func TestUnsubscribeSize(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedUnsub(popr, true)
+	p := NewPopulatedUnsubscribe(popr, true)
 	size2 := github_com_gogo_protobuf_proto.Size(p)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
@@ -3890,10 +3890,10 @@ func TestUnsubSize(t *testing.T) {
 	}
 }
 
-func TestSubSize(t *testing.T) {
+func TestSubscribeSize(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedSub(popr, true)
+	p := NewPopulatedSubscribe(popr, true)
 	size2 := github_com_gogo_protobuf_proto.Size(p)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {
@@ -3934,10 +3934,10 @@ func TestMessageSize(t *testing.T) {
 	}
 }
 
-func TestConnSize(t *testing.T) {
+func TestConnectSize(t *testing.T) {
 	seed := time.Now().UnixNano()
 	popr := math_rand.New(math_rand.NewSource(seed))
-	p := NewPopulatedConn(popr, true)
+	p := NewPopulatedConnect(popr, true)
 	size2 := github_com_gogo_protobuf_proto.Size(p)
 	dAtA, err := github_com_gogo_protobuf_proto.Marshal(p)
 	if err != nil {

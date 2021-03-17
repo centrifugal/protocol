@@ -6,33 +6,36 @@ import "sync"
 type Type string
 
 const (
-	// TypeJSON means JSON protocol - in this case data encoded in
-	// JSON-streaming format.
+	// TypeJSON means JSON protocol.
 	TypeJSON Type = "json"
-	// TypeProtobuf means protobuf protocol - in this case data encoded
-	// as length-delimited (varint) protobuf messages.
+	// TypeProtobuf means Protobuf protocol.
 	TypeProtobuf Type = "protobuf"
+)
+
+var (
+	jsonPushEncoder     = NewJSONPushEncoder()
+	protobufPushEncoder = NewProtobufPushEncoder()
 )
 
 // GetPushEncoder ...
 func GetPushEncoder(protoType Type) PushEncoder {
 	if protoType == TypeJSON {
-		return NewJSONPushEncoder()
+		return jsonPushEncoder
 	}
-	return NewProtobufPushEncoder()
+	return protobufPushEncoder
 }
+
+var (
+	jsonReplyEncoder     = NewJSONReplyEncoder()
+	protobufReplyEncoder = NewProtobufReplyEncoder()
+)
 
 // GetReplyEncoder ...
 func GetReplyEncoder(protoType Type) ReplyEncoder {
 	if protoType == TypeJSON {
-		return NewJSONReplyEncoder()
+		return jsonReplyEncoder
 	}
-	return NewProtobufReplyEncoder()
-}
-
-// PutReplyEncoder ...
-func PutReplyEncoder(protoType Type, e ReplyEncoder) {
-
+	return protobufReplyEncoder
 }
 
 var (

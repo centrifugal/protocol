@@ -6,26 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strconv"
-	"strings"
 
 	"github.com/gogo/protobuf/proto"
 )
-
-// UnmarshalJSON helps to unmarshal comamnd method when set as string.
-func (x *MethodType) UnmarshalJSON(data []byte) error {
-	val, err := strconv.Atoi(string(data))
-	if err != nil {
-		method := strings.Trim(strings.ToUpper(string(data)), `"`)
-		if v, ok := MethodType_value[method]; ok {
-			*x = MethodType(v)
-			return nil
-		}
-		return err
-	}
-	*x = MethodType(val)
-	return nil
-}
 
 // PushDecoder ...
 type PushDecoder interface {

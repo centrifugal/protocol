@@ -15,7 +15,7 @@ func BenchmarkReplyMarshalProtobuf(b *testing.B) {
 			b.Fail()
 		}
 		push := Push{
-			Type:    PushTypePublication,
+			Type:    PushType_PUSH_TYPE_PUBLICATION,
 			Channel: "test",
 			Data:    data,
 		}
@@ -45,7 +45,7 @@ func BenchmarkReplyMarshalJSON(b *testing.B) {
 			b.Fail()
 		}
 		push := Push{
-			Type:    PushTypePublication,
+			Type:    PushType_PUSH_TYPE_PUBLICATION,
 			Channel: "test",
 			Data:    data,
 		}

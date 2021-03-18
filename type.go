@@ -82,7 +82,6 @@ func GetCommandDecoder(protoType Type, data []byte) CommandDecoder {
 
 // PutCommandDecoder ...
 func PutCommandDecoder(protoType Type, e CommandDecoder) {
-	return
 }
 
 // GetResultEncoder ...
@@ -95,7 +94,6 @@ func GetResultEncoder(protoType Type) ResultEncoder {
 
 // PutResultEncoder ...
 func PutResultEncoder(protoType Type, e ReplyEncoder) {
-	return
 }
 
 // GetParamsDecoder ...
@@ -108,5 +106,4 @@ func GetParamsDecoder(protoType Type) ParamsDecoder {
 
 // PutParamsDecoder ...
 func PutParamsDecoder(protoType Type, e ParamsDecoder) {
-	return
 }

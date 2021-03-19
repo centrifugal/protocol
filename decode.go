@@ -6,26 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strconv"
-	"strings"
 
 	"github.com/gogo/protobuf/proto"
 )
-
-// UnmarshalJSON helps to unmarshal comamnd method when set as string.
-func (x *MethodType) UnmarshalJSON(data []byte) error {
-	val, err := strconv.Atoi(string(data))
-	if err != nil {
-		method := strings.Trim(strings.ToUpper(string(data)), `"`)
-		if v, ok := MethodType_value[method]; ok {
-			*x = MethodType(v)
-			return nil
-		}
-		return err
-	}
-	*x = MethodType(val)
-	return nil
-}
 
 // PushDecoder ...
 type PushDecoder interface {
@@ -34,9 +17,14 @@ type PushDecoder interface {
 	DecodeJoin([]byte) (*Join, error)
 	DecodeLeave([]byte) (*Leave, error)
 	DecodeMessage([]byte) (*Message, error)
-	DecodeUnsub([]byte) (*Unsub, error)
-	DecodeSub([]byte) (*Sub, error)
+	DecodeUnsubscribe([]byte) (*Unsubscribe, error)
+	DecodeSubscribe([]byte) (*Subscribe, error)
+	DecodeConnect([]byte) (*Connect, error)
+	DecodeDisconnect([]byte) (*Disconnect, error)
 }
+
+var _ PushDecoder = (*JSONPushDecoder)(nil)
+var _ PushDecoder = (*ProtobufPushDecoder)(nil)
 
 // JSONPushDecoder ...
 type JSONPushDecoder struct {
@@ -98,8 +86,8 @@ func (e *JSONPushDecoder) DecodeMessage(data []byte) (*Message, error) {
 }
 
 // DecodeUnsub ...
-func (e *JSONPushDecoder) DecodeUnsub(data []byte) (*Unsub, error) {
-	var m Unsub
+func (e *JSONPushDecoder) DecodeUnsubscribe(data []byte) (*Unsubscribe, error) {
+	var m Unsubscribe
 	err := json.Unmarshal(data, &m)
 	if err != nil {
 		return nil, err
@@ -108,8 +96,28 @@ func (e *JSONPushDecoder) DecodeUnsub(data []byte) (*Unsub, error) {
 }
 
 // DecodeSub ...
-func (e *JSONPushDecoder) DecodeSub(data []byte) (*Sub, error) {
-	var m Sub
+func (e *JSONPushDecoder) DecodeSubscribe(data []byte) (*Subscribe, error) {
+	var m Subscribe
+	err := json.Unmarshal(data, &m)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+// DecodeConnect ...
+func (e *JSONPushDecoder) DecodeConnect(data []byte) (*Connect, error) {
+	var m Connect
+	err := json.Unmarshal(data, &m)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+// DecodeDisconnect ...
+func (e *JSONPushDecoder) DecodeDisconnect(data []byte) (*Disconnect, error) {
+	var m Disconnect
 	err := json.Unmarshal(data, &m)
 	if err != nil {
 		return nil, err
@@ -176,9 +184,9 @@ func (e *ProtobufPushDecoder) DecodeMessage(data []byte) (*Message, error) {
 	return &m, nil
 }
 
-// DecodeUnsub ...
-func (e *ProtobufPushDecoder) DecodeUnsub(data []byte) (*Unsub, error) {
-	var m Unsub
+// DecodeUnsubscribe ...
+func (e *ProtobufPushDecoder) DecodeUnsubscribe(data []byte) (*Unsubscribe, error) {
+	var m Unsubscribe
 	err := m.Unmarshal(data)
 	if err != nil {
 		return nil, err
@@ -186,9 +194,29 @@ func (e *ProtobufPushDecoder) DecodeUnsub(data []byte) (*Unsub, error) {
 	return &m, nil
 }
 
-// DecodeSub ...
-func (e *ProtobufPushDecoder) DecodeSub(data []byte) (*Sub, error) {
-	var m Sub
+// DecodeSubscribe ...
+func (e *ProtobufPushDecoder) DecodeSubscribe(data []byte) (*Subscribe, error) {
+	var m Subscribe
+	err := m.Unmarshal(data)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+// DecodeConnect ...
+func (e *ProtobufPushDecoder) DecodeConnect(data []byte) (*Connect, error) {
+	var m Connect
+	err := m.Unmarshal(data)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+// DecodeDisconnect ...
+func (e *ProtobufPushDecoder) DecodeDisconnect(data []byte) (*Disconnect, error) {
+	var m Disconnect
 	err := m.Unmarshal(data)
 	if err != nil {
 		return nil, err

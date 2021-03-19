@@ -29,13 +29,13 @@ enum MethodType {
 }
 
 message Command {
-    uint32 id = 1{{if env.Getenv "GOGO"}} [(gogoproto.customname) = "ID", (gogoproto.jsontag) = "id,omitempty"]{{end}};
+    uint32 id = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "id,omitempty"]{{end}};
     MethodType method = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "method,omitempty"]{{end}};
     bytes params = 3{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "params,omitempty", (gogoproto.nullable) = false]{{end}};
 }
 
 message Reply {
-    uint32 id = 1{{if env.Getenv "GOGO"}} [(gogoproto.customname) = "ID", (gogoproto.jsontag) = "id,omitempty"]{{end}};
+    uint32 id = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "id,omitempty"]{{end}};
     Error error = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "error,omitempty"]{{end}};
     bytes result = 3{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "result,omitempty", (gogoproto.nullable) = false]{{end}};
 }
@@ -67,7 +67,7 @@ message ClientInfo {
 message Publication {
     uint32 seq = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "seq,omitempty"]{{end}};
     uint32 gen = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "gen,omitempty"]{{end}};
-    string uid = 3{{if env.Getenv "GOGO"}} [(gogoproto.customname) = "UID", (gogoproto.jsontag) = "uid,omitempty"]{{end}};
+    string uid = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "uid,omitempty"]{{end}};
     bytes data = 4{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data", (gogoproto.nullable) = false]{{end}};
     ClientInfo info = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "info,omitempty"]{{end}};
     uint64 offset = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
@@ -124,7 +124,7 @@ message ConnectResult {
     string client = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "client"]{{end}};
     string version = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "version,omitempty"]{{end}};
     bool expires = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "expires,omitempty"]{{end}};
-    uint32 ttl = 4{{if env.Getenv "GOGO"}} [(gogoproto.customname) = "TTL", (gogoproto.jsontag) = "ttl,omitempty"]{{end}};
+    uint32 ttl = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "ttl,omitempty"]{{end}};
     bytes data = 5{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data,omitempty", (gogoproto.nullable) = false]{{end}};
     map<string, SubscribeResult> subs = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "subs,omitempty"]{{end}};
 }
@@ -137,7 +137,7 @@ message RefreshResult {
     string client = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "client"]{{end}};
     string version = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "version"]{{end}};
     bool expires = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "expires,omitempty"]{{end}};
-    uint32 ttl = 4{{if env.Getenv "GOGO"}} [(gogoproto.customname) = "TTL", (gogoproto.jsontag) = "ttl,omitempty"]{{end}};
+    uint32 ttl = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "ttl,omitempty"]{{end}};
 }
 
 message SubscribeRequest {
@@ -152,7 +152,7 @@ message SubscribeRequest {
 
 message SubscribeResult {
     bool expires = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "expires,omitempty"]{{end}};
-    uint32 ttl = 2{{if env.Getenv "GOGO"}} [(gogoproto.customname) = "TTL", (gogoproto.jsontag) = "ttl,omitempty"]{{end}};
+    uint32 ttl = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "ttl,omitempty"]{{end}};
     bool recoverable = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "recoverable,omitempty"]{{end}};
     uint32 seq = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "seq,omitempty"]{{end}};
     uint32 gen = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "gen,omitempty"]{{end}};
@@ -171,7 +171,7 @@ message SubRefreshRequest {
 
 message SubRefreshResult {
     bool expires = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "expires,omitempty"]{{end}};
-    uint32 ttl = 2{{if env.Getenv "GOGO"}} [(gogoproto.customname) = "TTL", (gogoproto.jsontag) = "ttl,omitempty"]{{end}};
+    uint32 ttl = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "ttl,omitempty"]{{end}};
 }
 
 message UnsubscribeRequest {

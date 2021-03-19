@@ -92,6 +92,7 @@ message Subscribe {
     string epoch = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
     uint64 offset = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
     bool positioned = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "positioned,omitempty"]{{end}};
+    bytes data = 7{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data,omitempty", (gogoproto.nullable) = false]{{end}};
 }
 
 message Message {
@@ -160,6 +161,7 @@ message SubscribeResult {
     bool recovered = 8{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "recovered,omitempty"]{{end}};
     uint64 offset = 9{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
     bool positioned = 10{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "positioned,omitempty"]{{end}};
+    bytes data = 11{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data,omitempty", (gogoproto.nullable) = false]{{end}};
 }
 
 message SubRefreshRequest {

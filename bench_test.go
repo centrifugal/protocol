@@ -24,7 +24,7 @@ func BenchmarkReplyMarshalProtobuf(b *testing.B) {
 			b.Fail()
 		}
 		cmd := Reply{
-			ID:     1,
+			Id:     1,
 			Result: data,
 		}
 		_, err = cmd.Marshal()
@@ -54,7 +54,7 @@ func BenchmarkReplyMarshalJSON(b *testing.B) {
 			b.Fail()
 		}
 		cmd := Reply{
-			ID:     1,
+			Id:     1,
 			Result: data,
 		}
 		_, err = json.Marshal(cmd)

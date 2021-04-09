@@ -13,23 +13,22 @@ message Error {
     string message = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "message"]{{end}};
 }
 
-enum MethodType {
-    METHOD_TYPE_CONNECT = 0;
-    METHOD_TYPE_SUBSCRIBE = 1;
-    METHOD_TYPE_UNSUBSCRIBE = 2;
-    METHOD_TYPE_PUBLISH = 3;
-    METHOD_TYPE_PRESENCE = 4;
-    METHOD_TYPE_PRESENCE_STATS = 5;
-    METHOD_TYPE_HISTORY = 6;
-    METHOD_TYPE_PING = 7;
-    METHOD_TYPE_SEND = 8;
-    METHOD_TYPE_RPC = 9;
-    METHOD_TYPE_REFRESH = 10;
-    METHOD_TYPE_SUB_REFRESH = 11;
-}
-
 message Command {
     uint32 id = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "id,omitempty"]{{end}};
+    enum MethodType {
+        CONNECT = 0;
+        SUBSCRIBE = 1;
+        UNSUBSCRIBE = 2;
+        PUBLISH = 3;
+        PRESENCE = 4;
+        PRESENCE_STATS = 5;
+        HISTORY = 6;
+        PING = 7;
+        SEND = 8;
+        RPC = 9;
+        REFRESH = 10;
+        SUB_REFRESH = 11;
+    }
     MethodType method = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "method,omitempty"]{{end}};
     bytes params = 3{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "params,omitempty", (gogoproto.nullable) = false]{{end}};
 }
@@ -40,18 +39,17 @@ message Reply {
     bytes result = 3{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "result,omitempty", (gogoproto.nullable) = false]{{end}};
 }
 
-enum PushType {
-    PUSH_TYPE_PUBLICATION = 0;
-    PUSH_TYPE_JOIN = 1;
-    PUSH_TYPE_LEAVE = 2;
-    PUSH_TYPE_UNSUBSCRIBE = 3;
-    PUSH_TYPE_MESSAGE = 4;
-    PUSH_TYPE_SUBSCRIBE = 5;
-    PUSH_TYPE_CONNECT = 6;
-    PUSH_TYPE_DISCONNECT = 7;
-}
-
 message Push {
+    enum PushType {
+        PUBLICATION = 0;
+        JOIN = 1;
+        LEAVE = 2;
+        UNSUBSCRIBE = 3;
+        MESSAGE = 4;
+        SUBSCRIBE = 5;
+        CONNECT = 6;
+        DISCONNECT = 7;
+    }
     PushType type = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "type,omitempty"]{{end}};
     string channel = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "channel,omitempty"]{{end}};
     bytes data = 3{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data", (gogoproto.nullable) = false]{{end}};

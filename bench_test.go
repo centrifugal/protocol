@@ -2,32 +2,65 @@ package protocol
 
 import (
 	"encoding/json"
+	"io"
 	"testing"
 )
 
-func BenchmarkReplyMarshalProtobuf(b *testing.B) {
+func marshalProtobuf() ([]byte, error) {
 	pub := Publication{
-		Data: nil,
+		Data: []byte(`{}`),
 	}
+	data, err := pub.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	push := Push{
+		Type:    Push_PUBLICATION,
+		Channel: "test",
+		Data:    data,
+	}
+	data, err = push.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	r := &Reply{
+		Id:     1,
+		Result: data,
+	}
+	encoder := NewProtobufReplyEncoder()
+	data, _ = encoder.Encode(r)
+	return data, nil
+}
+
+func marshalJSON() ([]byte, error) {
+	pub := Publication{
+		Data: []byte(`{}`),
+	}
+	data, err := pub.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	push := Push{
+		Type:    Push_PUBLICATION,
+		Channel: "test",
+		Data:    data,
+	}
+	data, err = push.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	r := &Reply{
+		Id:     1,
+		Result: data,
+	}
+	encoder := NewJSONReplyEncoder()
+	data, _ = encoder.Encode(r)
+	return data, nil
+}
+
+func BenchmarkReplyProtobufMarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		data, err := pub.Marshal()
-		if err != nil {
-			b.Fail()
-		}
-		push := Push{
-			Type:    Push_PUBLICATION,
-			Channel: "test",
-			Data:    data,
-		}
-		data, err = push.Marshal()
-		if err != nil {
-			b.Fail()
-		}
-		cmd := Reply{
-			Id:     1,
-			Result: data,
-		}
-		_, err = cmd.Marshal()
+		_, err := marshalProtobuf()
 		if err != nil {
 			b.Fail()
 		}
@@ -35,31 +68,76 @@ func BenchmarkReplyMarshalProtobuf(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkReplyMarshalJSON(b *testing.B) {
-	pub := Publication{
-		Data: nil,
+func BenchmarkReplyProtobufUnmarshal(b *testing.B) {
+	params := &ConnectRequest{
+		Token: "token",
 	}
+	data, _ := params.Marshal()
+	cmd := &Command{
+		Id:     1,
+		Method: Command_CONNECT,
+		Params: data,
+	}
+	encoder := NewProtobufCommandEncoder()
+	data, _ = encoder.Encode(cmd)
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		data, err := json.Marshal(pub)
+		decoder := NewProtobufCommandDecoder(data)
+		cmd, err := decoder.Decode()
+		if err != nil {
+			b.Fatal()
+		}
+		paramsDecoder := NewProtobufParamsDecoder()
+		req, err := paramsDecoder.DecodeConnect(cmd.Params)
+		if err != nil {
+			b.Fatal()
+		}
+		if req.Token != "token" {
+			b.Fatal()
+		}
+	}
+	b.ReportAllocs()
+}
+
+func BenchmarkReplyJSONMarshal(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, err := marshalJSON()
 		if err != nil {
 			b.Fail()
 		}
-		push := Push{
-			Type:    Push_PUBLICATION,
-			Channel: "test",
-			Data:    data,
+	}
+	b.ReportAllocs()
+}
+
+func BenchmarkReplyJSONUnmarshal(b *testing.B) {
+	params := &ConnectRequest{
+		Token: "token",
+	}
+	data, _ := json.Marshal(params)
+	cmd := &Command{
+		Id:     1,
+		Method: Command_CONNECT,
+		Params: data,
+	}
+	encoder := NewJSONCommandEncoder()
+	data, err := encoder.Encode(cmd)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		decoder := NewJSONCommandDecoder(data)
+		cmd, err := decoder.Decode()
+		if (err != nil && err != io.EOF) || cmd == nil {
+			b.Fatal(err)
 		}
-		data, err = json.Marshal(push)
+		paramsDecoder := NewJSONParamsDecoder()
+		req, err := paramsDecoder.DecodeConnect(cmd.Params)
 		if err != nil {
-			b.Fail()
+			b.Fatal()
 		}
-		cmd := Reply{
-			Id:     1,
-			Result: data,
-		}
-		_, err = json.Marshal(cmd)
-		if err != nil {
-			b.Fail()
+		if req.Token != "token" {
+			b.Fatal()
 		}
 	}
 	b.ReportAllocs()

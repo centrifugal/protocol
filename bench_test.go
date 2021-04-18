@@ -7,19 +7,20 @@ import (
 )
 
 func marshalProtobuf() ([]byte, error) {
-	pub := Publication{
+	pushEncoder := NewProtobufPushEncoder()
+	pub := &Publication{
 		Data: []byte(`{}`),
 	}
-	data, err := pub.Marshal()
+	data, err := pushEncoder.EncodePublication(pub)
 	if err != nil {
 		return nil, err
 	}
-	push := Push{
+	push := &Push{
 		Type:    Push_PUBLICATION,
 		Channel: "test",
 		Data:    data,
 	}
-	data, err = push.Marshal()
+	data, err = pushEncoder.Encode(push)
 	if err != nil {
 		return nil, err
 	}
@@ -33,19 +34,20 @@ func marshalProtobuf() ([]byte, error) {
 }
 
 func marshalJSON() ([]byte, error) {
-	pub := Publication{
+	pushEncoder := NewJSONPushEncoder()
+	pub := &Publication{
 		Data: []byte(`{}`),
 	}
-	data, err := pub.Marshal()
+	data, err := pushEncoder.EncodePublication(pub)
 	if err != nil {
 		return nil, err
 	}
-	push := Push{
+	push := &Push{
 		Type:    Push_PUBLICATION,
 		Channel: "test",
 		Data:    data,
 	}
-	data, err = push.Marshal()
+	data, err = pushEncoder.Encode(push)
 	if err != nil {
 		return nil, err
 	}
@@ -82,21 +84,26 @@ func BenchmarkReplyProtobufUnmarshal(b *testing.B) {
 	data, _ = encoder.Encode(cmd)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		decoder := NewProtobufCommandDecoder(data)
-		cmd, err := decoder.Decode()
-		if err != nil {
-			b.Fatal()
-		}
-		paramsDecoder := NewProtobufParamsDecoder()
-		req, err := paramsDecoder.DecodeConnect(cmd.Params)
-		if err != nil {
-			b.Fatal()
-		}
-		if req.Token != "token" {
-			b.Fatal()
-		}
+		unmarshalProtobuf(b, data)
 	}
 	b.ReportAllocs()
+}
+
+func unmarshalProtobuf(b *testing.B, data []byte) {
+	decoder := GetCommandDecoder(TypeProtobuf, data)
+	defer PutCommandDecoder(TypeProtobuf, decoder)
+	cmd, err := decoder.Decode()
+	if err != nil {
+		b.Fatal()
+	}
+	paramsDecoder := NewProtobufParamsDecoder()
+	req, err := paramsDecoder.DecodeConnect(cmd.Params)
+	if err != nil {
+		b.Fatal()
+	}
+	if req.Token != "token" {
+		b.Fatal()
+	}
 }
 
 func BenchmarkReplyJSONMarshal(b *testing.B) {
@@ -126,19 +133,24 @@ func BenchmarkReplyJSONUnmarshal(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		decoder := NewJSONCommandDecoder(data)
-		cmd, err := decoder.Decode()
-		if (err != nil && err != io.EOF) || cmd == nil {
-			b.Fatal(err)
-		}
-		paramsDecoder := NewJSONParamsDecoder()
-		req, err := paramsDecoder.DecodeConnect(cmd.Params)
-		if err != nil {
-			b.Fatal()
-		}
-		if req.Token != "token" {
-			b.Fatal()
-		}
+		unmarshalJSON(b, data)
 	}
 	b.ReportAllocs()
+}
+
+func unmarshalJSON(b *testing.B, data []byte) {
+	decoder := GetCommandDecoder(TypeJSON, data)
+	defer PutCommandDecoder(TypeJSON, decoder)
+	cmd, err := decoder.Decode()
+	if (err != nil && err != io.EOF) || cmd == nil {
+		b.Fatal(err)
+	}
+	paramsDecoder := NewJSONParamsDecoder()
+	req, err := paramsDecoder.DecodeConnect(cmd.Params)
+	if err != nil {
+		b.Fatal()
+	}
+	if req.Token != "token" {
+		b.Fatal()
+	}
 }

@@ -56,8 +56,7 @@ func marshalJSON() ([]byte, error) {
 		Result: data,
 	}
 	encoder := NewJSONReplyEncoder()
-	data, _ = encoder.Encode(r)
-	return data, nil
+	return encoder.Encode(r)
 }
 
 func BenchmarkReplyProtobufMarshal(b *testing.B) {
@@ -68,6 +67,18 @@ func BenchmarkReplyProtobufMarshal(b *testing.B) {
 		}
 	}
 	b.ReportAllocs()
+}
+
+func BenchmarkReplyProtobufMarshalParallel(b *testing.B) {
+	b.ReportAllocs()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := marshalProtobuf()
+			if err != nil {
+				b.Fail()
+			}
+		}
+	})
 }
 
 func BenchmarkReplyProtobufUnmarshal(b *testing.B) {
@@ -86,6 +97,27 @@ func BenchmarkReplyProtobufUnmarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		unmarshalProtobuf(b, data)
 	}
+	b.ReportAllocs()
+}
+
+func BenchmarkReplyProtobufUnmarshalParallel(b *testing.B) {
+	params := &ConnectRequest{
+		Token: "token",
+	}
+	data, _ := params.Marshal()
+	cmd := &Command{
+		Id:     1,
+		Method: Command_CONNECT,
+		Params: data,
+	}
+	encoder := NewProtobufCommandEncoder()
+	data, _ = encoder.Encode(cmd)
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			unmarshalProtobuf(b, data)
+		}
+	})
 	b.ReportAllocs()
 }
 
@@ -110,10 +142,22 @@ func BenchmarkReplyJSONMarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, err := marshalJSON()
 		if err != nil {
-			b.Fail()
+			b.Fatal(err)
 		}
 	}
 	b.ReportAllocs()
+}
+
+func BenchmarkReplyJSONMarshalParallel(b *testing.B) {
+	b.ReportAllocs()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := marshalJSON()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
 }
 
 func BenchmarkReplyJSONUnmarshal(b *testing.B) {
@@ -136,6 +180,31 @@ func BenchmarkReplyJSONUnmarshal(b *testing.B) {
 		unmarshalJSON(b, data)
 	}
 	b.ReportAllocs()
+}
+
+func BenchmarkReplyJSONUnmarshalParallel(b *testing.B) {
+	params := &ConnectRequest{
+		Token: "token",
+	}
+	data, _ := json.Marshal(params)
+	cmd := &Command{
+		Id:     1,
+		Method: Command_CONNECT,
+		Params: data,
+	}
+	encoder := NewJSONCommandEncoder()
+	data, err := encoder.Encode(cmd)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			unmarshalJSON(b, data)
+		}
+	})
+	b.ReportAllocs()
+
 }
 
 func unmarshalJSON(b *testing.B, data []byte) {

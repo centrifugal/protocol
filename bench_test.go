@@ -1,15 +1,27 @@
 package protocol
 
 import (
-	"encoding/json"
 	"io"
 	"testing"
+
+	"encoding/json"
 )
+
+func benchPayload() []byte {
+	size := 1
+	var p []byte
+	for i := 0; i < size; i++ {
+		p = append(p, 'i')
+	}
+	return []byte(`{"input": "` + string(p) + `"}`)
+}
+
+var preparedPayload = benchPayload()
 
 func marshalProtobuf() ([]byte, error) {
 	pushEncoder := NewProtobufPushEncoder()
 	pub := &Publication{
-		Data: []byte(`{}`),
+		Data: preparedPayload,
 	}
 	data, err := pushEncoder.EncodePublication(pub)
 	if err != nil {
@@ -36,7 +48,7 @@ func marshalProtobuf() ([]byte, error) {
 func marshalJSON() ([]byte, error) {
 	pushEncoder := NewJSONPushEncoder()
 	pub := &Publication{
-		Data: []byte(`{}`),
+		Data: preparedPayload,
 	}
 	data, err := pushEncoder.EncodePublication(pub)
 	if err != nil {
@@ -125,8 +137,11 @@ func unmarshalProtobuf(b *testing.B, data []byte) {
 	decoder := GetCommandDecoder(TypeProtobuf, data)
 	defer PutCommandDecoder(TypeProtobuf, decoder)
 	cmd, err := decoder.Decode()
-	if err != nil {
-		b.Fatal()
+	if err != nil && err != io.EOF {
+		b.Fatal(err)
+	}
+	if cmd == nil {
+		b.Fatal("nil command")
 	}
 	paramsDecoder := NewProtobufParamsDecoder()
 	req, err := paramsDecoder.DecodeConnect(cmd.Params)

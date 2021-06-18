@@ -1,6 +1,8 @@
 syntax = "proto3";
 
-package protocol;
+package centrifugal.centrifuge.protocol;
+
+option go_package = "./;protocol";
 {{if env.Getenv "GOGO"}}
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
@@ -63,9 +65,7 @@ message ClientInfo {
 }
 
 message Publication {
-    uint32 seq = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "seq,omitempty"]{{end}};
-    uint32 gen = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "gen,omitempty"]{{end}};
-    string uid = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "uid,omitempty"]{{end}};
+    // 1-3 skipped here for backwards compatibility.
     bytes data = 4{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data", (gogoproto.nullable) = false]{{end}};
     ClientInfo info = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "info,omitempty"]{{end}};
     uint64 offset = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
@@ -85,8 +85,7 @@ message Unsubscribe {
 
 message Subscribe {
     bool recoverable = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "recoverable,omitempty"]{{end}};
-    uint32 seq = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "seq,omitempty"]{{end}};
-    uint32 gen = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "gen,omitempty"]{{end}};
+    // 2-3 skipped here for backwards compatibility.
     string epoch = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
     uint64 offset = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
     bool positioned = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "positioned,omitempty"]{{end}};
@@ -142,8 +141,7 @@ message SubscribeRequest {
     string channel = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "channel,omitempty"]{{end}};
     string token = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "token,omitempty"]{{end}};
     bool recover = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "recover,omitempty"]{{end}};
-    uint32 seq = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "seq,omitempty"]{{end}};
-    uint32 gen = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "gen,omitempty"]{{end}};
+    // 4-5 skipped here for backwards compatibility.
     string epoch = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
     uint64 offset = 7{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
 }
@@ -152,8 +150,7 @@ message SubscribeResult {
     bool expires = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "expires,omitempty"]{{end}};
     uint32 ttl = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "ttl,omitempty"]{{end}};
     bool recoverable = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "recoverable,omitempty"]{{end}};
-    uint32 seq = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "seq,omitempty"]{{end}};
-    uint32 gen = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "gen,omitempty"]{{end}};
+    // 4-5 skipped here for backwards compatibility.
     string epoch = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};   
     repeated Publication publications = 7{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "publications,omitempty"]{{end}};
     bool recovered = 8{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "recovered,omitempty"]{{end}};
@@ -202,13 +199,16 @@ message PresenceStatsResult {
     uint32 num_users = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "num_users"]{{end}};
 }
 
+message StreamPosition {
+    uint64 offset = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
+    string epoch = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
+}
+
 message HistoryRequest {
     string channel = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "channel"]{{end}};
-    bool use_since = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "use_since,omitempty"]{{end}};
-    uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset,omitempty"]{{end}};
-    string epoch = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "epoch,omitempty"]{{end}};
-    bool use_limit = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "use_limit,omitempty"]{{end}};
-    int32 limit = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "limit,omitempty"]{{end}};
+    // 2-6 skipped here for backwards compatibility.
+    int32 limit = 7{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "limit,omitempty"]{{end}};
+    StreamPosition since = 8{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "since,omitempty"]{{end}};
 }
 
 message HistoryResult {
@@ -217,11 +217,9 @@ message HistoryResult {
     uint64 offset = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "offset"]{{end}};
 }
 
-message PingRequest {
-}
+message PingRequest {}
 
-message PingResult {
-}
+message PingResult {}
 
 message RPCRequest{
     bytes data = 1{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data", (gogoproto.nullable) = false]{{end}};

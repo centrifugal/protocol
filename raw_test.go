@@ -15,7 +15,7 @@ type DataRaw struct {
 
 func TestRaw(t *testing.T) {
 	data1 := json.RawMessage(`{"key": "value"}`)
-	stdjsondata1, err := json.Marshal(DataRawMessage{
+	stdJsonData1, err := json.Marshal(DataRawMessage{
 		Data: &data1,
 	})
 	if err != nil {
@@ -23,13 +23,13 @@ func TestRaw(t *testing.T) {
 	}
 
 	data2 := Raw(`{"key": "value"}`)
-	stdjsondata2, err := json.Marshal(DataRaw{
+	stdJsonData2, err := json.Marshal(DataRaw{
 		Data: &data2,
 	})
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	if string(stdjsondata1) != string(stdjsondata2) {
+	if string(stdJsonData1) != string(stdJsonData2) {
 		t.Fatalf("no match: %v", err)
 	}
 }

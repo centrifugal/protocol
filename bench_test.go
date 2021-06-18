@@ -8,7 +8,7 @@ import (
 )
 
 func benchPayload() []byte {
-	size := 1
+	size := 256
 	var p []byte
 	for i := 0; i < size; i++ {
 		p = append(p, 'i')

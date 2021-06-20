@@ -85,7 +85,7 @@ func (e *JSONPushDecoder) DecodeMessage(data []byte) (*Message, error) {
 	return &m, nil
 }
 
-// DecodeUnsub ...
+// DecodeUnsubscribe ...
 func (e *JSONPushDecoder) DecodeUnsubscribe(data []byte) (*Unsubscribe, error) {
 	var m Unsubscribe
 	_, err := json.Parse(data, &m, json.ZeroCopy)
@@ -95,7 +95,7 @@ func (e *JSONPushDecoder) DecodeUnsubscribe(data []byte) (*Unsubscribe, error) {
 	return &m, nil
 }
 
-// DecodeSub ...
+// DecodeSubscribe ...
 func (e *JSONPushDecoder) DecodeSubscribe(data []byte) (*Subscribe, error) {
 	var m Subscribe
 	_, err := json.Parse(data, &m, json.ZeroCopy)
@@ -696,8 +696,8 @@ func NewJSONResultDecoder() *JSONResultDecoder {
 }
 
 // Decode ...
-func (e *JSONResultDecoder) Decode(data []byte, dest interface{}) error {
-	_, err := json.Parse(data, dest, json.ZeroCopy)
+func (e *JSONResultDecoder) Decode(data []byte, dst interface{}) error {
+	_, err := json.Parse(data, dst, json.ZeroCopy)
 	return err
 }
 
@@ -712,8 +712,8 @@ func NewProtobufResultDecoder() *ProtobufResultDecoder {
 }
 
 // Decode ...
-func (e *ProtobufResultDecoder) Decode(data []byte, dest interface{}) error {
-	m, ok := dest.(proto.Unmarshaler)
+func (e *ProtobufResultDecoder) Decode(data []byte, dst interface{}) error {
+	m, ok := dst.(proto.Unmarshaler)
 	if !ok {
 		return fmt.Errorf("can not unmarshal type from Protobuf")
 	}

@@ -87,21 +87,21 @@ func (e *JSONPushEncoder) EncodeLeave(message *Leave) ([]byte, error) {
 	return jw.BuildBytes()
 }
 
-// EncodeUnsub ...
+// EncodeUnsubscribe ...
 func (e *JSONPushEncoder) EncodeUnsubscribe(message *Unsubscribe) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeSub ...
+// EncodeSubscribe ...
 func (e *JSONPushEncoder) EncodeSubscribe(message *Subscribe) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeConn ...
+// EncodeConnect ...
 func (e *JSONPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
@@ -149,17 +149,17 @@ func (e *ProtobufPushEncoder) EncodeLeave(message *Leave) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeUnsub ...
+// EncodeUnsubscribe ...
 func (e *ProtobufPushEncoder) EncodeUnsubscribe(message *Unsubscribe) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeSub ...
+// EncodeSubscribe ...
 func (e *ProtobufPushEncoder) EncodeSubscribe(message *Subscribe) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeConn ...
+// EncodeConnect ...
 func (e *ProtobufPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
 	return message.Marshal()
 }

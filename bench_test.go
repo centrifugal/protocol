@@ -37,7 +37,6 @@ func marshalProtobuf() ([]byte, error) {
 		return nil, err
 	}
 	r := &Reply{
-		Id:     1,
 		Result: data,
 	}
 	encoder := NewProtobufReplyEncoder()
@@ -64,7 +63,6 @@ func marshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	r := &Reply{
-		Id:     1,
 		Result: data,
 	}
 	encoder := NewJSONReplyEncoder()

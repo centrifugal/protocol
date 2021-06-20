@@ -79,7 +79,7 @@ type intn interface {
 	Intn(n int) int
 }
 
-// NewPopulatedRaw required for gogoprotobuf custom type.
+// NewPopulatedRaw required for gogo/protobuf custom type.
 func NewPopulatedRaw(r intn) *Raw {
 	v1 := r.Intn(100)
 	data := make([]byte, v1)

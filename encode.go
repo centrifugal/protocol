@@ -25,9 +25,9 @@ func isValidJSON(b []byte) error {
 
 // PushEncoder ...
 type PushEncoder interface {
-	Encode(*Push) ([]byte, error)
+	Encode(*Push, ...[]byte) ([]byte, error)
 	EncodeMessage(*Message) ([]byte, error)
-	EncodePublication(*Publication) ([]byte, error)
+	EncodePublication(*Publication, ...[]byte) ([]byte, error)
 	EncodeJoin(*Join) ([]byte, error)
 	EncodeLeave(*Leave) ([]byte, error)
 	EncodeUnsubscribe(*Unsubscribe) ([]byte, error)
@@ -49,21 +49,21 @@ func NewJSONPushEncoder() *JSONPushEncoder {
 }
 
 // Encode ...
-func (e *JSONPushEncoder) Encode(message *Push) ([]byte, error) {
+func (e *JSONPushEncoder) Encode(message *Push, reuse ...[]byte) ([]byte, error) {
 	// Check data is valid JSON.
 	if err := isValidJSON(message.Data); err != nil {
 		return nil, err
 	}
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodePublication ...
-func (e *JSONPushEncoder) EncodePublication(message *Publication) ([]byte, error) {
+func (e *JSONPushEncoder) EncodePublication(message *Publication, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodeMessage ...
@@ -125,12 +125,22 @@ func NewProtobufPushEncoder() *ProtobufPushEncoder {
 }
 
 // Encode ...
-func (e *ProtobufPushEncoder) Encode(message *Push) ([]byte, error) {
+func (e *ProtobufPushEncoder) Encode(message *Push, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		ret := reuse[0][:0]
+		_, err := message.MarshalTo(ret)
+		return ret, err
+	}
 	return message.Marshal()
 }
 
 // EncodePublication ...
-func (e *ProtobufPushEncoder) EncodePublication(message *Publication) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodePublication(message *Publication, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		ret := reuse[0][:0]
+		_, err := message.MarshalTo(ret)
+		return ret, err
+	}
 	return message.Marshal()
 }
 
@@ -171,7 +181,7 @@ func (e *ProtobufPushEncoder) EncodeDisconnect(message *Disconnect) ([]byte, err
 
 // ReplyEncoder ...
 type ReplyEncoder interface {
-	Encode(*Reply) ([]byte, error)
+	Encode(*Reply, ...[]byte) ([]byte, error)
 }
 
 // JSONReplyEncoder ...
@@ -183,7 +193,7 @@ func NewJSONReplyEncoder() *JSONReplyEncoder {
 }
 
 // Encode ...
-func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
+func (e *JSONReplyEncoder) Encode(r *Reply, _ ...[]byte) ([]byte, error) {
 	if r.Id != 0 {
 		// Only check command result reply. Push reply JSON validation is done in PushEncoder.
 		if err := isValidJSON(r.Result); err != nil {
@@ -204,7 +214,12 @@ func NewProtobufReplyEncoder() *ProtobufReplyEncoder {
 }
 
 // Encode ...
-func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
+func (e *ProtobufReplyEncoder) Encode(r *Reply, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		ret := reuse[0][:0]
+		_, err := r.MarshalTo(ret)
+		return ret, err
+	}
 	return r.Marshal()
 }
 

@@ -23,7 +23,9 @@ func marshalProtobuf() ([]byte, error) {
 	pub := &Publication{
 		Data: preparedPayload,
 	}
-	data, err := pushEncoder.EncodePublication(pub)
+	reuse1 := Get(len(preparedPayload) + 10)
+	defer Put(reuse1)
+	data, err := pushEncoder.EncodePublication(pub, reuse1.B)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +34,9 @@ func marshalProtobuf() ([]byte, error) {
 		Channel: "test",
 		Data:    data,
 	}
-	data, err = pushEncoder.Encode(push)
+	reuse2 := Get(len(data) + 10)
+	defer Put(reuse2)
+	data, err = pushEncoder.Encode(push, reuse2.B)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +53,9 @@ func marshalJSON() ([]byte, error) {
 	pub := &Publication{
 		Data: preparedPayload,
 	}
-	data, err := pushEncoder.EncodePublication(pub)
+	reuse1 := Get(len(preparedPayload) + 50)
+	defer Put(reuse1)
+	data, err := pushEncoder.EncodePublication(pub, reuse1.B)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +64,9 @@ func marshalJSON() ([]byte, error) {
 		Channel: "test",
 		Data:    data,
 	}
-	data, err = pushEncoder.Encode(push)
+	reuse2 := Get(len(data) + 50)
+	defer Put(reuse2)
+	data, err = pushEncoder.Encode(push, reuse2.B)
 	if err != nil {
 		return nil, err
 	}

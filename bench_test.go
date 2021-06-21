@@ -23,6 +23,32 @@ func marshalProtobuf() ([]byte, error) {
 	pub := &Publication{
 		Data: preparedPayload,
 	}
+	data, err := pushEncoder.EncodePublication(pub)
+	if err != nil {
+		return nil, err
+	}
+	push := &Push{
+		Type:    Push_PUBLICATION,
+		Channel: "test",
+		Data:    data,
+	}
+	data, err = pushEncoder.Encode(push)
+	if err != nil {
+		return nil, err
+	}
+	r := &Reply{
+		Result: data,
+	}
+	encoder := NewProtobufReplyEncoder()
+	data, _ = encoder.Encode(r)
+	return data, nil
+}
+
+func marshalProtobufZeroCopy() ([]byte, error) {
+	pushEncoder := NewProtobufPushEncoder()
+	pub := &Publication{
+		Data: preparedPayload,
+	}
 	reuse1 := Get(len(preparedPayload) + 10)
 	defer Put(reuse1)
 	data, err := pushEncoder.EncodePublication(pub, reuse1.B)
@@ -43,12 +69,38 @@ func marshalProtobuf() ([]byte, error) {
 	r := &Reply{
 		Result: data,
 	}
+	reuse3 := Get(len(data) + 10)
+	defer Put(reuse3)
 	encoder := NewProtobufReplyEncoder()
-	data, _ = encoder.Encode(r)
-	return data, nil
+	return encoder.Encode(r, reuse3.B)
 }
 
 func marshalJSON() ([]byte, error) {
+	pushEncoder := NewJSONPushEncoder()
+	pub := &Publication{
+		Data: preparedPayload,
+	}
+	data, err := pushEncoder.EncodePublication(pub)
+	if err != nil {
+		return nil, err
+	}
+	push := &Push{
+		Type:    Push_PUBLICATION,
+		Channel: "test",
+		Data:    data,
+	}
+	data, err = pushEncoder.Encode(push)
+	if err != nil {
+		return nil, err
+	}
+	r := &Reply{
+		Result: data,
+	}
+	encoder := NewJSONReplyEncoder()
+	return encoder.Encode(r)
+}
+
+func marshalJSONZeroCopy() ([]byte, error) {
 	pushEncoder := NewJSONPushEncoder()
 	pub := &Publication{
 		Data: preparedPayload,
@@ -73,8 +125,10 @@ func marshalJSON() ([]byte, error) {
 	r := &Reply{
 		Result: data,
 	}
+	reuse3 := Get(len(data) + 50)
+	defer Put(reuse3)
 	encoder := NewJSONReplyEncoder()
-	return encoder.Encode(r)
+	return encoder.Encode(r, reuse3.B)
 }
 
 func BenchmarkReplyProtobufMarshal(b *testing.B) {
@@ -92,6 +146,28 @@ func BenchmarkReplyProtobufMarshalParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			_, err := marshalProtobuf()
+			if err != nil {
+				b.Fail()
+			}
+		}
+	})
+}
+
+func BenchmarkReplyProtobufMarshalZeroCopy(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, err := marshalProtobufZeroCopy()
+		if err != nil {
+			b.Fail()
+		}
+	}
+	b.ReportAllocs()
+}
+
+func BenchmarkReplyProtobufMarshalZeroCopyParallel(b *testing.B) {
+	b.ReportAllocs()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := marshalProtobufZeroCopy()
 			if err != nil {
 				b.Fail()
 			}
@@ -169,11 +245,33 @@ func BenchmarkReplyJSONMarshal(b *testing.B) {
 	b.ReportAllocs()
 }
 
+func BenchmarkReplyJSONMarshalZeroCopy(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, err := marshalJSONZeroCopy()
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	b.ReportAllocs()
+}
+
 func BenchmarkReplyJSONMarshalParallel(b *testing.B) {
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			_, err := marshalJSON()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
+func BenchmarkReplyJSONMarshalZeroCopyParallel(b *testing.B) {
+	b.ReportAllocs()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := marshalJSONZeroCopy()
 			if err != nil {
 				b.Fatal(err)
 			}

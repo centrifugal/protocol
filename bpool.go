@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	// Verify ByteBuffer implements the given interfaces.
+	// Verify ByteBuffer implements io.Writer.
 	_ io.Writer = &ByteBuffer{}
 )
 
@@ -28,54 +28,54 @@ func (bb *ByteBuffer) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// pools contains pools for byte slices of various capacities.
-//
-//    pools[0] is for capacities from 0 to 8
-//    pools[1] is for capacities from 9 to 16
-//    pools[2] is for capacities from 17 to 32
-//    ...
-//    pools[n] is for capacities from 2^(n+2)+1 to 2^(n+3)
-//
-// Limit the maximum capacity to 2^18, since there are no performance benefits
-// in caching byte slices with bigger capacities.
-var pools [17]sync.Pool
+// pools contain pools for byte slices of various capacities.
+var pools [19]sync.Pool
+
+// maxBufferLength is the maximum length of an element that can be added to the Pool.
+const maxBufferLength = 262144 // 2^18
+
+// Log of base two, round up (for v > 0).
+func nextLogBase2(v uint32) uint32 {
+	return uint32(bits.Len32(v - 1))
+}
+
+// Log of base two, round down (for v > 0)
+func prevLogBase2(num uint32) uint32 {
+	next := nextLogBase2(num)
+	if num == (1 << next) {
+		return next
+	}
+	return next - 1
+}
 
 // Get returns byte buffer with the given capacity.
-func Get(capacity int) *ByteBuffer {
-	id, capacityNeeded := getPoolIDAndCapacity(capacity)
-	for i := 0; i < 2; i++ {
-		if id < 0 || id >= len(pools) {
-			break
+func Get(length int) *ByteBuffer {
+	if length == 0 {
+		return &ByteBuffer{
+			B: nil,
 		}
-		if v := pools[id].Get(); v != nil {
-			return v.(*ByteBuffer)
+	}
+	if length > maxBufferLength {
+		return &ByteBuffer{
+			B: make([]byte, 0, length),
 		}
-		id++
+	}
+	idx := nextLogBase2(uint32(length))
+	if v := pools[idx].Get(); v != nil {
+		return v.(*ByteBuffer)
 	}
 	return &ByteBuffer{
-		B: make([]byte, 0, capacityNeeded),
+		B: make([]byte, 0, 1<<idx),
 	}
 }
 
 // Put returns bb to the pool.
 func Put(bb *ByteBuffer) {
 	capacity := cap(bb.B)
-	id, poolCapacity := getPoolIDAndCapacity(capacity)
-	if capacity <= poolCapacity {
-		bb.Reset()
-		pools[id].Put(bb)
+	if capacity == 0 || capacity > maxBufferLength {
+		return // drop.
 	}
-}
-
-func getPoolIDAndCapacity(size int) (int, int) {
-	size--
-	if size < 0 {
-		size = 0
-	}
-	size >>= 3
-	id := bits.Len(uint(size))
-	if id >= len(pools) {
-		id = len(pools) - 1
-	}
-	return id, 1 << (id + 3)
+	idx := prevLogBase2(uint32(capacity))
+	bb.Reset()
+	pools[idx].Put(bb)
 }

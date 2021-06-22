@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetPutConcurrent(t *testing.T) {
@@ -11,7 +13,7 @@ func TestGetPutConcurrent(t *testing.T) {
 	doneCh := make(chan struct{}, concurrency)
 	for i := 0; i < concurrency; i++ {
 		go func() {
-			for capacity := -1; capacity < 100; capacity++ {
+			for capacity := 0; capacity < 100; capacity++ {
 				bb := Get(capacity)
 				if len(bb.B) > 0 {
 					panic(fmt.Errorf("len(bb.B) must be zero; got %d", len(bb.B)))
@@ -32,5 +34,14 @@ func TestGetPutConcurrent(t *testing.T) {
 			t.Fatalf("timeout")
 		case <-doneCh:
 		}
+	}
+}
+
+func TestGetCapacity(t *testing.T) {
+	for i := 1; i < 130; i++ {
+		idx := nextLogBase2(uint32(i))
+		b := Get(i)
+		require.Equal(t, 1<<idx, cap(b.B))
+		Put(b)
 	}
 }

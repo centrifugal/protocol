@@ -49,7 +49,7 @@ func marshalProtobufZeroCopy() ([]byte, error) {
 	pub := &Publication{
 		Data: preparedPayload,
 	}
-	reuse1 := Get(len(preparedPayload) + 10)
+	reuse1 := Get(pub.Size())
 	defer Put(reuse1)
 	data, err := pushEncoder.EncodePublication(pub, reuse1.B)
 	if err != nil {
@@ -60,7 +60,7 @@ func marshalProtobufZeroCopy() ([]byte, error) {
 		Channel: "test",
 		Data:    data,
 	}
-	reuse2 := Get(len(data) + 10)
+	reuse2 := Get(push.Size())
 	defer Put(reuse2)
 	data, err = pushEncoder.Encode(push, reuse2.B)
 	if err != nil {
@@ -69,7 +69,7 @@ func marshalProtobufZeroCopy() ([]byte, error) {
 	r := &Reply{
 		Result: data,
 	}
-	reuse3 := Get(len(data) + 10)
+	reuse3 := Get(r.Size())
 	defer Put(reuse3)
 	encoder := NewProtobufReplyEncoder()
 	return encoder.Encode(r, reuse3.B)

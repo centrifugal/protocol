@@ -48,8 +48,8 @@ func prevLogBase2(num uint32) uint32 {
 	return next - 1
 }
 
-// Get returns byte buffer with the given capacity.
-func Get(length int) *ByteBuffer {
+// getByteBuffer returns byte buffer with the given capacity.
+func getByteBuffer(length int) *ByteBuffer {
 	if length == 0 {
 		return &ByteBuffer{
 			B: nil,
@@ -69,8 +69,8 @@ func Get(length int) *ByteBuffer {
 	}
 }
 
-// Put returns bb to the pool.
-func Put(bb *ByteBuffer) {
+// putByteBuffer returns bb to the pool.
+func putByteBuffer(bb *ByteBuffer) {
 	capacity := cap(bb.B)
 	if capacity == 0 || capacity > maxBufferLength {
 		return // drop.

@@ -49,8 +49,8 @@ func marshalProtobufZeroCopy() ([]byte, error) {
 	pub := &Publication{
 		Data: preparedPayload,
 	}
-	reuse1 := Get(pub.Size())
-	defer Put(reuse1)
+	reuse1 := getByteBuffer(pub.Size())
+	defer putByteBuffer(reuse1)
 	data, err := pushEncoder.EncodePublication(pub, reuse1.B)
 	if err != nil {
 		return nil, err
@@ -60,8 +60,8 @@ func marshalProtobufZeroCopy() ([]byte, error) {
 		Channel: "test",
 		Data:    data,
 	}
-	reuse2 := Get(push.Size())
-	defer Put(reuse2)
+	reuse2 := getByteBuffer(push.Size())
+	defer putByteBuffer(reuse2)
 	data, err = pushEncoder.Encode(push, reuse2.B)
 	if err != nil {
 		return nil, err
@@ -69,8 +69,8 @@ func marshalProtobufZeroCopy() ([]byte, error) {
 	r := &Reply{
 		Result: data,
 	}
-	reuse3 := Get(r.Size())
-	defer Put(reuse3)
+	reuse3 := getByteBuffer(r.Size())
+	defer putByteBuffer(reuse3)
 	encoder := NewProtobufReplyEncoder()
 	return encoder.Encode(r, reuse3.B)
 }
@@ -105,8 +105,8 @@ func marshalJSONZeroCopy() ([]byte, error) {
 	pub := &Publication{
 		Data: preparedPayload,
 	}
-	reuse1 := Get(len(preparedPayload) + 50)
-	defer Put(reuse1)
+	reuse1 := getByteBuffer(len(preparedPayload) + 50)
+	defer putByteBuffer(reuse1)
 	data, err := pushEncoder.EncodePublication(pub, reuse1.B)
 	if err != nil {
 		return nil, err
@@ -116,8 +116,8 @@ func marshalJSONZeroCopy() ([]byte, error) {
 		Channel: "test",
 		Data:    data,
 	}
-	reuse2 := Get(len(data) + 50)
-	defer Put(reuse2)
+	reuse2 := getByteBuffer(len(data) + 50)
+	defer putByteBuffer(reuse2)
 	data, err = pushEncoder.Encode(push, reuse2.B)
 	if err != nil {
 		return nil, err
@@ -125,8 +125,8 @@ func marshalJSONZeroCopy() ([]byte, error) {
 	r := &Reply{
 		Result: data,
 	}
-	reuse3 := Get(len(data) + 50)
-	defer Put(reuse3)
+	reuse3 := getByteBuffer(len(data) + 50)
+	defer putByteBuffer(reuse3)
 	encoder := NewJSONReplyEncoder()
 	return encoder.Encode(r, reuse3.B)
 }

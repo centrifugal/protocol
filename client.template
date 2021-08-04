@@ -115,6 +115,7 @@ message ConnectRequest {
     map<string, SubscribeRequest> subs = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "subs,omitempty"]{{end}};
     string name = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "name,omitempty"]{{end}};
     string version = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "version,omitempty"]{{end}};
+    repeated string channels = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "channels,omitempty"]{{end}};
 }
 
 message ConnectResult {

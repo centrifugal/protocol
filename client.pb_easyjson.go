@@ -2556,6 +2556,10 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild34(in *jlexer.Lexer,
 				}
 				in.Delim('}')
 			}
+		case "expires":
+			out.Expires = bool(in.Bool())
+		case "ttl":
+			out.Ttl = uint32(in.Uint32())
 		default:
 			in.SkipRecursive()
 		}
@@ -2623,6 +2627,26 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild34(out *writer, in C
 			}
 			out.RawByte('}')
 		}
+	}
+	if in.Expires {
+		const prefix string = ",\"expires\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Expires))
+	}
+	if in.Ttl != 0 {
+		const prefix string = ",\"ttl\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Uint32(uint32(in.Ttl))
 	}
 	out.RawByte('}')
 }

@@ -101,6 +101,8 @@ message Connect {
     string version = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "version,omitempty"]{{end}};
     bytes data = 3{{if env.Getenv "GOGO"}} [(gogoproto.customtype) = "Raw", (gogoproto.jsontag) = "data,omitempty", (gogoproto.nullable) = false]{{end}};
     map<string, SubscribeResult> subs = 4{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "subs,omitempty"]{{end}};
+    bool expires = 5{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "expires,omitempty"]{{end}};
+    uint32 ttl = 6{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "ttl,omitempty"]{{end}};
 }
 
 message Disconnect {

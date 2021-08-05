@@ -95,6 +95,8 @@ message Connect {
     string version = 2;
     bytes data = 3;
     map<string, SubscribeResult> subs = 4;
+    bool expires = 5;
+    uint32 ttl = 6;
 }
 
 message Disconnect {

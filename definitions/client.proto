@@ -109,7 +109,6 @@ message ConnectRequest {
     map<string, SubscribeRequest> subs = 3;
     string name = 4;
     string version = 5;
-    repeated string channels = 6;
 }
 
 message ConnectResult {

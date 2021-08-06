@@ -34,6 +34,7 @@ type PushEncoder interface {
 	EncodeSubscribe(*Subscribe) ([]byte, error)
 	EncodeConnect(*Connect) ([]byte, error)
 	EncodeDisconnect(*Disconnect) ([]byte, error)
+	EncodeRefresh(*Refresh) ([]byte, error)
 }
 
 var _ PushEncoder = (*JSONPushEncoder)(nil)
@@ -115,6 +116,13 @@ func (e *JSONPushEncoder) EncodeDisconnect(message *Disconnect) ([]byte, error) 
 	return jw.BuildBytes()
 }
 
+// EncodeRefresh ...
+func (e *JSONPushEncoder) EncodeRefresh(message *Refresh) ([]byte, error) {
+	jw := newWriter()
+	message.MarshalEasyJSON(jw)
+	return jw.BuildBytes()
+}
+
 // ProtobufPushEncoder ...
 type ProtobufPushEncoder struct {
 }
@@ -166,6 +174,11 @@ func (e *ProtobufPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
 
 // EncodeDisconnect ...
 func (e *ProtobufPushEncoder) EncodeDisconnect(message *Disconnect) ([]byte, error) {
+	return message.Marshal()
+}
+
+// EncodeRefresh ...
+func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh) ([]byte, error) {
 	return message.Marshal()
 }
 

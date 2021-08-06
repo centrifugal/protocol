@@ -51,6 +51,7 @@ message Push {
         SUBSCRIBE = 5;
         CONNECT = 6;
         DISCONNECT = 7;
+        REFRESH = 8;
     }
     PushType type = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "type,omitempty"]{{end}};
     string channel = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "channel,omitempty"]{{end}};
@@ -109,6 +110,11 @@ message Disconnect {
     uint32 code = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "code,omitempty"]{{end}};
     string reason = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "reason,omitempty"]{{end}};
     bool reconnect = 3{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "reconnect,omitempty"]{{end}};
+}
+
+message Refresh {
+    bool expires = 1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "expires,omitempty"]{{end}};
+    uint32 ttl = 2{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "ttl,omitempty"]{{end}};
 }
 
 message ConnectRequest {

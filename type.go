@@ -39,8 +39,10 @@ func GetReplyEncoder(protoType Type) ReplyEncoder {
 }
 
 var (
-	jsonDataEncoderPool     sync.Pool
-	protobufDataEncoderPool sync.Pool
+	jsonDataEncoderPool        sync.Pool
+	protobufDataEncoderPool    sync.Pool
+	jsonCommandDecoderPool     sync.Pool
+	protobufCommandDecoderPool sync.Pool
 )
 
 // GetDataEncoder ...
@@ -75,13 +77,30 @@ func PutDataEncoder(protoType Type, e DataEncoder) {
 // GetCommandDecoder ...
 func GetCommandDecoder(protoType Type, data []byte) CommandDecoder {
 	if protoType == TypeJSON {
-		return NewJSONCommandDecoder(data)
+		e := jsonCommandDecoderPool.Get()
+		if e == nil {
+			return NewJSONCommandDecoder(data)
+		}
+		commandDecoder := e.(*JSONCommandDecoder)
+		_ = commandDecoder.Reset(data)
+		return commandDecoder
 	}
-	return NewProtobufCommandDecoder(data)
+	e := protobufCommandDecoderPool.Get()
+	if e == nil {
+		return NewProtobufCommandDecoder(data)
+	}
+	commandDecoder := e.(*ProtobufCommandDecoder)
+	_ = commandDecoder.Reset(data)
+	return commandDecoder
 }
 
 // PutCommandDecoder ...
 func PutCommandDecoder(protoType Type, e CommandDecoder) {
+	if protoType == TypeJSON {
+		jsonCommandDecoderPool.Put(e)
+		return
+	}
+	protobufCommandDecoderPool.Put(e)
 }
 
 // GetResultEncoder ...

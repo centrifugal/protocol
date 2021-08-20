@@ -1,13 +1,14 @@
 package protocol
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/segmentio/encoding/json"
 )
 
 // PushDecoder ...
@@ -23,12 +24,11 @@ type PushDecoder interface {
 	DecodeDisconnect([]byte) (*Disconnect, error)
 }
 
-var _ PushDecoder = (*JSONPushDecoder)(nil)
-var _ PushDecoder = (*ProtobufPushDecoder)(nil)
+var _ PushDecoder = NewJSONPushDecoder()
+var _ PushDecoder = NewProtobufPushDecoder()
 
 // JSONPushDecoder ...
-type JSONPushDecoder struct {
-}
+type JSONPushDecoder struct{}
 
 // NewJSONPushDecoder ...
 func NewJSONPushDecoder() *JSONPushDecoder {
@@ -38,7 +38,7 @@ func NewJSONPushDecoder() *JSONPushDecoder {
 // Decode ...
 func (e *JSONPushDecoder) Decode(data []byte) (*Push, error) {
 	var m Push
-	err := json.Unmarshal(data, &m)
+	_, err := json.Parse(data, &m, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (e *JSONPushDecoder) Decode(data []byte) (*Push, error) {
 // DecodePublication ...
 func (e *JSONPushDecoder) DecodePublication(data []byte) (*Publication, error) {
 	var m Publication
-	err := json.Unmarshal(data, &m)
+	_, err := json.Parse(data, &m, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (e *JSONPushDecoder) DecodePublication(data []byte) (*Publication, error) {
 // DecodeJoin ...
 func (e *JSONPushDecoder) DecodeJoin(data []byte) (*Join, error) {
 	var m Join
-	err := json.Unmarshal(data, &m)
+	_, err := json.Parse(data, &m, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (e *JSONPushDecoder) DecodeJoin(data []byte) (*Join, error) {
 // DecodeLeave  ...
 func (e *JSONPushDecoder) DecodeLeave(data []byte) (*Leave, error) {
 	var m Leave
-	err := json.Unmarshal(data, &m)
+	_, err := json.Parse(data, &m, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -78,27 +78,27 @@ func (e *JSONPushDecoder) DecodeLeave(data []byte) (*Leave, error) {
 // DecodeMessage ...
 func (e *JSONPushDecoder) DecodeMessage(data []byte) (*Message, error) {
 	var m Message
-	err := json.Unmarshal(data, &m)
+	_, err := json.Parse(data, &m, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
 	return &m, nil
 }
 
-// DecodeUnsub ...
+// DecodeUnsubscribe ...
 func (e *JSONPushDecoder) DecodeUnsubscribe(data []byte) (*Unsubscribe, error) {
 	var m Unsubscribe
-	err := json.Unmarshal(data, &m)
+	_, err := json.Parse(data, &m, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
 	return &m, nil
 }
 
-// DecodeSub ...
+// DecodeSubscribe ...
 func (e *JSONPushDecoder) DecodeSubscribe(data []byte) (*Subscribe, error) {
 	var m Subscribe
-	err := json.Unmarshal(data, &m)
+	_, err := json.Parse(data, &m, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (e *JSONPushDecoder) DecodeSubscribe(data []byte) (*Subscribe, error) {
 // DecodeConnect ...
 func (e *JSONPushDecoder) DecodeConnect(data []byte) (*Connect, error) {
 	var m Connect
-	err := json.Unmarshal(data, &m)
+	_, err := json.Parse(data, &m, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (e *JSONPushDecoder) DecodeConnect(data []byte) (*Connect, error) {
 // DecodeDisconnect ...
 func (e *JSONPushDecoder) DecodeDisconnect(data []byte) (*Disconnect, error) {
 	var m Disconnect
-	err := json.Unmarshal(data, &m)
+	_, err := json.Parse(data, &m, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -232,30 +232,48 @@ type CommandDecoder interface {
 
 // JSONCommandDecoder ...
 type JSONCommandDecoder struct {
-	decoder *json.Decoder
+	reader    *bytes.Reader
+	bufReader *bufio.Reader
 }
 
 // NewJSONCommandDecoder ...
 func NewJSONCommandDecoder(data []byte) *JSONCommandDecoder {
+	reader := bytes.NewReader(data)
 	return &JSONCommandDecoder{
-		decoder: json.NewDecoder(bytes.NewReader(data)),
+		reader:    reader,
+		bufReader: bufio.NewReader(reader),
 	}
 }
 
 // Reset ...
 func (d *JSONCommandDecoder) Reset(data []byte) error {
-	d.decoder = json.NewDecoder(bytes.NewReader(data))
+	d.reader.Reset(data)
+	d.bufReader.Reset(d.reader)
 	return nil
 }
 
 // Decode ...
 func (d *JSONCommandDecoder) Decode() (*Command, error) {
 	var c Command
-	err := d.decoder.Decode(&c)
+	line, err := d.bufReader.ReadSlice(byte('\n'))
 	if err != nil {
+		if err == io.EOF {
+			if len(line) == 0 {
+				return nil, io.EOF
+			}
+			_, err = json.Parse(line, &c, json.ZeroCopy)
+			if err != nil {
+				return nil, err
+			}
+			return &c, io.EOF
+		}
 		return nil, err
 	}
-	return &c, nil
+	if len(line) == 0 {
+		return nil, io.EOF
+	}
+	_, err = json.Parse(line, &c, json.ZeroCopy)
+	return &c, err
 }
 
 // ProtobufCommandDecoder ...
@@ -283,13 +301,25 @@ func (d *ProtobufCommandDecoder) Decode() (*Command, error) {
 	if d.offset < len(d.data) {
 		var c Command
 		l, n := binary.Uvarint(d.data[d.offset:])
-		cmdBytes := d.data[d.offset+n : d.offset+n+int(l)]
-		err := c.Unmarshal(cmdBytes)
-		if err != nil {
-			return nil, err
+		if l == 0 && n <= 0 {
+			return nil, io.EOF
 		}
-		d.offset = d.offset + n + int(l)
-		return &c, nil
+		from := d.offset + n
+		to := d.offset + n + int(l)
+		if to <= len(d.data) {
+			cmdBytes := d.data[from:to]
+			err := c.Unmarshal(cmdBytes)
+			if err != nil {
+				return nil, err
+			}
+			d.offset = to
+			if d.offset == len(d.data) {
+				err = io.EOF
+			}
+			return &c, err
+		} else {
+			return nil, io.ErrShortBuffer
+		}
 	}
 	return nil, io.EOF
 }
@@ -322,7 +352,7 @@ func NewJSONParamsDecoder() *JSONParamsDecoder {
 func (d *JSONParamsDecoder) DecodeConnect(data []byte) (*ConnectRequest, error) {
 	var p ConnectRequest
 	if data != nil {
-		err := json.Unmarshal(data, &p)
+		_, err := json.Parse(data, &p, json.ZeroCopy)
 		if err != nil {
 			return nil, err
 		}
@@ -333,7 +363,7 @@ func (d *JSONParamsDecoder) DecodeConnect(data []byte) (*ConnectRequest, error) 
 // DecodeRefresh ...
 func (d *JSONParamsDecoder) DecodeRefresh(data []byte) (*RefreshRequest, error) {
 	var p RefreshRequest
-	err := json.Unmarshal(data, &p)
+	_, err := json.Parse(data, &p, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +373,7 @@ func (d *JSONParamsDecoder) DecodeRefresh(data []byte) (*RefreshRequest, error) 
 // DecodeSubscribe ...
 func (d *JSONParamsDecoder) DecodeSubscribe(data []byte) (*SubscribeRequest, error) {
 	var p SubscribeRequest
-	err := json.Unmarshal(data, &p)
+	_, err := json.Parse(data, &p, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +383,7 @@ func (d *JSONParamsDecoder) DecodeSubscribe(data []byte) (*SubscribeRequest, err
 // DecodeSubRefresh ...
 func (d *JSONParamsDecoder) DecodeSubRefresh(data []byte) (*SubRefreshRequest, error) {
 	var p SubRefreshRequest
-	err := json.Unmarshal(data, &p)
+	_, err := json.Parse(data, &p, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -363,7 +393,7 @@ func (d *JSONParamsDecoder) DecodeSubRefresh(data []byte) (*SubRefreshRequest, e
 // DecodeUnsubscribe ...
 func (d *JSONParamsDecoder) DecodeUnsubscribe(data []byte) (*UnsubscribeRequest, error) {
 	var p UnsubscribeRequest
-	err := json.Unmarshal(data, &p)
+	_, err := json.Parse(data, &p, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +403,7 @@ func (d *JSONParamsDecoder) DecodeUnsubscribe(data []byte) (*UnsubscribeRequest,
 // DecodePublish ...
 func (d *JSONParamsDecoder) DecodePublish(data []byte) (*PublishRequest, error) {
 	var p PublishRequest
-	err := json.Unmarshal(data, &p)
+	_, err := json.Parse(data, &p, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +413,7 @@ func (d *JSONParamsDecoder) DecodePublish(data []byte) (*PublishRequest, error) 
 // DecodePresence ...
 func (d *JSONParamsDecoder) DecodePresence(data []byte) (*PresenceRequest, error) {
 	var p PresenceRequest
-	err := json.Unmarshal(data, &p)
+	_, err := json.Parse(data, &p, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +423,7 @@ func (d *JSONParamsDecoder) DecodePresence(data []byte) (*PresenceRequest, error
 // DecodePresenceStats ...
 func (d *JSONParamsDecoder) DecodePresenceStats(data []byte) (*PresenceStatsRequest, error) {
 	var p PresenceStatsRequest
-	err := json.Unmarshal(data, &p)
+	_, err := json.Parse(data, &p, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -403,7 +433,7 @@ func (d *JSONParamsDecoder) DecodePresenceStats(data []byte) (*PresenceStatsRequ
 // DecodeHistory ...
 func (d *JSONParamsDecoder) DecodeHistory(data []byte) (*HistoryRequest, error) {
 	var p HistoryRequest
-	err := json.Unmarshal(data, &p)
+	_, err := json.Parse(data, &p, json.ZeroCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -414,7 +444,7 @@ func (d *JSONParamsDecoder) DecodeHistory(data []byte) (*HistoryRequest, error) 
 func (d *JSONParamsDecoder) DecodePing(data []byte) (*PingRequest, error) {
 	var p PingRequest
 	if data != nil {
-		err := json.Unmarshal(data, &p)
+		_, err := json.Parse(data, &p, json.ZeroCopy)
 		if err != nil {
 			return nil, err
 		}
@@ -426,7 +456,7 @@ func (d *JSONParamsDecoder) DecodePing(data []byte) (*PingRequest, error) {
 func (d *JSONParamsDecoder) DecodeRPC(data []byte) (*RPCRequest, error) {
 	var p RPCRequest
 	if data != nil {
-		err := json.Unmarshal(data, &p)
+		_, err := json.Parse(data, &p, json.ZeroCopy)
 		if err != nil {
 			return nil, err
 		}
@@ -438,7 +468,7 @@ func (d *JSONParamsDecoder) DecodeRPC(data []byte) (*RPCRequest, error) {
 func (d *JSONParamsDecoder) DecodeSend(data []byte) (*SendRequest, error) {
 	var p SendRequest
 	if data != nil {
-		err := json.Unmarshal(data, &p)
+		_, err := json.Parse(data, &p, json.ZeroCopy)
 		if err != nil {
 			return nil, err
 		}
@@ -582,6 +612,8 @@ type ReplyDecoder interface {
 	Decode() (*Reply, error)
 }
 
+var _ ReplyDecoder = NewJSONReplyDecoder(nil)
+
 // JSONReplyDecoder ...
 type JSONReplyDecoder struct {
 	decoder *json.Decoder
@@ -609,6 +641,8 @@ func (d *JSONReplyDecoder) Decode() (*Reply, error) {
 	}
 	return &c, nil
 }
+
+var _ ReplyDecoder = NewProtobufReplyDecoder(nil)
 
 // ProtobufReplyDecoder ...
 type ProtobufReplyDecoder struct {
@@ -651,6 +685,8 @@ type ResultDecoder interface {
 	Decode([]byte, interface{}) error
 }
 
+var _ ResultDecoder = NewJSONResultDecoder()
+
 // JSONResultDecoder ...
 type JSONResultDecoder struct{}
 
@@ -660,9 +696,12 @@ func NewJSONResultDecoder() *JSONResultDecoder {
 }
 
 // Decode ...
-func (e *JSONResultDecoder) Decode(data []byte, dest interface{}) error {
-	return json.Unmarshal(data, dest)
+func (e *JSONResultDecoder) Decode(data []byte, dst interface{}) error {
+	_, err := json.Parse(data, dst, json.ZeroCopy)
+	return err
 }
+
+var _ ResultDecoder = NewProtobufResultDecoder()
 
 // ProtobufResultDecoder ...
 type ProtobufResultDecoder struct{}
@@ -673,8 +712,8 @@ func NewProtobufResultDecoder() *ProtobufResultDecoder {
 }
 
 // Decode ...
-func (e *ProtobufResultDecoder) Decode(data []byte, dest interface{}) error {
-	m, ok := dest.(proto.Unmarshaler)
+func (e *ProtobufResultDecoder) Decode(data []byte, dst interface{}) error {
+	m, ok := dst.(proto.Unmarshaler)
 	if !ok {
 		return fmt.Errorf("can not unmarshal type from Protobuf")
 	}

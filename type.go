@@ -112,8 +112,7 @@ func GetResultEncoder(protoType Type) ResultEncoder {
 }
 
 // PutResultEncoder ...
-func PutResultEncoder(protoType Type, e ReplyEncoder) {
-}
+func PutResultEncoder(_ Type, _ ReplyEncoder) {}
 
 // GetParamsDecoder ...
 func GetParamsDecoder(protoType Type) ParamsDecoder {
@@ -124,5 +123,4 @@ func GetParamsDecoder(protoType Type) ParamsDecoder {
 }
 
 // PutParamsDecoder ...
-func PutParamsDecoder(protoType Type, e ParamsDecoder) {
-}
+func PutParamsDecoder(_ Type, _ ParamsDecoder) {}

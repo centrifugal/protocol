@@ -1,1 +1,1 @@
-This folder contains actual Centrifuge protocol Protobuf definitions.
+This folder contains the latest Centrifuge protocol Protobuf definitions.

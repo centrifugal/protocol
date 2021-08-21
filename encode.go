@@ -49,7 +49,7 @@ func NewJSONPushEncoder() *JSONPushEncoder {
 	return &JSONPushEncoder{}
 }
 
-// Encode ...
+// Encode Push to bytes.
 func (e *JSONPushEncoder) Encode(message *Push) ([]byte, error) {
 	// Check data is valid JSON.
 	if err := isValidJSON(message.Data); err != nil {
@@ -60,63 +60,63 @@ func (e *JSONPushEncoder) Encode(message *Push) ([]byte, error) {
 	return jw.BuildBytes()
 }
 
-// EncodePublication ...
+// EncodePublication to bytes.
 func (e *JSONPushEncoder) EncodePublication(message *Publication) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeMessage ...
+// EncodeMessage to bytes.
 func (e *JSONPushEncoder) EncodeMessage(message *Message) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeJoin ...
+// EncodeJoin to bytes.
 func (e *JSONPushEncoder) EncodeJoin(message *Join) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeLeave ...
+// EncodeLeave to bytes.
 func (e *JSONPushEncoder) EncodeLeave(message *Leave) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeUnsubscribe ...
+// EncodeUnsubscribe to bytes.
 func (e *JSONPushEncoder) EncodeUnsubscribe(message *Unsubscribe) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeSubscribe ...
+// EncodeSubscribe to bytes.
 func (e *JSONPushEncoder) EncodeSubscribe(message *Subscribe) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeConnect ...
+// EncodeConnect to bytes.
 func (e *JSONPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeDisconnect ...
+// EncodeDisconnect to bytes.
 func (e *JSONPushEncoder) EncodeDisconnect(message *Disconnect) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeRefresh ...
+// EncodeRefresh to bytes.
 func (e *JSONPushEncoder) EncodeRefresh(message *Refresh) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
@@ -132,52 +132,52 @@ func NewProtobufPushEncoder() *ProtobufPushEncoder {
 	return &ProtobufPushEncoder{}
 }
 
-// Encode ...
+// Encode Push to bytes.
 func (e *ProtobufPushEncoder) Encode(message *Push) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodePublication ...
+// EncodePublication to bytes.
 func (e *ProtobufPushEncoder) EncodePublication(message *Publication) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeMessage ...
+// EncodeMessage to bytes.
 func (e *ProtobufPushEncoder) EncodeMessage(message *Message) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeJoin ...
+// EncodeJoin to bytes.
 func (e *ProtobufPushEncoder) EncodeJoin(message *Join) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeLeave ...
+// EncodeLeave to bytes.
 func (e *ProtobufPushEncoder) EncodeLeave(message *Leave) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeUnsubscribe ...
+// EncodeUnsubscribe to bytes.
 func (e *ProtobufPushEncoder) EncodeUnsubscribe(message *Unsubscribe) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeSubscribe ...
+// EncodeSubscribe to bytes.
 func (e *ProtobufPushEncoder) EncodeSubscribe(message *Subscribe) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeConnect ...
+// EncodeConnect to bytes.
 func (e *ProtobufPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeDisconnect ...
+// EncodeDisconnect to bytes.
 func (e *ProtobufPushEncoder) EncodeDisconnect(message *Disconnect) ([]byte, error) {
 	return message.Marshal()
 }
 
-// EncodeRefresh ...
+// EncodeRefresh to bytes.
 func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh) ([]byte, error) {
 	return message.Marshal()
 }
@@ -195,7 +195,7 @@ func NewJSONReplyEncoder() *JSONReplyEncoder {
 	return &JSONReplyEncoder{}
 }
 
-// Encode ...
+// Encode Reply to bytes.
 func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
 	if r.Id != 0 {
 		// Only check command result reply. Push reply JSON validation is done in PushEncoder.
@@ -216,7 +216,7 @@ func NewProtobufReplyEncoder() *ProtobufReplyEncoder {
 	return &ProtobufReplyEncoder{}
 }
 
-// Encode ...
+// Encode Reply to bytes.
 func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
 	return r.Marshal()
 }

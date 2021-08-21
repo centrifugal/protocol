@@ -6,6 +6,7 @@ which protoc
 which protoc-gen-gogofaster
 which gomplate
 which easyjson
+which goimports
 
 gomplate -f client.template > definitions/client.proto
 GOGO=1 gomplate -f client.template > client.proto

@@ -81,7 +81,7 @@ message Leave {
 }
 
 message Unsubscribe {
-    bool resubscribe =1{{if env.Getenv "GOGO"}} [(gogoproto.jsontag) = "resubscribe,omitempty"]{{end}};
+    // Field 1 removed (bool resubscribe).
 }
 
 message Subscribe {

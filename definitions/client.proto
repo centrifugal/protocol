@@ -75,7 +75,7 @@ message Leave {
 }
 
 message Unsubscribe {
-    bool resubscribe =1;
+    // Field 1 removed (bool resubscribe).
 }
 
 message Subscribe {

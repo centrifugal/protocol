@@ -133,8 +133,6 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild2(in *jlexer.Lexer, 
 			continue
 		}
 		switch key {
-		case "resubscribe":
-			out.Resubscribe = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -149,12 +147,6 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild2(out *writer, in Un
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Resubscribe {
-		const prefix string = ",\"resubscribe\":"
-		first = false
-		out.RawString(prefix[1:])
-		out.Bool(bool(in.Resubscribe))
-	}
 	out.RawByte('}')
 }
 

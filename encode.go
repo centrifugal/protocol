@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
 	fastJSON "github.com/segmentio/encoding/json"
 )
 
@@ -134,52 +133,52 @@ func NewProtobufPushEncoder() *ProtobufPushEncoder {
 
 // Encode Push to bytes.
 func (e *ProtobufPushEncoder) Encode(message *Push) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // EncodePublication to bytes.
 func (e *ProtobufPushEncoder) EncodePublication(message *Publication) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // EncodeMessage to bytes.
 func (e *ProtobufPushEncoder) EncodeMessage(message *Message) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // EncodeJoin to bytes.
 func (e *ProtobufPushEncoder) EncodeJoin(message *Join) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // EncodeLeave to bytes.
 func (e *ProtobufPushEncoder) EncodeLeave(message *Leave) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // EncodeUnsubscribe to bytes.
 func (e *ProtobufPushEncoder) EncodeUnsubscribe(message *Unsubscribe) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // EncodeSubscribe to bytes.
 func (e *ProtobufPushEncoder) EncodeSubscribe(message *Subscribe) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // EncodeConnect to bytes.
 func (e *ProtobufPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // EncodeDisconnect to bytes.
 func (e *ProtobufPushEncoder) EncodeDisconnect(message *Disconnect) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // EncodeRefresh to bytes.
 func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh) ([]byte, error) {
-	return message.Marshal()
+	return message.MarshalVT()
 }
 
 // ReplyEncoder ...
@@ -218,7 +217,7 @@ func NewProtobufReplyEncoder() *ProtobufReplyEncoder {
 
 // Encode Reply to bytes.
 func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
-	return r.Marshal()
+	return r.MarshalVT()
 }
 
 // DataEncoder ...
@@ -405,57 +404,57 @@ func NewProtobufResultEncoder() *ProtobufResultEncoder {
 
 // EncodeConnectResult ...
 func (e *ProtobufResultEncoder) EncodeConnectResult(res *ConnectResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodeRefreshResult ...
 func (e *ProtobufResultEncoder) EncodeRefreshResult(res *RefreshResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodeSubscribeResult ...
 func (e *ProtobufResultEncoder) EncodeSubscribeResult(res *SubscribeResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodeSubRefreshResult ...
 func (e *ProtobufResultEncoder) EncodeSubRefreshResult(res *SubRefreshResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodeUnsubscribeResult ...
 func (e *ProtobufResultEncoder) EncodeUnsubscribeResult(res *UnsubscribeResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodePublishResult ...
 func (e *ProtobufResultEncoder) EncodePublishResult(res *PublishResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodePresenceResult ...
 func (e *ProtobufResultEncoder) EncodePresenceResult(res *PresenceResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodePresenceStatsResult ...
 func (e *ProtobufResultEncoder) EncodePresenceStatsResult(res *PresenceStatsResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodeHistoryResult ...
 func (e *ProtobufResultEncoder) EncodeHistoryResult(res *HistoryResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodePingResult ...
 func (e *ProtobufResultEncoder) EncodePingResult(res *PingResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // EncodeRPCResult ...
 func (e *ProtobufResultEncoder) EncodeRPCResult(res *RPCResult) ([]byte, error) {
-	return res.Marshal()
+	return res.MarshalVT()
 }
 
 // CommandEncoder ...
@@ -490,7 +489,7 @@ func NewProtobufCommandEncoder() *ProtobufCommandEncoder {
 
 // Encode ...
 func (e *ProtobufCommandEncoder) Encode(cmd *Command) ([]byte, error) {
-	commandBytes, err := cmd.Marshal()
+	commandBytes, err := cmd.MarshalVT()
 	if err != nil {
 		return nil, err
 	}
@@ -532,11 +531,15 @@ func NewProtobufParamsEncoder() *ProtobufParamsEncoder {
 	return &ProtobufParamsEncoder{}
 }
 
+type vtMarshaler interface {
+	MarshalVT() (dAtA []byte, err error)
+}
+
 // Encode ...
 func (d *ProtobufParamsEncoder) Encode(r interface{}) ([]byte, error) {
-	m, ok := r.(proto.Marshaler)
+	m, ok := r.(vtMarshaler)
 	if !ok {
 		return nil, fmt.Errorf("can not marshal type %T to Protobuf", r)
 	}
-	return m.Marshal()
+	return m.MarshalVT()
 }

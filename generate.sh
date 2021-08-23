@@ -10,7 +10,6 @@ which protoc
 which gomodifytype
 which gomodifytags
 protoc-gen-go --version
-protoc-gen-go-grpc --version
 which protoc-gen-go-vtproto
 which easyjson
 

@@ -21,8 +21,7 @@ protoc --go_out=. --plugin protoc-gen-go=${GOBIN}/protoc-gen-go --go-vtproto_out
 
 gomodifytype -file client.pb.go -all -w -from "[]byte" -to "Raw"
 
-echo "replacing tags of structs..."
-
+echo "replacing tags of structs for JSON backwards compatibility..."
 gomodifytags -file client.pb.go -field User -struct ClientInfo -all -w -remove-options json=omitempty >/dev/null
 gomodifytags -file client.pb.go -field Client -struct ClientInfo -all -w -remove-options json=omitempty >/dev/null
 gomodifytags -file client.pb.go -field Presence -struct PresenceResult -all -w -remove-options json=omitempty >/dev/null
@@ -50,4 +49,5 @@ find . -name 'client.pb_easyjson.go' -print0 | xargs -0 sed -i "" "s/jwriter\.N/
 # cleanup formatting.
 goimports -w client.pb_easyjson.go
 
+# Copy to definitions folder for docs link backwards compatibility.
 cp client.proto definitions/client.proto

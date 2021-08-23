@@ -95,7 +95,7 @@ func BenchmarkReplyProtobufUnmarshal(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
-	data, _ := params.Marshal()
+	data, _ := params.MarshalVT()
 	cmd := &Command{
 		Id:     1,
 		Method: Command_CONNECT,
@@ -114,7 +114,7 @@ func BenchmarkReplyProtobufUnmarshalParallel(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
-	data, _ := params.Marshal()
+	data, _ := params.MarshalVT()
 	cmd := &Command{
 		Id:     1,
 		Method: Command_CONNECT,

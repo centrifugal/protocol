@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/segmentio/encoding/json"
 )
 
@@ -137,7 +136,7 @@ func NewProtobufPushDecoder() *ProtobufPushDecoder {
 // Decode ...
 func (e *ProtobufPushDecoder) Decode(data []byte) (*Push, error) {
 	var m Push
-	err := m.Unmarshal(data)
+	err := m.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +146,7 @@ func (e *ProtobufPushDecoder) Decode(data []byte) (*Push, error) {
 // DecodePublication ...
 func (e *ProtobufPushDecoder) DecodePublication(data []byte) (*Publication, error) {
 	var m Publication
-	err := m.Unmarshal(data)
+	err := m.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +156,7 @@ func (e *ProtobufPushDecoder) DecodePublication(data []byte) (*Publication, erro
 // DecodeJoin ...
 func (e *ProtobufPushDecoder) DecodeJoin(data []byte) (*Join, error) {
 	var m Join
-	err := m.Unmarshal(data)
+	err := m.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +166,7 @@ func (e *ProtobufPushDecoder) DecodeJoin(data []byte) (*Join, error) {
 // DecodeLeave  ...
 func (e *ProtobufPushDecoder) DecodeLeave(data []byte) (*Leave, error) {
 	var m Leave
-	err := m.Unmarshal(data)
+	err := m.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +176,7 @@ func (e *ProtobufPushDecoder) DecodeLeave(data []byte) (*Leave, error) {
 // DecodeMessage ...
 func (e *ProtobufPushDecoder) DecodeMessage(data []byte) (*Message, error) {
 	var m Message
-	err := m.Unmarshal(data)
+	err := m.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +186,7 @@ func (e *ProtobufPushDecoder) DecodeMessage(data []byte) (*Message, error) {
 // DecodeUnsubscribe ...
 func (e *ProtobufPushDecoder) DecodeUnsubscribe(data []byte) (*Unsubscribe, error) {
 	var m Unsubscribe
-	err := m.Unmarshal(data)
+	err := m.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +196,7 @@ func (e *ProtobufPushDecoder) DecodeUnsubscribe(data []byte) (*Unsubscribe, erro
 // DecodeSubscribe ...
 func (e *ProtobufPushDecoder) DecodeSubscribe(data []byte) (*Subscribe, error) {
 	var m Subscribe
-	err := m.Unmarshal(data)
+	err := m.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +206,7 @@ func (e *ProtobufPushDecoder) DecodeSubscribe(data []byte) (*Subscribe, error) {
 // DecodeConnect ...
 func (e *ProtobufPushDecoder) DecodeConnect(data []byte) (*Connect, error) {
 	var m Connect
-	err := m.Unmarshal(data)
+	err := m.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +216,7 @@ func (e *ProtobufPushDecoder) DecodeConnect(data []byte) (*Connect, error) {
 // DecodeDisconnect ...
 func (e *ProtobufPushDecoder) DecodeDisconnect(data []byte) (*Disconnect, error) {
 	var m Disconnect
-	err := m.Unmarshal(data)
+	err := m.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +307,7 @@ func (d *ProtobufCommandDecoder) Decode() (*Command, error) {
 		to := d.offset + n + int(l)
 		if to <= len(d.data) {
 			cmdBytes := d.data[from:to]
-			err := c.Unmarshal(cmdBytes)
+			err := c.UnmarshalVT(cmdBytes)
 			if err != nil {
 				return nil, err
 			}
@@ -488,7 +487,7 @@ func NewProtobufParamsDecoder() *ProtobufParamsDecoder {
 func (d *ProtobufParamsDecoder) DecodeConnect(data []byte) (*ConnectRequest, error) {
 	var p ConnectRequest
 	if data != nil {
-		err := p.Unmarshal(data)
+		err := p.UnmarshalVT(data)
 		if err != nil {
 			return nil, err
 		}
@@ -499,7 +498,7 @@ func (d *ProtobufParamsDecoder) DecodeConnect(data []byte) (*ConnectRequest, err
 // DecodeRefresh ...
 func (d *ProtobufParamsDecoder) DecodeRefresh(data []byte) (*RefreshRequest, error) {
 	var p RefreshRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +508,7 @@ func (d *ProtobufParamsDecoder) DecodeRefresh(data []byte) (*RefreshRequest, err
 // DecodeSubscribe ...
 func (d *ProtobufParamsDecoder) DecodeSubscribe(data []byte) (*SubscribeRequest, error) {
 	var p SubscribeRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -519,7 +518,7 @@ func (d *ProtobufParamsDecoder) DecodeSubscribe(data []byte) (*SubscribeRequest,
 // DecodeSubRefresh ...
 func (d *ProtobufParamsDecoder) DecodeSubRefresh(data []byte) (*SubRefreshRequest, error) {
 	var p SubRefreshRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -529,7 +528,7 @@ func (d *ProtobufParamsDecoder) DecodeSubRefresh(data []byte) (*SubRefreshReques
 // DecodeUnsubscribe ...
 func (d *ProtobufParamsDecoder) DecodeUnsubscribe(data []byte) (*UnsubscribeRequest, error) {
 	var p UnsubscribeRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -539,7 +538,7 @@ func (d *ProtobufParamsDecoder) DecodeUnsubscribe(data []byte) (*UnsubscribeRequ
 // DecodePublish ...
 func (d *ProtobufParamsDecoder) DecodePublish(data []byte) (*PublishRequest, error) {
 	var p PublishRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -549,7 +548,7 @@ func (d *ProtobufParamsDecoder) DecodePublish(data []byte) (*PublishRequest, err
 // DecodePresence ...
 func (d *ProtobufParamsDecoder) DecodePresence(data []byte) (*PresenceRequest, error) {
 	var p PresenceRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -559,7 +558,7 @@ func (d *ProtobufParamsDecoder) DecodePresence(data []byte) (*PresenceRequest, e
 // DecodePresenceStats ...
 func (d *ProtobufParamsDecoder) DecodePresenceStats(data []byte) (*PresenceStatsRequest, error) {
 	var p PresenceStatsRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -569,7 +568,7 @@ func (d *ProtobufParamsDecoder) DecodePresenceStats(data []byte) (*PresenceStats
 // DecodeHistory ...
 func (d *ProtobufParamsDecoder) DecodeHistory(data []byte) (*HistoryRequest, error) {
 	var p HistoryRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -579,7 +578,7 @@ func (d *ProtobufParamsDecoder) DecodeHistory(data []byte) (*HistoryRequest, err
 // DecodePing ...
 func (d *ProtobufParamsDecoder) DecodePing(data []byte) (*PingRequest, error) {
 	var p PingRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -589,7 +588,7 @@ func (d *ProtobufParamsDecoder) DecodePing(data []byte) (*PingRequest, error) {
 // DecodeRPC ...
 func (d *ProtobufParamsDecoder) DecodeRPC(data []byte) (*RPCRequest, error) {
 	var p RPCRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -599,7 +598,7 @@ func (d *ProtobufParamsDecoder) DecodeRPC(data []byte) (*RPCRequest, error) {
 // DecodeSend ...
 func (d *ProtobufParamsDecoder) DecodeSend(data []byte) (*SendRequest, error) {
 	var p SendRequest
-	err := p.Unmarshal(data)
+	err := p.UnmarshalVT(data)
 	if err != nil {
 		return nil, err
 	}
@@ -670,7 +669,7 @@ func (d *ProtobufReplyDecoder) Decode() (*Reply, error) {
 		var c Reply
 		l, n := binary.Uvarint(d.data[d.offset:])
 		replyBytes := d.data[d.offset+n : d.offset+n+int(l)]
-		err := c.Unmarshal(replyBytes)
+		err := c.UnmarshalVT(replyBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -711,11 +710,15 @@ func NewProtobufResultDecoder() *ProtobufResultDecoder {
 	return &ProtobufResultDecoder{}
 }
 
+type vtUnmarshaler interface {
+	UnmarshalVT([]byte) error
+}
+
 // Decode ...
 func (e *ProtobufResultDecoder) Decode(data []byte, dst interface{}) error {
-	m, ok := dst.(proto.Unmarshaler)
+	m, ok := dst.(vtUnmarshaler)
 	if !ok {
 		return fmt.Errorf("can not unmarshal type from Protobuf")
 	}
-	return m.Unmarshal(data)
+	return m.UnmarshalVT(data)
 }

@@ -97,8 +97,9 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild1(out *writer, in Un
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Channel != "" {
 		const prefix string = ",\"channel\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Channel))
 	}
@@ -658,14 +659,20 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild7(out *writer, in Su
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Channel != "" {
 		const prefix string = ",\"channel\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Channel))
 	}
-	{
+	if in.Token != "" {
 		const prefix string = ",\"token\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.String(string(in.Token))
 	}
 	out.RawByte('}')
@@ -782,8 +789,9 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild9(out *writer, in Se
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if len(in.Data) != 0 {
 		const prefix string = ",\"data\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.Raw((in.Data).MarshalJSON())
 	}
@@ -927,24 +935,40 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild11(out *writer, in R
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Client != "" {
 		const prefix string = ",\"client\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Client))
 	}
-	{
+	if in.Version != "" {
 		const prefix string = ",\"version\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.String(string(in.Version))
 	}
 	if in.Expires {
 		const prefix string = ",\"expires\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Bool(bool(in.Expires))
 	}
 	if in.Ttl != 0 {
 		const prefix string = ",\"ttl\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Uint32(uint32(in.Ttl))
 	}
 	out.RawByte('}')
@@ -994,8 +1018,9 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild12(out *writer, in R
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Token != "" {
 		const prefix string = ",\"token\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Token))
 	}
@@ -1170,14 +1195,20 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild15(out *writer, in R
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if len(in.Data) != 0 {
 		const prefix string = ",\"data\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.Raw((in.Data).MarshalJSON())
 	}
 	if in.Method != "" {
 		const prefix string = ",\"method\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.String(string(in.Method))
 	}
 	out.RawByte('}')
@@ -1249,7 +1280,7 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild16(out *writer, in P
 		}
 		out.String(string(in.Channel))
 	}
-	{
+	if len(in.Data) != 0 {
 		const prefix string = ",\"data\":"
 		if first {
 			first = false
@@ -1355,14 +1386,20 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild18(out *writer, in P
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Channel != "" {
 		const prefix string = ",\"channel\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Channel))
 	}
-	{
+	if len(in.Data) != 0 {
 		const prefix string = ",\"data\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Raw((in.Data).MarshalJSON())
 	}
 	out.RawByte('}')
@@ -1426,19 +1463,30 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if len(in.Data) != 0 {
 		const prefix string = ",\"data\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.Raw((in.Data).MarshalJSON())
 	}
 	if in.Info != nil {
 		const prefix string = ",\"info\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		(*in.Info).MarshalEasyJSON(out)
 	}
 	if in.Offset != 0 {
 		const prefix string = ",\"offset\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Uint64(uint64(in.Offset))
 	}
 	out.RawByte('}')
@@ -1547,8 +1595,9 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild21(out *writer, in P
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Channel != "" {
 		const prefix string = ",\"channel\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Channel))
 	}
@@ -1693,8 +1742,9 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild23(out *writer, in P
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Channel != "" {
 		const prefix string = ",\"channel\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Channel))
 	}
@@ -1837,8 +1887,9 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild26(out *writer, in M
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if len(in.Data) != 0 {
 		const prefix string = ",\"data\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.Raw((in.Data).MarshalJSON())
 	}
@@ -1874,7 +1925,15 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild27(in *jlexer.Lexer,
 		}
 		switch key {
 		case "info":
-			(out.Info).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Info = nil
+			} else {
+				if out.Info == nil {
+					out.Info = new(ClientInfo)
+				}
+				(*out.Info).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1889,10 +1948,11 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild27(out *writer, in L
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Info != nil {
 		const prefix string = ",\"info\":"
+		first = false
 		out.RawString(prefix[1:])
-		(in.Info).MarshalEasyJSON(out)
+		(*in.Info).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -1926,7 +1986,15 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild28(in *jlexer.Lexer,
 		}
 		switch key {
 		case "info":
-			(out.Info).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Info = nil
+			} else {
+				if out.Info == nil {
+					out.Info = new(ClientInfo)
+				}
+				(*out.Info).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1941,10 +2009,11 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild28(out *writer, in J
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Info != nil {
 		const prefix string = ",\"info\":"
+		first = false
 		out.RawString(prefix[1:])
-		(in.Info).MarshalEasyJSON(out)
+		(*in.Info).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -2115,19 +2184,30 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild30(out *writer, in H
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Channel != "" {
 		const prefix string = ",\"channel\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Channel))
 	}
 	if in.Limit != 0 {
 		const prefix string = ",\"limit\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Int32(int32(in.Limit))
 	}
 	if in.Since != nil {
 		const prefix string = ",\"since\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		(*in.Since).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
@@ -2179,14 +2259,20 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild31(out *writer, in E
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Code != 0 {
 		const prefix string = ",\"code\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.Uint32(uint32(in.Code))
 	}
-	{
+	if in.Message != "" {
 		const prefix string = ",\"message\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.String(string(in.Message))
 	}
 	out.RawByte('}')
@@ -2351,34 +2437,60 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild33(out *writer, in C
 	out.RawByte('{')
 	first := true
 	_ = first
-	{
+	if in.Client != "" {
 		const prefix string = ",\"client\":"
+		first = false
 		out.RawString(prefix[1:])
 		out.String(string(in.Client))
 	}
 	if in.Version != "" {
 		const prefix string = ",\"version\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.String(string(in.Version))
 	}
 	if in.Expires {
 		const prefix string = ",\"expires\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Bool(bool(in.Expires))
 	}
 	if in.Ttl != 0 {
 		const prefix string = ",\"ttl\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Uint32(uint32(in.Ttl))
 	}
 	if len(in.Data) != 0 {
 		const prefix string = ",\"data\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Raw((in.Data).MarshalJSON())
 	}
 	if len(in.Subs) != 0 {
 		const prefix string = ",\"subs\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		{
 			out.RawByte('{')
 			v10First := true

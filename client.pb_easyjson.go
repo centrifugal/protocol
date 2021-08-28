@@ -2170,6 +2170,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild30(in *jlexer.Lexer,
 				}
 				(*out.Since).UnmarshalEasyJSON(in)
 			}
+		case "reverse":
+			out.Reverse = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -2209,6 +2211,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild30(out *writer, in H
 			out.RawString(prefix)
 		}
 		(*in.Since).MarshalEasyJSON(out)
+	}
+	if in.Reverse {
+		const prefix string = ",\"reverse\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Reverse))
 	}
 	out.RawByte('}')
 }

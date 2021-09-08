@@ -5,12 +5,14 @@ import (
 	"strings"
 	"testing"
 
+	fastJSON "github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/require"
 )
 
-func TestEncode(t *testing.T) {
+func TestEncodeEasyJson(t *testing.T) {
 	data := []byte(`{
-  "num": "1"
+  "num": "1\n"
+
 }
 `)
 	pushEncoder := NewJSONPushEncoder()
@@ -19,13 +21,13 @@ func TestEncode(t *testing.T) {
 	}
 	res, err := pushEncoder.EncodePublication(pub)
 	require.NoError(t, err)
-
 	require.Len(t, strings.Split(string(res), "\n"), 1)
 }
 
 func TestEncodeStd(t *testing.T) {
 	data := []byte(`{
-  "num": "1"
+  "num": "1\n"
+
 }
 `)
 	pub := &Publication{
@@ -34,6 +36,20 @@ func TestEncodeStd(t *testing.T) {
 
 	res, err := json.Marshal(pub)
 	require.NoError(t, err)
+	require.Len(t, strings.Split(string(res), "\n"), 1)
+}
 
+func TestEncodeFast(t *testing.T) {
+	data := []byte(`{
+  "num": "1\n"
+
+}
+`)
+	pub := &Publication{
+		Data: data,
+	}
+
+	res, err := fastJSON.Marshal(pub)
+	require.NoError(t, err)
 	require.Len(t, strings.Split(string(res), "\n"), 1)
 }

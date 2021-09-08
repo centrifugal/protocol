@@ -55,14 +55,14 @@ func (w *writer) RawString(s string) {
 
 // Raw appends raw binary data to the buffer or sets the error if it is given. Useful for
 // calling with results of MarshalJSON-like functions.
-func (w *writer) Raw(data []byte, err error) {
+func (w *writer) Raw(src []byte, err error) {
 	switch {
 	case w.Error != nil:
 		return
 	case err != nil:
 		w.Error = err
-	case len(data) > 0:
-		_, _ = w.Buffer.Write(data)
+	case len(src) > 0:
+		_, _ = w.Buffer.Write(src)
 	default:
 		w.RawString("null")
 	}

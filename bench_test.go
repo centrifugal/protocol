@@ -13,7 +13,9 @@ func benchPayload() []byte {
 	for i := 0; i < size; i++ {
 		p = append(p, 'i')
 	}
-	return []byte(`{"input": "` + string(p) + `"}`)
+	return []byte(`{
+""input":"` + string(p) + `
+"}`)
 }
 
 var preparedPayload = benchPayload()
@@ -52,7 +54,7 @@ func BenchmarkReplyProtobufMarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, err := marshalProtobuf()
 		if err != nil {
-			b.Fail()
+			b.Fatal(err)
 		}
 	}
 	b.ReportAllocs()
@@ -64,7 +66,7 @@ func BenchmarkReplyProtobufMarshalParallel(b *testing.B) {
 		for pb.Next() {
 			_, err := marshalProtobuf()
 			if err != nil {
-				b.Fail()
+				b.Fatal(err)
 			}
 		}
 	})

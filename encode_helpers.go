@@ -79,18 +79,19 @@ func newRefreshPush(data Raw) *Push {
 	}
 }
 
-// At the moment this is hardcoded to a value which is enough for all our messages.
-// If we will have a message with field names total size greater than this value then
+// At the moment this is hardcoded to a value which should be enough for most our messages
+// sent. If we will have a message with field names total size greater than this value then
 // byte buffer won't be reused in JSON case (so need to take care of this to not loose
-// performance at some point).
-const MaxFieldsSize = 30
+// performance at some point). Would be nice to add additional size for messages like
+// Connect push which can have variable length Connect.Subs field.
+const MaxJSONPushFieldsSize = 32
 
 func EncodePublicationPush(protoType Type, channel string, message *Publication) ([]byte, error) {
 	if protoType == TypeJSON {
 		// Use branching here instead of GetPushEncoder(protoType) since otherwise
 		// Go allocates more on heap (due to interface involved).
 		pushEncoder := jsonPushEncoder
-		size := message.SizeVT() + MaxFieldsSize
+		size := message.SizeVT() + MaxJSONPushFieldsSize
 		reuse := getByteBuffer(size)
 		defer putByteBuffer(reuse)
 		data, err := pushEncoder.EncodePublication(message, reuse.B)
@@ -117,7 +118,7 @@ func EncodeJoinPush(protoType Type, channel string, message *Join) ([]byte, erro
 		// Use branching here instead of GetPushEncoder(protoType) since otherwise
 		// Go allocates more on heap (due to interface involved).
 		pushEncoder := GetPushEncoder(protoType)
-		size := message.SizeVT() + MaxFieldsSize
+		size := message.SizeVT() + MaxJSONPushFieldsSize
 		reuse := getByteBuffer(size)
 		defer putByteBuffer(reuse)
 		data, err := pushEncoder.EncodeJoin(message, reuse.B)
@@ -144,7 +145,7 @@ func EncodeLeavePush(protoType Type, channel string, message *Leave) ([]byte, er
 		// Use branching here instead of GetPushEncoder(protoType) since otherwise
 		// Go allocates more on heap (due to interface involved).
 		pushEncoder := jsonPushEncoder
-		size := message.SizeVT() + MaxFieldsSize
+		size := message.SizeVT() + MaxJSONPushFieldsSize
 		reuse := getByteBuffer(size)
 		defer putByteBuffer(reuse)
 		data, err := pushEncoder.EncodeLeave(message, reuse.B)
@@ -171,7 +172,7 @@ func EncodeMessagePush(protoType Type, message *Message) ([]byte, error) {
 		// Use branching here instead of GetPushEncoder(protoType) since otherwise
 		// Go allocates more on heap (due to interface involved).
 		pushEncoder := jsonPushEncoder
-		size := message.SizeVT() + MaxFieldsSize
+		size := message.SizeVT() + MaxJSONPushFieldsSize
 		reuse := getByteBuffer(size)
 		defer putByteBuffer(reuse)
 		data, err := pushEncoder.EncodeMessage(message, reuse.B)
@@ -198,7 +199,7 @@ func EncodeUnsubscribePush(protoType Type, channel string, message *Unsubscribe)
 		// Use branching here instead of GetPushEncoder(protoType) since otherwise
 		// Go allocates more on heap (due to interface involved).
 		pushEncoder := jsonPushEncoder
-		size := message.SizeVT() + MaxFieldsSize
+		size := message.SizeVT() + MaxJSONPushFieldsSize
 		reuse := getByteBuffer(size)
 		defer putByteBuffer(reuse)
 		data, err := pushEncoder.EncodeUnsubscribe(message, reuse.B)
@@ -225,7 +226,7 @@ func EncodeSubscribePush(protoType Type, channel string, message *Subscribe) ([]
 		// Use branching here instead of GetPushEncoder(protoType) since otherwise
 		// Go allocates more on heap (due to interface involved).
 		pushEncoder := jsonPushEncoder
-		size := message.SizeVT() + MaxFieldsSize
+		size := message.SizeVT() + MaxJSONPushFieldsSize
 		reuse := getByteBuffer(size)
 		defer putByteBuffer(reuse)
 		data, err := pushEncoder.EncodeSubscribe(message, reuse.B)
@@ -252,7 +253,7 @@ func EncodeDisconnectPush(protoType Type, message *Disconnect) ([]byte, error) {
 		// Use branching here instead of GetPushEncoder(protoType) since otherwise
 		// Go allocates more on heap (due to interface involved).
 		pushEncoder := jsonPushEncoder
-		size := message.SizeVT() + MaxFieldsSize
+		size := message.SizeVT() + MaxJSONPushFieldsSize
 		reuse := getByteBuffer(size)
 		defer putByteBuffer(reuse)
 		data, err := pushEncoder.EncodeDisconnect(message, reuse.B)
@@ -279,7 +280,7 @@ func EncodeConnectPush(protoType Type, message *Connect) ([]byte, error) {
 		// Use branching here instead of GetPushEncoder(protoType) since otherwise
 		// Go allocates more on heap (due to interface involved).
 		pushEncoder := jsonPushEncoder
-		size := message.SizeVT() + MaxFieldsSize
+		size := message.SizeVT() + MaxJSONPushFieldsSize
 		reuse := getByteBuffer(size)
 		defer putByteBuffer(reuse)
 		data, err := pushEncoder.EncodeConnect(message, reuse.B)
@@ -306,7 +307,7 @@ func EncodeRefreshPush(protoType Type, message *Refresh) ([]byte, error) {
 		// Use branching here instead of GetPushEncoder(protoType) since otherwise
 		// Go allocates more on heap (due to interface involved).
 		pushEncoder := jsonPushEncoder
-		size := message.SizeVT() + MaxFieldsSize
+		size := message.SizeVT() + MaxJSONPushFieldsSize
 		reuse := getByteBuffer(size)
 		defer putByteBuffer(reuse)
 		data, err := pushEncoder.EncodeRefresh(message, reuse.B)

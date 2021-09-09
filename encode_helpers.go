@@ -84,7 +84,7 @@ func newRefreshPush(data Raw) *Push {
 // byte buffer won't be reused in JSON case (so need to take care of this to not loose
 // performance at some point). Would be nice to add additional size for messages like
 // Connect push which can have variable length Connect.Subs field.
-const MaxJSONPushFieldsSize = 32
+const MaxJSONPushFieldsSize = 64
 
 func EncodePublicationPush(protoType Type, channel string, message *Publication) ([]byte, error) {
 	if protoType == TypeJSON {

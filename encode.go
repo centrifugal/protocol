@@ -25,15 +25,15 @@ func isValidJSON(b []byte) error {
 // PushEncoder ...
 type PushEncoder interface {
 	Encode(*Push) ([]byte, error)
-	EncodeMessage(*Message) ([]byte, error)
-	EncodePublication(*Publication) ([]byte, error)
-	EncodeJoin(*Join) ([]byte, error)
-	EncodeLeave(*Leave) ([]byte, error)
-	EncodeUnsubscribe(*Unsubscribe) ([]byte, error)
-	EncodeSubscribe(*Subscribe) ([]byte, error)
-	EncodeConnect(*Connect) ([]byte, error)
-	EncodeDisconnect(*Disconnect) ([]byte, error)
-	EncodeRefresh(*Refresh) ([]byte, error)
+	EncodeMessage(*Message, ...[]byte) ([]byte, error)
+	EncodePublication(*Publication, ...[]byte) ([]byte, error)
+	EncodeJoin(*Join, ...[]byte) ([]byte, error)
+	EncodeLeave(*Leave, ...[]byte) ([]byte, error)
+	EncodeUnsubscribe(*Unsubscribe, ...[]byte) ([]byte, error)
+	EncodeSubscribe(*Subscribe, ...[]byte) ([]byte, error)
+	EncodeConnect(*Connect, ...[]byte) ([]byte, error)
+	EncodeDisconnect(*Disconnect, ...[]byte) ([]byte, error)
+	EncodeRefresh(*Refresh, ...[]byte) ([]byte, error)
 }
 
 var _ PushEncoder = (*JSONPushEncoder)(nil)
@@ -60,66 +60,66 @@ func (e *JSONPushEncoder) Encode(message *Push) ([]byte, error) {
 }
 
 // EncodePublication to bytes.
-func (e *JSONPushEncoder) EncodePublication(message *Publication) ([]byte, error) {
+func (e *JSONPushEncoder) EncodePublication(message *Publication, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodeMessage to bytes.
-func (e *JSONPushEncoder) EncodeMessage(message *Message) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeMessage(message *Message, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodeJoin to bytes.
-func (e *JSONPushEncoder) EncodeJoin(message *Join) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeJoin(message *Join, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodeLeave to bytes.
-func (e *JSONPushEncoder) EncodeLeave(message *Leave) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeLeave(message *Leave, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodeUnsubscribe to bytes.
-func (e *JSONPushEncoder) EncodeUnsubscribe(message *Unsubscribe) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeUnsubscribe(message *Unsubscribe, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodeSubscribe to bytes.
-func (e *JSONPushEncoder) EncodeSubscribe(message *Subscribe) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeSubscribe(message *Subscribe, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodeConnect to bytes.
-func (e *JSONPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeConnect(message *Connect, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodeDisconnect to bytes.
-func (e *JSONPushEncoder) EncodeDisconnect(message *Disconnect) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeDisconnect(message *Disconnect, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // EncodeRefresh to bytes.
-func (e *JSONPushEncoder) EncodeRefresh(message *Refresh) ([]byte, error) {
+func (e *JSONPushEncoder) EncodeRefresh(message *Refresh, reuse ...[]byte) ([]byte, error) {
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return jw.BuildBytes(reuse...)
 }
 
 // ProtobufPushEncoder ...
@@ -137,47 +137,137 @@ func (e *ProtobufPushEncoder) Encode(message *Push) ([]byte, error) {
 }
 
 // EncodePublication to bytes.
-func (e *ProtobufPushEncoder) EncodePublication(message *Publication) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodePublication(message *Publication, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		size := message.SizeVT()
+		if cap(reuse[0]) >= size {
+			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			if err != nil {
+				return nil, err
+			}
+			return reuse[0][:n], nil
+		}
+	}
 	return message.MarshalVT()
 }
 
 // EncodeMessage to bytes.
-func (e *ProtobufPushEncoder) EncodeMessage(message *Message) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeMessage(message *Message, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		size := message.SizeVT()
+		if cap(reuse[0]) >= size {
+			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			if err != nil {
+				return nil, err
+			}
+			return reuse[0][:n], nil
+		}
+	}
 	return message.MarshalVT()
 }
 
 // EncodeJoin to bytes.
-func (e *ProtobufPushEncoder) EncodeJoin(message *Join) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeJoin(message *Join, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		size := message.SizeVT()
+		if cap(reuse[0]) >= size {
+			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			if err != nil {
+				return nil, err
+			}
+			return reuse[0][:n], nil
+		}
+	}
 	return message.MarshalVT()
 }
 
 // EncodeLeave to bytes.
-func (e *ProtobufPushEncoder) EncodeLeave(message *Leave) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeLeave(message *Leave, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		size := message.SizeVT()
+		if cap(reuse[0]) >= size {
+			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			if err != nil {
+				return nil, err
+			}
+			return reuse[0][:n], nil
+		}
+	}
 	return message.MarshalVT()
 }
 
 // EncodeUnsubscribe to bytes.
-func (e *ProtobufPushEncoder) EncodeUnsubscribe(message *Unsubscribe) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeUnsubscribe(message *Unsubscribe, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		size := message.SizeVT()
+		if cap(reuse[0]) >= size {
+			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			if err != nil {
+				return nil, err
+			}
+			return reuse[0][:n], nil
+		}
+	}
 	return message.MarshalVT()
 }
 
 // EncodeSubscribe to bytes.
-func (e *ProtobufPushEncoder) EncodeSubscribe(message *Subscribe) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeSubscribe(message *Subscribe, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		size := message.SizeVT()
+		if cap(reuse[0]) >= size {
+			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			if err != nil {
+				return nil, err
+			}
+			return reuse[0][:n], nil
+		}
+	}
 	return message.MarshalVT()
 }
 
 // EncodeConnect to bytes.
-func (e *ProtobufPushEncoder) EncodeConnect(message *Connect) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeConnect(message *Connect, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		size := message.SizeVT()
+		if cap(reuse[0]) >= size {
+			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			if err != nil {
+				return nil, err
+			}
+			return reuse[0][:n], nil
+		}
+	}
 	return message.MarshalVT()
 }
 
 // EncodeDisconnect to bytes.
-func (e *ProtobufPushEncoder) EncodeDisconnect(message *Disconnect) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeDisconnect(message *Disconnect, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		size := message.SizeVT()
+		if cap(reuse[0]) >= size {
+			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			if err != nil {
+				return nil, err
+			}
+			return reuse[0][:n], nil
+		}
+	}
 	return message.MarshalVT()
 }
 
 // EncodeRefresh to bytes.
-func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh) ([]byte, error) {
+func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh, reuse ...[]byte) ([]byte, error) {
+	if len(reuse) == 1 {
+		size := message.SizeVT()
+		if cap(reuse[0]) >= size {
+			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			if err != nil {
+				return nil, err
+			}
+			return reuse[0][:n], nil
+		}
+	}
 	return message.MarshalVT()
 }
 

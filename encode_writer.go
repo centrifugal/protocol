@@ -31,16 +31,23 @@ func newWriter() *writer {
 }
 
 // BuildBytes returns writer data as a single byte slice.
-func (w *writer) BuildBytes() ([]byte, error) {
+func (w *writer) BuildBytes(reuse ...[]byte) ([]byte, error) {
 	if w.Error != nil {
 		return nil, w.Error
 	}
-	cp := make([]byte, w.Buffer.Len())
-	copy(cp, w.Buffer.Bytes())
+	var ret []byte
+	size := w.Buffer.Len()
+	// If we got a buffer as argument and it is big enough, reuse it.
+	if len(reuse) == 1 && cap(reuse[0]) >= size {
+		ret = reuse[0][:0]
+	} else {
+		ret = make([]byte, 0, size)
+	}
+	ret = append(ret, w.Buffer.Bytes()...)
 	bytebufferpool.Put(w.Buffer)
 	// Make writer non-usable after building bytes - writes will panic.
 	w.Buffer = nil
-	return cp, nil
+	return ret, nil
 }
 
 // RawByte appends raw binary data to the buffer.

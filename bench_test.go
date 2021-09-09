@@ -19,51 +19,30 @@ func benchPayload() []byte {
 var preparedPayload = benchPayload()
 
 func marshalProtobuf() ([]byte, error) {
-	pushEncoder := NewProtobufPushEncoder()
 	pub := &Publication{
 		Data: preparedPayload,
 	}
-	data, err := pushEncoder.EncodePublication(pub)
-	if err != nil {
-		return nil, err
-	}
-	push := &Push{
-		Type:    Push_PUBLICATION,
-		Channel: "test",
-		Data:    data,
-	}
-	data, err = pushEncoder.Encode(push)
+	pushBytes, err := EncodePublicationPush(TypeProtobuf, "test", pub)
 	if err != nil {
 		return nil, err
 	}
 	r := &Reply{
-		Result: data,
+		Result: pushBytes,
 	}
 	encoder := NewProtobufReplyEncoder()
-	data, _ = encoder.Encode(r)
-	return data, nil
+	return encoder.Encode(r)
 }
 
 func marshalJSON() ([]byte, error) {
-	pushEncoder := NewJSONPushEncoder()
 	pub := &Publication{
 		Data: preparedPayload,
 	}
-	data, err := pushEncoder.EncodePublication(pub)
-	if err != nil {
-		return nil, err
-	}
-	push := &Push{
-		Type:    Push_PUBLICATION,
-		Channel: "test",
-		Data:    data,
-	}
-	data, err = pushEncoder.Encode(push)
+	pushBytes, err := EncodePublicationPush(TypeJSON, "test", pub)
 	if err != nil {
 		return nil, err
 	}
 	r := &Reply{
-		Result: data,
+		Result: pushBytes,
 	}
 	encoder := NewJSONReplyEncoder()
 	return encoder.Encode(r)

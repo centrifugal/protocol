@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"bytes"
 	"errors"
 )
 
@@ -15,7 +16,10 @@ func (r Raw) MarshalJSON() ([]byte, error) {
 	if r == nil {
 		return []byte("null"), nil
 	}
-	return r, nil
+	if !bytes.Contains(r, []byte("\n")) {
+		return r, nil
+	}
+	return bytes.ReplaceAll(r, []byte("\n"), []byte("")), nil
 }
 
 // UnmarshalJSON sets *r to a copy of data.

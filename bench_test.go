@@ -13,57 +13,38 @@ func benchPayload() []byte {
 	for i := 0; i < size; i++ {
 		p = append(p, 'i')
 	}
-	return []byte(`{"input": "` + string(p) + `"}`)
+	return []byte(`{
+"input":"` + string(p) + `
+"}`)
 }
 
 var preparedPayload = benchPayload()
 
 func marshalProtobuf() ([]byte, error) {
-	pushEncoder := NewProtobufPushEncoder()
 	pub := &Publication{
 		Data: preparedPayload,
 	}
-	data, err := pushEncoder.EncodePublication(pub)
-	if err != nil {
-		return nil, err
-	}
-	push := &Push{
-		Type:    Push_PUBLICATION,
-		Channel: "test",
-		Data:    data,
-	}
-	data, err = pushEncoder.Encode(push)
+	pushBytes, err := EncodePublicationPush(TypeProtobuf, "test", pub)
 	if err != nil {
 		return nil, err
 	}
 	r := &Reply{
-		Result: data,
+		Result: pushBytes,
 	}
 	encoder := NewProtobufReplyEncoder()
-	data, _ = encoder.Encode(r)
-	return data, nil
+	return encoder.Encode(r)
 }
 
 func marshalJSON() ([]byte, error) {
-	pushEncoder := NewJSONPushEncoder()
 	pub := &Publication{
 		Data: preparedPayload,
 	}
-	data, err := pushEncoder.EncodePublication(pub)
-	if err != nil {
-		return nil, err
-	}
-	push := &Push{
-		Type:    Push_PUBLICATION,
-		Channel: "test",
-		Data:    data,
-	}
-	data, err = pushEncoder.Encode(push)
+	pushBytes, err := EncodePublicationPush(TypeJSON, "test", pub)
 	if err != nil {
 		return nil, err
 	}
 	r := &Reply{
-		Result: data,
+		Result: pushBytes,
 	}
 	encoder := NewJSONReplyEncoder()
 	return encoder.Encode(r)
@@ -73,7 +54,7 @@ func BenchmarkReplyProtobufMarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, err := marshalProtobuf()
 		if err != nil {
-			b.Fail()
+			b.Fatal(err)
 		}
 	}
 	b.ReportAllocs()
@@ -85,7 +66,7 @@ func BenchmarkReplyProtobufMarshalParallel(b *testing.B) {
 		for pb.Next() {
 			_, err := marshalProtobuf()
 			if err != nil {
-				b.Fail()
+				b.Fatal(err)
 			}
 		}
 	})

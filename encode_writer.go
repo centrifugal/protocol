@@ -31,16 +31,23 @@ func newWriter() *writer {
 }
 
 // BuildBytes returns writer data as a single byte slice.
-func (w *writer) BuildBytes() ([]byte, error) {
+func (w *writer) BuildBytes(reuse ...[]byte) ([]byte, error) {
 	if w.Error != nil {
 		return nil, w.Error
 	}
-	cp := make([]byte, w.Buffer.Len())
-	copy(cp, w.Buffer.Bytes())
+	var ret []byte
+	size := w.Buffer.Len()
+	// If we got a buffer as argument and it is big enough, reuse it.
+	if len(reuse) == 1 && cap(reuse[0]) >= size {
+		ret = reuse[0][:0]
+	} else {
+		ret = make([]byte, 0, size)
+	}
+	ret = append(ret, w.Buffer.Bytes()...)
 	bytebufferpool.Put(w.Buffer)
 	// Make writer non-usable after building bytes - writes will panic.
 	w.Buffer = nil
-	return cp, nil
+	return ret, nil
 }
 
 // RawByte appends raw binary data to the buffer.
@@ -55,14 +62,14 @@ func (w *writer) RawString(s string) {
 
 // Raw appends raw binary data to the buffer or sets the error if it is given. Useful for
 // calling with results of MarshalJSON-like functions.
-func (w *writer) Raw(data []byte, err error) {
+func (w *writer) Raw(src []byte, err error) {
 	switch {
 	case w.Error != nil:
 		return
 	case err != nil:
 		w.Error = err
-	case len(data) > 0:
-		_, _ = w.Buffer.Write(data)
+	case len(src) > 0:
+		_, _ = w.Buffer.Write(src)
 	default:
 		w.RawString("null")
 	}

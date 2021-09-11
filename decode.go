@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
@@ -231,48 +230,57 @@ type CommandDecoder interface {
 
 // JSONCommandDecoder ...
 type JSONCommandDecoder struct {
-	reader    *bytes.Reader
-	bufReader *bufio.Reader
+	decoder    *json.Decoder
+	reader     *bytes.Reader
+	data       []byte
+	isMultiple bool
 }
 
 // NewJSONCommandDecoder ...
 func NewJSONCommandDecoder(data []byte) *JSONCommandDecoder {
+	isMultiple := bytes.Contains(data, []byte("\n"))
+	var decoder *json.Decoder
 	reader := bytes.NewReader(data)
+	if isMultiple {
+		decoder = json.NewDecoder(reader)
+	}
 	return &JSONCommandDecoder{
-		reader:    reader,
-		bufReader: bufio.NewReader(reader),
+		decoder:    decoder,
+		reader:     reader,
+		data:       data,
+		isMultiple: isMultiple,
 	}
 }
 
 // Reset ...
 func (d *JSONCommandDecoder) Reset(data []byte) error {
-	d.reader.Reset(data)
-	d.bufReader.Reset(d.reader)
+	isMultiple := bytes.Contains(data, []byte("\n"))
+	var decoder *json.Decoder
+	if isMultiple {
+		d.reader.Reset(data)
+		decoder = json.NewDecoder(d.reader)
+	}
+	d.data = data
+	d.isMultiple = isMultiple
+	d.decoder = decoder
 	return nil
 }
 
 // Decode ...
 func (d *JSONCommandDecoder) Decode() (*Command, error) {
 	var c Command
-	line, err := d.bufReader.ReadSlice(byte('\n'))
-	if err != nil {
-		if err == io.EOF {
-			if len(line) == 0 {
-				return nil, io.EOF
-			}
-			_, err = json.Parse(line, &c, json.ZeroCopy)
-			if err != nil {
-				return nil, err
-			}
-			return &c, io.EOF
+	if !d.isMultiple {
+		_, err := json.Parse(d.data, &c, json.ZeroCopy)
+		if err != nil {
+			return nil, err
 		}
+		return &c, io.EOF
+	}
+	err := d.decoder.Decode(&c)
+	if err != nil {
 		return nil, err
 	}
-	if len(line) == 0 {
-		return nil, io.EOF
-	}
-	_, err = json.Parse(line, &c, json.ZeroCopy)
-	return &c, err
+	return &c, nil
 }
 
 // ProtobufCommandDecoder ...

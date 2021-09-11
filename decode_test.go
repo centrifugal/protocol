@@ -31,7 +31,7 @@ func TestJSONCommandDecoder_Decode_Single(t *testing.T) {
 
 func TestJSONCommandDecoder_Decode_Large(t *testing.T) {
 	var s string
-	for i := 0; i < 120000; i++ {
+	for i := 0; i < 200000; i++ {
 		s += "1"
 	}
 	data := []byte(`{"id": 1, "x": "` + s + `"}`)
@@ -58,6 +58,30 @@ func TestJSONCommandDecoder_Decode_Large(t *testing.T) {
 func TestJSONCommandDecoder_Decode_Many(t *testing.T) {
 	data := []byte(`{"id": 1}
 {"id": 2}`)
+	decoder := GetCommandDecoder(TypeJSON, data)
+	var commands []*Command
+	for {
+		cmd, err := decoder.Decode()
+		if err != nil {
+			if err == io.EOF {
+				if cmd != nil {
+					commands = append(commands, cmd)
+				}
+				break
+			}
+			t.Fatal(err)
+		}
+		if cmd != nil {
+			commands = append(commands, cmd)
+		}
+	}
+	require.Len(t, commands, 2)
+}
+
+func TestJSONCommandDecoder_Decode_Many_ExtraNewLine(t *testing.T) {
+	data := []byte(`{"id": 1}
+{"id": 2}
+`)
 	decoder := GetCommandDecoder(TypeJSON, data)
 	var commands []*Command
 	for {

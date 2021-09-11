@@ -230,27 +230,25 @@ type CommandDecoder interface {
 
 // JSONCommandDecoder ...
 type JSONCommandDecoder struct {
-	//reader     *bytes.Reader
-	//bufReader  *bufio.Reader
 	decoder    *json.Decoder
+	reader     *bytes.Reader
 	data       []byte
 	isMultiple bool
 }
 
 // NewJSONCommandDecoder ...
 func NewJSONCommandDecoder(data []byte) *JSONCommandDecoder {
-	//reader := bytes.NewReader(data)
 	isMultiple := bytes.Contains(data, []byte("\n"))
 	var decoder *json.Decoder
+	reader := bytes.NewReader(data)
 	if isMultiple {
-		decoder = json.NewDecoder(bytes.NewReader(data))
+		decoder = json.NewDecoder(reader)
 	}
 	return &JSONCommandDecoder{
-		//reader:     reader,
-		//bufReader:  bufio.NewReaderSize(reader, len(data)),
-		data:       data,
 		decoder:    decoder,
-		isMultiple: bytes.Contains(data, []byte("\n")),
+		reader:     reader,
+		data:       data,
+		isMultiple: isMultiple,
 	}
 }
 
@@ -259,7 +257,8 @@ func (d *JSONCommandDecoder) Reset(data []byte) error {
 	isMultiple := bytes.Contains(data, []byte("\n"))
 	var decoder *json.Decoder
 	if isMultiple {
-		decoder = json.NewDecoder(bytes.NewReader(data))
+		d.reader.Reset(data)
+		decoder = json.NewDecoder(d.reader)
 	}
 	d.data = data
 	d.isMultiple = isMultiple
@@ -278,7 +277,10 @@ func (d *JSONCommandDecoder) Decode() (*Command, error) {
 		return &c, io.EOF
 	}
 	err := d.decoder.Decode(&c)
-	return &c, err
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
 }
 
 // ProtobufCommandDecoder ...

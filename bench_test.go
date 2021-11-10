@@ -224,6 +224,32 @@ func BenchmarkReplyJSONUnmarshalMultiple(b *testing.B) {
 	b.ReportAllocs()
 }
 
+func BenchmarkReplyJSONUnmarshalMultipleParallel(b *testing.B) {
+	params := &ConnectRequest{
+		Token: "token",
+	}
+	data, _ := json.Marshal(params)
+	cmd := &Command{
+		Id:     1,
+		Method: Command_CONNECT,
+		Params: data,
+	}
+	encoder := NewJSONCommandEncoder()
+	data, err := encoder.Encode(cmd)
+	if err != nil {
+		b.Fatal(err)
+	}
+	data = append(data, []byte("\n")...)
+	data = append(data, data...)
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			unmarshalJSONMultiple(b, data)
+		}
+	})
+	b.ReportAllocs()
+}
+
 func unmarshalJSON(b *testing.B, data []byte) {
 	decoder := GetCommandDecoder(TypeJSON, data)
 	defer PutCommandDecoder(TypeJSON, decoder)

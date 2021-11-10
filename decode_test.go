@@ -86,10 +86,31 @@ func TestJSONCommandDecoder_DifferentNumberOfMessages(t *testing.T) {
 func TestJSONCommandDecoder_Decode_Many_ExtraNewLine(t *testing.T) {
 	data := []byte(`{"id": 1}
 {"id": 2}
+{"id": 3}
 `)
 	decoder := GetCommandDecoder(TypeJSON, data)
 	commands := readCommands(t, decoder)
-	require.Len(t, commands, 2)
+	require.Len(t, commands, 3)
+}
+
+func TestJSONCommandDecoder_Decode_Many_UnexpectedEOF(t *testing.T) {
+	data := []byte(``)
+	decoder := GetCommandDecoder(TypeJSON, data)
+	_, err := decoder.Decode()
+	require.Equal(t, io.ErrUnexpectedEOF, err)
+}
+
+func TestJSONCommandDecoder_Decode_Many_FormatError(t *testing.T) {
+	data := []byte(`{"id": 1}
+
+
+{"id": 2}
+`)
+	decoder := GetCommandDecoder(TypeJSON, data)
+	_, err := decoder.Decode()
+	require.NoError(t, err)
+	_, err = decoder.Decode()
+	require.Error(t, err)
 }
 
 func TestProtobufCommandDecoder_Decode_Many(t *testing.T) {

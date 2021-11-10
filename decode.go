@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
@@ -231,10 +230,9 @@ type CommandDecoder interface {
 
 // JSONCommandDecoder ...
 type JSONCommandDecoder struct {
-	reader          *bytes.Reader
-	bufReader       *bufio.Reader
 	data            []byte
 	messageCount    int
+	prevNewLine     int
 	numMessagesRead int
 }
 
@@ -242,17 +240,14 @@ type JSONCommandDecoder struct {
 func NewJSONCommandDecoder(data []byte) *JSONCommandDecoder {
 	// We have a strict contract that protocol messages should be separated by at most one `\n`.
 	messageCount := bytes.Count(data, []byte("\n")) + 1
-	if data[len(data)-1] == '\n' {
+	if len(data) == 0 || data[len(data)-1] == '\n' {
 		// We have a strict contract that protocol message should use at most one `\n` at the end.
 		messageCount--
 	}
-	reader := bytes.NewReader(data)
-	bufReader := bufio.NewReader(reader)
 	return &JSONCommandDecoder{
-		reader:          reader,
-		bufReader:       bufReader,
 		data:            data,
 		messageCount:    messageCount,
+		prevNewLine:     0,
 		numMessagesRead: 0,
 	}
 }
@@ -261,16 +256,13 @@ func NewJSONCommandDecoder(data []byte) *JSONCommandDecoder {
 func (d *JSONCommandDecoder) Reset(data []byte) error {
 	// We have a strict contract that protocol messages should be separated by at most one `\n`.
 	messageCount := bytes.Count(data, []byte("\n")) + 1
-	if data[len(data)-1] == '\n' {
+	if len(data) == 0 || data[len(data)-1] == '\n' {
 		// We have a strict contract that protocol message should use at most one `\n` at the end.
 		messageCount--
 	}
-	if messageCount > 1 {
-		d.reader.Reset(data)
-		d.bufReader.Reset(d.reader)
-	}
 	d.data = data
 	d.messageCount = messageCount
+	d.prevNewLine = 0
 	d.numMessagesRead = 0
 	return nil
 }
@@ -278,7 +270,7 @@ func (d *JSONCommandDecoder) Reset(data []byte) error {
 // Decode ...
 func (d *JSONCommandDecoder) Decode() (*Command, error) {
 	if d.messageCount == 0 {
-		return nil, io.ErrShortBuffer
+		return nil, io.ErrUnexpectedEOF
 	}
 	var c Command
 	if d.messageCount == 1 {
@@ -288,27 +280,34 @@ func (d *JSONCommandDecoder) Decode() (*Command, error) {
 		}
 		return &c, io.EOF
 	}
-	if d.numMessagesRead < d.messageCount-1 {
+	if d.numMessagesRead <= d.messageCount-1 {
 		d.numMessagesRead++
-		data, err := d.bufReader.ReadBytes('\n')
-		if err != nil {
-			return nil, err
+		nextNewLine := bytes.Index(d.data[d.prevNewLine:], []byte("\n"))
+		if nextNewLine > -1 {
+			if len(d.data) > d.prevNewLine+nextNewLine {
+				_, err := json.Parse(d.data[d.prevNewLine:d.prevNewLine+nextNewLine], &c, json.ZeroCopy)
+				if err != nil {
+					return nil, err
+				}
+				d.numMessagesRead++
+				d.prevNewLine = nextNewLine + 1
+				return &c, nil
+			} else {
+				return nil, io.ErrShortBuffer
+			}
+		} else {
+			return nil, io.ErrShortBuffer
 		}
-		_, err = json.Parse(data, &c, json.ZeroCopy)
-		if err != nil {
-			return nil, err
-		}
-		return &c, nil
 	} else {
-		data, err := io.ReadAll(d.bufReader)
-		if err != nil {
-			return nil, err
+		if len(d.data) > d.prevNewLine {
+			_, err := json.Parse(d.data[d.prevNewLine:], &c, json.ZeroCopy)
+			if err != nil {
+				return nil, err
+			}
+			return &c, io.EOF
+		} else {
+			return nil, io.ErrShortBuffer
 		}
-		_, err = json.Parse(data, &c, json.ZeroCopy)
-		if err != nil {
-			return nil, err
-		}
-		return &c, io.EOF
 	}
 }
 

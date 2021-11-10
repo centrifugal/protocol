@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
@@ -230,57 +231,85 @@ type CommandDecoder interface {
 
 // JSONCommandDecoder ...
 type JSONCommandDecoder struct {
-	decoder    *json.Decoder
-	reader     *bytes.Reader
-	data       []byte
-	isMultiple bool
+	reader          *bytes.Reader
+	bufReader       *bufio.Reader
+	data            []byte
+	messageCount    int
+	numMessagesRead int
 }
 
 // NewJSONCommandDecoder ...
 func NewJSONCommandDecoder(data []byte) *JSONCommandDecoder {
-	isMultiple := bytes.Contains(data, []byte("\n"))
-	var decoder *json.Decoder
-	reader := bytes.NewReader(data)
-	if isMultiple {
-		decoder = json.NewDecoder(reader)
+	// We have a strict contract that protocol messages should be separated by at most one `\n`.
+	messageCount := bytes.Count(data, []byte("\n")) + 1
+	if data[len(data)-1] == '\n' {
+		// We have a strict contract that protocol message should use at most one `\n` at the end.
+		messageCount--
 	}
+	reader := bytes.NewReader(data)
+	bufReader := bufio.NewReader(reader)
 	return &JSONCommandDecoder{
-		decoder:    decoder,
-		reader:     reader,
-		data:       data,
-		isMultiple: isMultiple,
+		reader:          reader,
+		bufReader:       bufReader,
+		data:            data,
+		messageCount:    messageCount,
+		numMessagesRead: 0,
 	}
 }
 
 // Reset ...
 func (d *JSONCommandDecoder) Reset(data []byte) error {
-	isMultiple := bytes.Contains(data, []byte("\n"))
-	var decoder *json.Decoder
-	if isMultiple {
+	// We have a strict contract that protocol messages should be separated by at most one `\n`.
+	messageCount := bytes.Count(data, []byte("\n")) + 1
+	if data[len(data)-1] == '\n' {
+		// We have a strict contract that protocol message should use at most one `\n` at the end.
+		messageCount--
+	}
+	if messageCount > 1 {
 		d.reader.Reset(data)
-		decoder = json.NewDecoder(d.reader)
+		d.bufReader.Reset(d.reader)
 	}
 	d.data = data
-	d.isMultiple = isMultiple
-	d.decoder = decoder
+	d.messageCount = messageCount
+	d.numMessagesRead = 0
 	return nil
 }
 
 // Decode ...
 func (d *JSONCommandDecoder) Decode() (*Command, error) {
+	if d.messageCount == 0 {
+		return nil, io.ErrShortBuffer
+	}
 	var c Command
-	if !d.isMultiple {
+	if d.messageCount == 1 {
 		_, err := json.Parse(d.data, &c, json.ZeroCopy)
 		if err != nil {
 			return nil, err
 		}
 		return &c, io.EOF
 	}
-	err := d.decoder.Decode(&c)
-	if err != nil {
-		return nil, err
+	if d.numMessagesRead < d.messageCount-1 {
+		d.numMessagesRead++
+		data, err := d.bufReader.ReadBytes('\n')
+		if err != nil {
+			return nil, err
+		}
+		_, err = json.Parse(data, &c, json.ZeroCopy)
+		if err != nil {
+			return nil, err
+		}
+		return &c, nil
+	} else {
+		data, err := io.ReadAll(d.bufReader)
+		if err != nil {
+			return nil, err
+		}
+		_, err = json.Parse(data, &c, json.ZeroCopy)
+		if err != nil {
+			return nil, err
+		}
+		return &c, io.EOF
 	}
-	return &c, nil
 }
 
 // ProtobufCommandDecoder ...

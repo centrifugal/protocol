@@ -7,9 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestJSONCommandDecoder_Decode_Single(t *testing.T) {
-	data := []byte(`{"id": 1}`)
-	decoder := GetCommandDecoder(TypeJSON, data)
+func readCommands(t testing.TB, decoder CommandDecoder) []*Command {
+	t.Helper()
 	var commands []*Command
 	for {
 		cmd, err := decoder.Decode()
@@ -26,6 +25,21 @@ func TestJSONCommandDecoder_Decode_Single(t *testing.T) {
 			commands = append(commands, cmd)
 		}
 	}
+	return commands
+}
+
+func TestJSONCommandDecoder_Decode_Single(t *testing.T) {
+	data := []byte(`{"id": 1}`)
+	decoder := GetCommandDecoder(TypeJSON, data)
+	commands := readCommands(t, decoder)
+	require.Len(t, commands, 1)
+}
+
+func TestJSONCommandDecoder_Decode_Single_ExtraNewLine(t *testing.T) {
+	data := []byte(`{"id": 1}
+`)
+	decoder := GetCommandDecoder(TypeJSON, data)
+	commands := readCommands(t, decoder)
 	require.Len(t, commands, 1)
 }
 
@@ -36,22 +50,7 @@ func TestJSONCommandDecoder_Decode_Large(t *testing.T) {
 	}
 	data := []byte(`{"id": 1, "x": "` + s + `"}`)
 	decoder := GetCommandDecoder(TypeJSON, data)
-	var commands []*Command
-	for {
-		cmd, err := decoder.Decode()
-		if err != nil {
-			if err == io.EOF {
-				if cmd != nil {
-					commands = append(commands, cmd)
-				}
-				break
-			}
-			t.Fatal(err)
-		}
-		if cmd != nil {
-			commands = append(commands, cmd)
-		}
-	}
+	commands := readCommands(t, decoder)
 	require.Len(t, commands, 1)
 }
 
@@ -59,23 +58,29 @@ func TestJSONCommandDecoder_Decode_Many(t *testing.T) {
 	data := []byte(`{"id": 1}
 {"id": 2}`)
 	decoder := GetCommandDecoder(TypeJSON, data)
-	var commands []*Command
-	for {
-		cmd, err := decoder.Decode()
-		if err != nil {
-			if err == io.EOF {
-				if cmd != nil {
-					commands = append(commands, cmd)
-				}
-				break
-			}
-			t.Fatal(err)
-		}
-		if cmd != nil {
-			commands = append(commands, cmd)
-		}
-	}
+	commands := readCommands(t, decoder)
 	require.Len(t, commands, 2)
+}
+
+func TestJSONCommandDecoder_DifferentNumberOfMessages(t *testing.T) {
+	data1 := []byte(`{"id": 1}`)
+	data2 := []byte(`{"id": 1}
+{"id": 2}`)
+
+	decoder := GetCommandDecoder(TypeJSON, data1)
+
+	commands := readCommands(t, decoder)
+	require.Len(t, commands, 1)
+
+	err := decoder.Reset(data2)
+	require.NoError(t, err)
+	commands = readCommands(t, decoder)
+	require.Len(t, commands, 2)
+
+	err = decoder.Reset(data1)
+	require.NoError(t, err)
+	commands = readCommands(t, decoder)
+	require.Len(t, commands, 1)
 }
 
 func TestJSONCommandDecoder_Decode_Many_ExtraNewLine(t *testing.T) {
@@ -83,22 +88,7 @@ func TestJSONCommandDecoder_Decode_Many_ExtraNewLine(t *testing.T) {
 {"id": 2}
 `)
 	decoder := GetCommandDecoder(TypeJSON, data)
-	var commands []*Command
-	for {
-		cmd, err := decoder.Decode()
-		if err != nil {
-			if err == io.EOF {
-				if cmd != nil {
-					commands = append(commands, cmd)
-				}
-				break
-			}
-			t.Fatal(err)
-		}
-		if cmd != nil {
-			commands = append(commands, cmd)
-		}
-	}
+	commands := readCommands(t, decoder)
 	require.Len(t, commands, 2)
 }
 
@@ -114,22 +104,7 @@ func TestProtobufCommandDecoder_Decode_Many(t *testing.T) {
 	copy(data, data1)
 
 	decoder := GetCommandDecoder(TypeProtobuf, data)
-	var commands []*Command
-	for {
-		cmd, err := decoder.Decode()
-		if err != nil {
-			if err == io.EOF {
-				if cmd != nil {
-					commands = append(commands, cmd)
-				}
-				break
-			}
-			t.Fatal(err)
-		}
-		if cmd != nil {
-			commands = append(commands, cmd)
-		}
-	}
+	commands := readCommands(t, decoder)
 	require.Len(t, commands, 2)
 	if len(commands) == 2 { // Make Goland happy.
 		require.Equal(t, uint32(1), commands[0].Id)

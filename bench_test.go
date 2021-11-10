@@ -198,7 +198,30 @@ func BenchmarkReplyJSONUnmarshalParallel(b *testing.B) {
 		}
 	})
 	b.ReportAllocs()
+}
 
+func BenchmarkReplyJSONUnmarshalMultiple(b *testing.B) {
+	params := &ConnectRequest{
+		Token: "token",
+	}
+	data, _ := json.Marshal(params)
+	cmd := &Command{
+		Id:     1,
+		Method: Command_CONNECT,
+		Params: data,
+	}
+	encoder := NewJSONCommandEncoder()
+	data, err := encoder.Encode(cmd)
+	if err != nil {
+		b.Fatal(err)
+	}
+	data = append(data, []byte("\n")...)
+	data = append(data, data...)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		unmarshalJSONMultiple(b, data)
+	}
+	b.ReportAllocs()
 }
 
 func unmarshalJSON(b *testing.B, data []byte) {
@@ -210,6 +233,34 @@ func unmarshalJSON(b *testing.B, data []byte) {
 	}
 	paramsDecoder := NewJSONParamsDecoder()
 	req, err := paramsDecoder.DecodeConnect(cmd.Params)
+	if err != nil {
+		b.Fatal()
+	}
+	if req.Token != "token" {
+		b.Fatal()
+	}
+}
+
+func unmarshalJSONMultiple(b *testing.B, data []byte) {
+	decoder := GetCommandDecoder(TypeJSON, data)
+	defer PutCommandDecoder(TypeJSON, decoder)
+	cmd, err := decoder.Decode()
+	if err != nil {
+		b.Fatal(err)
+	}
+	paramsDecoder := NewJSONParamsDecoder()
+	req, err := paramsDecoder.DecodeConnect(cmd.Params)
+	if err != nil {
+		b.Fatal()
+	}
+	if req.Token != "token" {
+		b.Fatal()
+	}
+	cmd, err = decoder.Decode()
+	if (err != nil && err != io.EOF) || cmd == nil {
+		b.Fatal(err)
+	}
+	req, err = paramsDecoder.DecodeConnect(cmd.Params)
 	if err != nil {
 		b.Fatal()
 	}

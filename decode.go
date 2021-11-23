@@ -280,34 +280,23 @@ func (d *JSONCommandDecoder) Decode() (*Command, error) {
 		}
 		return &c, io.EOF
 	}
-	if d.numMessagesRead <= d.messageCount-1 {
+	nextNewLine := bytes.Index(d.data[d.prevNewLine:], []byte("\n"))
+	if nextNewLine < 0 {
+		nextNewLine = len(d.data[d.prevNewLine:])
+	}
+	if len(d.data) >= d.prevNewLine+nextNewLine {
+		_, err := json.Parse(d.data[d.prevNewLine:d.prevNewLine+nextNewLine], &c, json.ZeroCopy)
+		if err != nil {
+			return nil, err
+		}
 		d.numMessagesRead++
-		nextNewLine := bytes.Index(d.data[d.prevNewLine:], []byte("\n"))
-		if nextNewLine > -1 {
-			if len(d.data) > d.prevNewLine+nextNewLine {
-				_, err := json.Parse(d.data[d.prevNewLine:d.prevNewLine+nextNewLine], &c, json.ZeroCopy)
-				if err != nil {
-					return nil, err
-				}
-				d.numMessagesRead++
-				d.prevNewLine = d.prevNewLine + nextNewLine + 1
-				return &c, nil
-			} else {
-				return nil, io.ErrShortBuffer
-			}
-		} else {
-			return nil, io.ErrShortBuffer
-		}
-	} else {
-		if len(d.data) > d.prevNewLine {
-			_, err := json.Parse(d.data[d.prevNewLine:], &c, json.ZeroCopy)
-			if err != nil {
-				return nil, err
-			}
+		d.prevNewLine = d.prevNewLine + nextNewLine + 1
+		if d.numMessagesRead == d.messageCount {
 			return &c, io.EOF
-		} else {
-			return nil, io.ErrShortBuffer
 		}
+		return &c, nil
+	} else {
+		return nil, io.ErrShortBuffer
 	}
 }
 

@@ -280,9 +280,17 @@ func (d *JSONCommandDecoder) Decode() (*Command, error) {
 		}
 		return &c, io.EOF
 	}
-	nextNewLine := bytes.Index(d.data[d.prevNewLine:], []byte("\n"))
-	if nextNewLine < 0 {
+	var nextNewLine int
+	if d.numMessagesRead == d.messageCount-1 {
+		// Last message, no need to search for a new line.
 		nextNewLine = len(d.data[d.prevNewLine:])
+	} else if len(d.data) > d.prevNewLine {
+		nextNewLine = bytes.Index(d.data[d.prevNewLine:], []byte("\n"))
+		if nextNewLine < 0 {
+			return nil, io.ErrShortBuffer
+		}
+	} else {
+		return nil, io.ErrShortBuffer
 	}
 	if len(d.data) >= d.prevNewLine+nextNewLine {
 		_, err := json.Parse(d.data[d.prevNewLine:d.prevNewLine+nextNewLine], &c, json.ZeroCopy)

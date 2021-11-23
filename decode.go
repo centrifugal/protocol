@@ -290,7 +290,7 @@ func (d *JSONCommandDecoder) Decode() (*Command, error) {
 					return nil, err
 				}
 				d.numMessagesRead++
-				d.prevNewLine = nextNewLine + 1
+				d.prevNewLine = d.prevNewLine + nextNewLine + 1
 				return &c, nil
 			} else {
 				return nil, io.ErrShortBuffer

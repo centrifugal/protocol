@@ -60,22 +60,27 @@ func TestJSONCommandDecoder_Decode_Many(t *testing.T) {
 	decoder := GetCommandDecoder(TypeJSON, data)
 	commands := readCommands(t, decoder)
 	require.Len(t, commands, 2)
+	require.Equal(t, uint32(1), commands[0].Id)
+	require.Equal(t, uint32(2), commands[1].Id)
 }
 
 func TestJSONCommandDecoder_DifferentNumberOfMessages(t *testing.T) {
 	data1 := []byte(`{"id": 1}`)
-	data2 := []byte(`{"id": 1}
-{"id": 2}`)
+	data2 := []byte(`{"id": 2}
+{"id": 3}`)
 
 	decoder := GetCommandDecoder(TypeJSON, data1)
 
 	commands := readCommands(t, decoder)
 	require.Len(t, commands, 1)
+	require.Equal(t, uint32(1), commands[0].Id)
 
 	err := decoder.Reset(data2)
 	require.NoError(t, err)
 	commands = readCommands(t, decoder)
 	require.Len(t, commands, 2)
+	require.Equal(t, uint32(2), commands[0].Id)
+	require.Equal(t, uint32(3), commands[1].Id)
 
 	err = decoder.Reset(data1)
 	require.NoError(t, err)
@@ -84,13 +89,16 @@ func TestJSONCommandDecoder_DifferentNumberOfMessages(t *testing.T) {
 }
 
 func TestJSONCommandDecoder_Decode_Many_ExtraNewLine(t *testing.T) {
-	data := []byte(`{"id": 1}
-{"id": 2}
-{"id": 3}
+	data := []byte(`{"method":1,"params":{"channel":"chat:1","recover":true,"epoch":"WHBN"},"id":222}
+{"method":1,"params":{"channel":"chat:2","recover":true,"epoch":"yenC"},"id":223}
+{"method":1,"params":{"channel":"chat:index"},"id":224}
 `)
 	decoder := GetCommandDecoder(TypeJSON, data)
 	commands := readCommands(t, decoder)
 	require.Len(t, commands, 3)
+	require.Contains(t, string(commands[0].Params), "chat:1")
+	require.Contains(t, string(commands[1].Params), "chat:2")
+	require.Contains(t, string(commands[2].Params), "chat:index")
 }
 
 func TestJSONCommandDecoder_Decode_Many_UnexpectedEOF(t *testing.T) {

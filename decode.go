@@ -238,10 +238,10 @@ type JSONCommandDecoder struct {
 
 // NewJSONCommandDecoder ...
 func NewJSONCommandDecoder(data []byte) *JSONCommandDecoder {
-	// We have a strict contract that protocol messages should be separated by at most one `\n`.
+	// Protocol message must be separated by exactly one `\n`.
 	messageCount := bytes.Count(data, []byte("\n")) + 1
 	if len(data) == 0 || data[len(data)-1] == '\n' {
-		// We have a strict contract that protocol message should use at most one `\n` at the end.
+		// Protocol message must have zero or one `\n` at the end.
 		messageCount--
 	}
 	return &JSONCommandDecoder{

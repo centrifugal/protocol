@@ -319,7 +319,6 @@ type DataEncoder interface {
 
 // JSONDataEncoder ...
 type JSONDataEncoder struct {
-	count  int
 	buffer bytes.Buffer
 }
 
@@ -330,17 +329,13 @@ func NewJSONDataEncoder() *JSONDataEncoder {
 
 // Reset ...
 func (e *JSONDataEncoder) Reset() {
-	e.count = 0
 	e.buffer.Reset()
 }
 
 // Encode ...
 func (e *JSONDataEncoder) Encode(data []byte) error {
-	if e.count > 0 {
-		e.buffer.WriteString("\n")
-	}
 	e.buffer.Write(data)
-	e.count++
+	e.buffer.WriteString("\n")
 	return nil
 }
 
@@ -579,16 +574,7 @@ func NewProtobufCommandEncoder() *ProtobufCommandEncoder {
 
 // Encode ...
 func (e *ProtobufCommandEncoder) Encode(cmd *Command) ([]byte, error) {
-	commandBytes, err := cmd.MarshalVT()
-	if err != nil {
-		return nil, err
-	}
-	bs := make([]byte, 8)
-	n := binary.PutUvarint(bs, uint64(len(commandBytes)))
-	var buf bytes.Buffer
-	buf.Write(bs[:n])
-	buf.Write(commandBytes)
-	return buf.Bytes(), nil
+	return cmd.MarshalVT()
 }
 
 // ParamsEncoder ...

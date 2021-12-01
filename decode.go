@@ -230,57 +230,82 @@ type CommandDecoder interface {
 
 // JSONCommandDecoder ...
 type JSONCommandDecoder struct {
-	decoder    *json.Decoder
-	reader     *bytes.Reader
-	data       []byte
-	isMultiple bool
+	data            []byte
+	messageCount    int
+	prevNewLine     int
+	numMessagesRead int
 }
 
 // NewJSONCommandDecoder ...
 func NewJSONCommandDecoder(data []byte) *JSONCommandDecoder {
-	isMultiple := bytes.Contains(data, []byte("\n"))
-	var decoder *json.Decoder
-	reader := bytes.NewReader(data)
-	if isMultiple {
-		decoder = json.NewDecoder(reader)
+	// Protocol message must be separated by exactly one `\n`.
+	messageCount := bytes.Count(data, []byte("\n")) + 1
+	if len(data) == 0 || data[len(data)-1] == '\n' {
+		// Protocol message must have zero or one `\n` at the end.
+		messageCount--
 	}
 	return &JSONCommandDecoder{
-		decoder:    decoder,
-		reader:     reader,
-		data:       data,
-		isMultiple: isMultiple,
+		data:            data,
+		messageCount:    messageCount,
+		prevNewLine:     0,
+		numMessagesRead: 0,
 	}
 }
 
 // Reset ...
 func (d *JSONCommandDecoder) Reset(data []byte) error {
-	isMultiple := bytes.Contains(data, []byte("\n"))
-	var decoder *json.Decoder
-	if isMultiple {
-		d.reader.Reset(data)
-		decoder = json.NewDecoder(d.reader)
+	// We have a strict contract that protocol messages should be separated by at most one `\n`.
+	messageCount := bytes.Count(data, []byte("\n")) + 1
+	if len(data) == 0 || data[len(data)-1] == '\n' {
+		// We have a strict contract that protocol message should use at most one `\n` at the end.
+		messageCount--
 	}
 	d.data = data
-	d.isMultiple = isMultiple
-	d.decoder = decoder
+	d.messageCount = messageCount
+	d.prevNewLine = 0
+	d.numMessagesRead = 0
 	return nil
 }
 
 // Decode ...
 func (d *JSONCommandDecoder) Decode() (*Command, error) {
+	if d.messageCount == 0 {
+		return nil, io.ErrUnexpectedEOF
+	}
 	var c Command
-	if !d.isMultiple {
+	if d.messageCount == 1 {
 		_, err := json.Parse(d.data, &c, json.ZeroCopy)
 		if err != nil {
 			return nil, err
 		}
 		return &c, io.EOF
 	}
-	err := d.decoder.Decode(&c)
-	if err != nil {
-		return nil, err
+	var nextNewLine int
+	if d.numMessagesRead == d.messageCount-1 {
+		// Last message, no need to search for a new line.
+		nextNewLine = len(d.data[d.prevNewLine:])
+	} else if len(d.data) > d.prevNewLine {
+		nextNewLine = bytes.Index(d.data[d.prevNewLine:], []byte("\n"))
+		if nextNewLine < 0 {
+			return nil, io.ErrShortBuffer
+		}
+	} else {
+		return nil, io.ErrShortBuffer
 	}
-	return &c, nil
+	if len(d.data) >= d.prevNewLine+nextNewLine {
+		_, err := json.Parse(d.data[d.prevNewLine:d.prevNewLine+nextNewLine], &c, json.ZeroCopy)
+		if err != nil {
+			return nil, err
+		}
+		d.numMessagesRead++
+		d.prevNewLine = d.prevNewLine + nextNewLine + 1
+		if d.numMessagesRead == d.messageCount {
+			return &c, io.EOF
+		}
+		return &c, nil
+	} else {
+		return nil, io.ErrShortBuffer
+	}
 }
 
 // ProtobufCommandDecoder ...
@@ -308,12 +333,12 @@ func (d *ProtobufCommandDecoder) Decode() (*Command, error) {
 	if d.offset < len(d.data) {
 		var c Command
 		l, n := binary.Uvarint(d.data[d.offset:])
-		if l == 0 && n <= 0 {
+		if l == 0 || n <= 0 {
 			return nil, io.EOF
 		}
 		from := d.offset + n
 		to := d.offset + n + int(l)
-		if to <= len(d.data) {
+		if to > 0 && to <= len(d.data) {
 			cmdBytes := d.data[from:to]
 			err := c.UnmarshalVT(cmdBytes)
 			if err != nil {

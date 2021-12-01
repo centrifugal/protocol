@@ -333,12 +333,12 @@ func (d *ProtobufCommandDecoder) Decode() (*Command, error) {
 	if d.offset < len(d.data) {
 		var c Command
 		l, n := binary.Uvarint(d.data[d.offset:])
-		if l == 0 && n <= 0 {
+		if l == 0 || n <= 0 {
 			return nil, io.EOF
 		}
 		from := d.offset + n
 		to := d.offset + n + int(l)
-		if to <= len(d.data) {
+		if to > 0 && to <= len(d.data) {
 			cmdBytes := d.data[from:to]
 			err := c.UnmarshalVT(cmdBytes)
 			if err != nil {

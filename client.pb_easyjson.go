@@ -382,6 +382,10 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild4(in *jlexer.Lexer, 
 			out.Epoch = string(in.String())
 		case "offset":
 			out.Offset = uint64(in.Uint64())
+		case "data":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.Data).UnmarshalJSON(data))
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -441,6 +445,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild4(out *writer, in Su
 			out.RawString(prefix)
 		}
 		out.Uint64(uint64(in.Offset))
+	}
+	if len(in.Data) != 0 {
+		const prefix string = ",\"data\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Raw((in.Data).MarshalJSON())
 	}
 	out.RawByte('}')
 }

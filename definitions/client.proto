@@ -146,6 +146,7 @@ message SubscribeRequest {
   // 4-5 skipped here for backwards compatibility.
   string epoch = 6;
   uint64 offset = 7;
+  bytes data = 8;
 }
 
 message SubscribeResult {

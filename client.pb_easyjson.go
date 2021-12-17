@@ -1463,6 +1463,26 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild19(in *jlexer.Lexer,
 			}
 		case "offset":
 			out.Offset = uint64(in.Uint64())
+		case "meta":
+			if in.IsNull() {
+				in.Skip()
+			} else {
+				in.Delim('{')
+				if !in.IsDelim('}') {
+					out.Meta = make(map[string]string)
+				} else {
+					out.Meta = nil
+				}
+				for !in.IsDelim('}') {
+					key := string(in.String())
+					in.WantColon()
+					var v4 string
+					v4 = string(in.String())
+					(out.Meta)[key] = v4
+					in.WantComma()
+				}
+				in.Delim('}')
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1502,6 +1522,30 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 			out.RawString(prefix)
 		}
 		out.Uint64(uint64(in.Offset))
+	}
+	if len(in.Meta) != 0 {
+		const prefix string = ",\"meta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		{
+			out.RawByte('{')
+			v5First := true
+			for v5Name, v5Value := range in.Meta {
+				if v5First {
+					v5First = false
+				} else {
+					out.RawByte(',')
+				}
+				out.String(string(v5Name))
+				out.RawByte(':')
+				out.String(string(v5Value))
+			}
+			out.RawByte('}')
+		}
 	}
 	out.RawByte('}')
 }
@@ -1655,17 +1699,17 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild22(in *jlexer.Lexer,
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v4 *ClientInfo
+					var v6 *ClientInfo
 					if in.IsNull() {
 						in.Skip()
-						v4 = nil
+						v6 = nil
 					} else {
-						if v4 == nil {
-							v4 = new(ClientInfo)
+						if v6 == nil {
+							v6 = new(ClientInfo)
 						}
-						(*v4).UnmarshalEasyJSON(in)
+						(*v6).UnmarshalEasyJSON(in)
 					}
-					(out.Presence)[key] = v4
+					(out.Presence)[key] = v6
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -1691,19 +1735,19 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild22(out *writer, in P
 			out.RawString(`null`)
 		} else {
 			out.RawByte('{')
-			v5First := true
-			for v5Name, v5Value := range in.Presence {
-				if v5First {
-					v5First = false
+			v7First := true
+			for v7Name, v7Value := range in.Presence {
+				if v7First {
+					v7First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v5Name))
+				out.String(string(v7Name))
 				out.RawByte(':')
-				if v5Value == nil {
+				if v7Value == nil {
 					out.RawString("null")
 				} else {
-					(*v5Value).MarshalEasyJSON(out)
+					(*v7Value).MarshalEasyJSON(out)
 				}
 			}
 			out.RawByte('}')
@@ -2076,17 +2120,17 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild29(in *jlexer.Lexer,
 					out.Publications = (out.Publications)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v6 *Publication
+					var v8 *Publication
 					if in.IsNull() {
 						in.Skip()
-						v6 = nil
+						v8 = nil
 					} else {
-						if v6 == nil {
-							v6 = new(Publication)
+						if v8 == nil {
+							v8 = new(Publication)
 						}
-						(*v6).UnmarshalEasyJSON(in)
+						(*v8).UnmarshalEasyJSON(in)
 					}
-					out.Publications = append(out.Publications, v6)
+					out.Publications = append(out.Publications, v8)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -2116,14 +2160,14 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild29(out *writer, in H
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v7, v8 := range in.Publications {
-				if v7 > 0 {
+			for v9, v10 := range in.Publications {
+				if v9 > 0 {
 					out.RawByte(',')
 				}
-				if v8 == nil {
+				if v10 == nil {
 					out.RawString("null")
 				} else {
-					(*v8).MarshalEasyJSON(out)
+					(*v10).MarshalEasyJSON(out)
 				}
 			}
 			out.RawByte(']')
@@ -2434,17 +2478,17 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild33(in *jlexer.Lexer,
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v9 *SubscribeResult
+					var v11 *SubscribeResult
 					if in.IsNull() {
 						in.Skip()
-						v9 = nil
+						v11 = nil
 					} else {
-						if v9 == nil {
-							v9 = new(SubscribeResult)
+						if v11 == nil {
+							v11 = new(SubscribeResult)
 						}
-						(*v9).UnmarshalEasyJSON(in)
+						(*v11).UnmarshalEasyJSON(in)
 					}
-					(out.Subs)[key] = v9
+					(out.Subs)[key] = v11
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -2519,19 +2563,19 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild33(out *writer, in C
 		}
 		{
 			out.RawByte('{')
-			v10First := true
-			for v10Name, v10Value := range in.Subs {
-				if v10First {
-					v10First = false
+			v12First := true
+			for v12Name, v12Value := range in.Subs {
+				if v12First {
+					v12First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v10Name))
+				out.String(string(v12Name))
 				out.RawByte(':')
-				if v10Value == nil {
+				if v12Value == nil {
 					out.RawString("null")
 				} else {
-					(*v10Value).MarshalEasyJSON(out)
+					(*v12Value).MarshalEasyJSON(out)
 				}
 			}
 			out.RawByte('}')
@@ -2587,17 +2631,17 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild34(in *jlexer.Lexer,
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v11 *SubscribeRequest
+					var v13 *SubscribeRequest
 					if in.IsNull() {
 						in.Skip()
-						v11 = nil
+						v13 = nil
 					} else {
-						if v11 == nil {
-							v11 = new(SubscribeRequest)
+						if v13 == nil {
+							v13 = new(SubscribeRequest)
 						}
-						(*v11).UnmarshalEasyJSON(in)
+						(*v13).UnmarshalEasyJSON(in)
 					}
-					(out.Subs)[key] = v11
+					(out.Subs)[key] = v13
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -2646,19 +2690,19 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild34(out *writer, in C
 		}
 		{
 			out.RawByte('{')
-			v12First := true
-			for v12Name, v12Value := range in.Subs {
-				if v12First {
-					v12First = false
+			v14First := true
+			for v14Name, v14Value := range in.Subs {
+				if v14First {
+					v14First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v12Name))
+				out.String(string(v14Name))
 				out.RawByte(':')
-				if v12Value == nil {
+				if v14Value == nil {
 					out.RawString("null")
 				} else {
-					(*v12Value).MarshalEasyJSON(out)
+					(*v14Value).MarshalEasyJSON(out)
 				}
 			}
 			out.RawByte('}')
@@ -2736,17 +2780,17 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild35(in *jlexer.Lexer,
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
-					var v13 *SubscribeResult
+					var v15 *SubscribeResult
 					if in.IsNull() {
 						in.Skip()
-						v13 = nil
+						v15 = nil
 					} else {
-						if v13 == nil {
-							v13 = new(SubscribeResult)
+						if v15 == nil {
+							v15 = new(SubscribeResult)
 						}
-						(*v13).UnmarshalEasyJSON(in)
+						(*v15).UnmarshalEasyJSON(in)
 					}
-					(out.Subs)[key] = v13
+					(out.Subs)[key] = v15
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -2805,19 +2849,19 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild35(out *writer, in C
 		}
 		{
 			out.RawByte('{')
-			v14First := true
-			for v14Name, v14Value := range in.Subs {
-				if v14First {
-					v14First = false
+			v16First := true
+			for v16Name, v16Value := range in.Subs {
+				if v16First {
+					v16First = false
 				} else {
 					out.RawByte(',')
 				}
-				out.String(string(v14Name))
+				out.String(string(v16Name))
 				out.RawByte(':')
-				if v14Value == nil {
+				if v16Value == nil {
 					out.RawString("null")
 				} else {
-					(*v14Value).MarshalEasyJSON(out)
+					(*v16Value).MarshalEasyJSON(out)
 				}
 			}
 			out.RawByte('}')

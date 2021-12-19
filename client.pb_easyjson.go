@@ -856,6 +856,126 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild10(in *jlexer.Lexer,
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Result).UnmarshalJSON(data))
 			}
+		case "push":
+			if in.IsNull() {
+				in.Skip()
+				out.Push = nil
+			} else {
+				if out.Push == nil {
+					out.Push = new(Push)
+				}
+				(*out.Push).UnmarshalEasyJSON(in)
+			}
+		case "connect":
+			if in.IsNull() {
+				in.Skip()
+				out.Connect = nil
+			} else {
+				if out.Connect == nil {
+					out.Connect = new(ConnectResult)
+				}
+				(*out.Connect).UnmarshalEasyJSON(in)
+			}
+		case "subscribe":
+			if in.IsNull() {
+				in.Skip()
+				out.Subscribe = nil
+			} else {
+				if out.Subscribe == nil {
+					out.Subscribe = new(SubscribeResult)
+				}
+				(*out.Subscribe).UnmarshalEasyJSON(in)
+			}
+		case "unsubscribe":
+			if in.IsNull() {
+				in.Skip()
+				out.Unsubscribe = nil
+			} else {
+				if out.Unsubscribe == nil {
+					out.Unsubscribe = new(UnsubscribeResult)
+				}
+				(*out.Unsubscribe).UnmarshalEasyJSON(in)
+			}
+		case "publish":
+			if in.IsNull() {
+				in.Skip()
+				out.Publish = nil
+			} else {
+				if out.Publish == nil {
+					out.Publish = new(PublishResult)
+				}
+				(*out.Publish).UnmarshalEasyJSON(in)
+			}
+		case "presence":
+			if in.IsNull() {
+				in.Skip()
+				out.Presence = nil
+			} else {
+				if out.Presence == nil {
+					out.Presence = new(PresenceResult)
+				}
+				(*out.Presence).UnmarshalEasyJSON(in)
+			}
+		case "presence_stats":
+			if in.IsNull() {
+				in.Skip()
+				out.PresenceStats = nil
+			} else {
+				if out.PresenceStats == nil {
+					out.PresenceStats = new(PresenceStatsResult)
+				}
+				(*out.PresenceStats).UnmarshalEasyJSON(in)
+			}
+		case "history":
+			if in.IsNull() {
+				in.Skip()
+				out.History = nil
+			} else {
+				if out.History == nil {
+					out.History = new(HistoryResult)
+				}
+				(*out.History).UnmarshalEasyJSON(in)
+			}
+		case "ping":
+			if in.IsNull() {
+				in.Skip()
+				out.Ping = nil
+			} else {
+				if out.Ping == nil {
+					out.Ping = new(PingResult)
+				}
+				(*out.Ping).UnmarshalEasyJSON(in)
+			}
+		case "rpc":
+			if in.IsNull() {
+				in.Skip()
+				out.Rpc = nil
+			} else {
+				if out.Rpc == nil {
+					out.Rpc = new(RPCResult)
+				}
+				(*out.Rpc).UnmarshalEasyJSON(in)
+			}
+		case "refresh":
+			if in.IsNull() {
+				in.Skip()
+				out.Refresh = nil
+			} else {
+				if out.Refresh == nil {
+					out.Refresh = new(RefreshResult)
+				}
+				(*out.Refresh).UnmarshalEasyJSON(in)
+			}
+		case "sub_refresh":
+			if in.IsNull() {
+				in.Skip()
+				out.SubRefresh = nil
+			} else {
+				if out.SubRefresh == nil {
+					out.SubRefresh = new(SubRefreshResult)
+				}
+				(*out.SubRefresh).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -895,6 +1015,126 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild10(out *writer, in R
 			out.RawString(prefix)
 		}
 		out.Raw((in.Result).MarshalJSON())
+	}
+	if in.Push != nil {
+		const prefix string = ",\"push\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Push).MarshalEasyJSON(out)
+	}
+	if in.Connect != nil {
+		const prefix string = ",\"connect\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Connect).MarshalEasyJSON(out)
+	}
+	if in.Subscribe != nil {
+		const prefix string = ",\"subscribe\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Subscribe).MarshalEasyJSON(out)
+	}
+	if in.Unsubscribe != nil {
+		const prefix string = ",\"unsubscribe\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Unsubscribe).MarshalEasyJSON(out)
+	}
+	if in.Publish != nil {
+		const prefix string = ",\"publish\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Publish).MarshalEasyJSON(out)
+	}
+	if in.Presence != nil {
+		const prefix string = ",\"presence\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Presence).MarshalEasyJSON(out)
+	}
+	if in.PresenceStats != nil {
+		const prefix string = ",\"presence_stats\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.PresenceStats).MarshalEasyJSON(out)
+	}
+	if in.History != nil {
+		const prefix string = ",\"history\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.History).MarshalEasyJSON(out)
+	}
+	if in.Ping != nil {
+		const prefix string = ",\"ping\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Ping).MarshalEasyJSON(out)
+	}
+	if in.Rpc != nil {
+		const prefix string = ",\"rpc\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Rpc).MarshalEasyJSON(out)
+	}
+	if in.Refresh != nil {
+		const prefix string = ",\"refresh\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Refresh).MarshalEasyJSON(out)
+	}
+	if in.SubRefresh != nil {
+		const prefix string = ",\"sub_refresh\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.SubRefresh).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -1264,6 +1504,96 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild16(in *jlexer.Lexer,
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Data).UnmarshalJSON(data))
 			}
+		case "pub":
+			if in.IsNull() {
+				in.Skip()
+				out.Pub = nil
+			} else {
+				if out.Pub == nil {
+					out.Pub = new(Publication)
+				}
+				(*out.Pub).UnmarshalEasyJSON(in)
+			}
+		case "join":
+			if in.IsNull() {
+				in.Skip()
+				out.Join = nil
+			} else {
+				if out.Join == nil {
+					out.Join = new(Join)
+				}
+				(*out.Join).UnmarshalEasyJSON(in)
+			}
+		case "leave":
+			if in.IsNull() {
+				in.Skip()
+				out.Leave = nil
+			} else {
+				if out.Leave == nil {
+					out.Leave = new(Leave)
+				}
+				(*out.Leave).UnmarshalEasyJSON(in)
+			}
+		case "unsubscribe":
+			if in.IsNull() {
+				in.Skip()
+				out.Unsubscribe = nil
+			} else {
+				if out.Unsubscribe == nil {
+					out.Unsubscribe = new(Unsubscribe)
+				}
+				(*out.Unsubscribe).UnmarshalEasyJSON(in)
+			}
+		case "message":
+			if in.IsNull() {
+				in.Skip()
+				out.Message = nil
+			} else {
+				if out.Message == nil {
+					out.Message = new(Message)
+				}
+				(*out.Message).UnmarshalEasyJSON(in)
+			}
+		case "subscribe":
+			if in.IsNull() {
+				in.Skip()
+				out.Subscribe = nil
+			} else {
+				if out.Subscribe == nil {
+					out.Subscribe = new(Subscribe)
+				}
+				(*out.Subscribe).UnmarshalEasyJSON(in)
+			}
+		case "connect":
+			if in.IsNull() {
+				in.Skip()
+				out.Connect = nil
+			} else {
+				if out.Connect == nil {
+					out.Connect = new(Connect)
+				}
+				(*out.Connect).UnmarshalEasyJSON(in)
+			}
+		case "disconnect":
+			if in.IsNull() {
+				in.Skip()
+				out.Disconnect = nil
+			} else {
+				if out.Disconnect == nil {
+					out.Disconnect = new(Disconnect)
+				}
+				(*out.Disconnect).UnmarshalEasyJSON(in)
+			}
+		case "refresh":
+			if in.IsNull() {
+				in.Skip()
+				out.Refresh = nil
+			} else {
+				if out.Refresh == nil {
+					out.Refresh = new(Refresh)
+				}
+				(*out.Refresh).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1303,6 +1633,96 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild16(out *writer, in P
 			out.RawString(prefix)
 		}
 		out.Raw((in.Data).MarshalJSON())
+	}
+	if in.Pub != nil {
+		const prefix string = ",\"pub\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Pub).MarshalEasyJSON(out)
+	}
+	if in.Join != nil {
+		const prefix string = ",\"join\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Join).MarshalEasyJSON(out)
+	}
+	if in.Leave != nil {
+		const prefix string = ",\"leave\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Leave).MarshalEasyJSON(out)
+	}
+	if in.Unsubscribe != nil {
+		const prefix string = ",\"unsubscribe\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Unsubscribe).MarshalEasyJSON(out)
+	}
+	if in.Message != nil {
+		const prefix string = ",\"message\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Message).MarshalEasyJSON(out)
+	}
+	if in.Subscribe != nil {
+		const prefix string = ",\"subscribe\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Subscribe).MarshalEasyJSON(out)
+	}
+	if in.Connect != nil {
+		const prefix string = ",\"connect\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Connect).MarshalEasyJSON(out)
+	}
+	if in.Disconnect != nil {
+		const prefix string = ",\"disconnect\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Disconnect).MarshalEasyJSON(out)
+	}
+	if in.Refresh != nil {
+		const prefix string = ",\"refresh\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Refresh).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -2882,6 +3302,126 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild36(in *jlexer.Lexer,
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Params).UnmarshalJSON(data))
 			}
+		case "connect":
+			if in.IsNull() {
+				in.Skip()
+				out.Connect = nil
+			} else {
+				if out.Connect == nil {
+					out.Connect = new(ConnectRequest)
+				}
+				(*out.Connect).UnmarshalEasyJSON(in)
+			}
+		case "subscribe":
+			if in.IsNull() {
+				in.Skip()
+				out.Subscribe = nil
+			} else {
+				if out.Subscribe == nil {
+					out.Subscribe = new(SubscribeRequest)
+				}
+				(*out.Subscribe).UnmarshalEasyJSON(in)
+			}
+		case "unsubscribe":
+			if in.IsNull() {
+				in.Skip()
+				out.Unsubscribe = nil
+			} else {
+				if out.Unsubscribe == nil {
+					out.Unsubscribe = new(UnsubscribeRequest)
+				}
+				(*out.Unsubscribe).UnmarshalEasyJSON(in)
+			}
+		case "publish":
+			if in.IsNull() {
+				in.Skip()
+				out.Publish = nil
+			} else {
+				if out.Publish == nil {
+					out.Publish = new(PublishRequest)
+				}
+				(*out.Publish).UnmarshalEasyJSON(in)
+			}
+		case "presence":
+			if in.IsNull() {
+				in.Skip()
+				out.Presence = nil
+			} else {
+				if out.Presence == nil {
+					out.Presence = new(PresenceRequest)
+				}
+				(*out.Presence).UnmarshalEasyJSON(in)
+			}
+		case "presence_stats":
+			if in.IsNull() {
+				in.Skip()
+				out.PresenceStats = nil
+			} else {
+				if out.PresenceStats == nil {
+					out.PresenceStats = new(PresenceStatsRequest)
+				}
+				(*out.PresenceStats).UnmarshalEasyJSON(in)
+			}
+		case "history":
+			if in.IsNull() {
+				in.Skip()
+				out.History = nil
+			} else {
+				if out.History == nil {
+					out.History = new(HistoryRequest)
+				}
+				(*out.History).UnmarshalEasyJSON(in)
+			}
+		case "ping":
+			if in.IsNull() {
+				in.Skip()
+				out.Ping = nil
+			} else {
+				if out.Ping == nil {
+					out.Ping = new(PingRequest)
+				}
+				(*out.Ping).UnmarshalEasyJSON(in)
+			}
+		case "send":
+			if in.IsNull() {
+				in.Skip()
+				out.Send = nil
+			} else {
+				if out.Send == nil {
+					out.Send = new(SendRequest)
+				}
+				(*out.Send).UnmarshalEasyJSON(in)
+			}
+		case "rpc":
+			if in.IsNull() {
+				in.Skip()
+				out.Rpc = nil
+			} else {
+				if out.Rpc == nil {
+					out.Rpc = new(RPCRequest)
+				}
+				(*out.Rpc).UnmarshalEasyJSON(in)
+			}
+		case "refresh":
+			if in.IsNull() {
+				in.Skip()
+				out.Refresh = nil
+			} else {
+				if out.Refresh == nil {
+					out.Refresh = new(RefreshRequest)
+				}
+				(*out.Refresh).UnmarshalEasyJSON(in)
+			}
+		case "sub_refresh":
+			if in.IsNull() {
+				in.Skip()
+				out.SubRefresh = nil
+			} else {
+				if out.SubRefresh == nil {
+					out.SubRefresh = new(SubRefreshRequest)
+				}
+				(*out.SubRefresh).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -2921,6 +3461,126 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild36(out *writer, in C
 			out.RawString(prefix)
 		}
 		out.Raw((in.Params).MarshalJSON())
+	}
+	if in.Connect != nil {
+		const prefix string = ",\"connect\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Connect).MarshalEasyJSON(out)
+	}
+	if in.Subscribe != nil {
+		const prefix string = ",\"subscribe\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Subscribe).MarshalEasyJSON(out)
+	}
+	if in.Unsubscribe != nil {
+		const prefix string = ",\"unsubscribe\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Unsubscribe).MarshalEasyJSON(out)
+	}
+	if in.Publish != nil {
+		const prefix string = ",\"publish\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Publish).MarshalEasyJSON(out)
+	}
+	if in.Presence != nil {
+		const prefix string = ",\"presence\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Presence).MarshalEasyJSON(out)
+	}
+	if in.PresenceStats != nil {
+		const prefix string = ",\"presence_stats\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.PresenceStats).MarshalEasyJSON(out)
+	}
+	if in.History != nil {
+		const prefix string = ",\"history\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.History).MarshalEasyJSON(out)
+	}
+	if in.Ping != nil {
+		const prefix string = ",\"ping\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Ping).MarshalEasyJSON(out)
+	}
+	if in.Send != nil {
+		const prefix string = ",\"send\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Send).MarshalEasyJSON(out)
+	}
+	if in.Rpc != nil {
+		const prefix string = ",\"rpc\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Rpc).MarshalEasyJSON(out)
+	}
+	if in.Refresh != nil {
+		const prefix string = ",\"refresh\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.Refresh).MarshalEasyJSON(out)
+	}
+	if in.SubRefresh != nil {
+		const prefix string = ",\"sub_refresh\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.SubRefresh).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }

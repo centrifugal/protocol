@@ -11,6 +11,8 @@ message Error {
 
 message Command {
   uint32 id = 1;
+
+  // using method with params is a DEPRECATED format.
   enum MethodType {
     CONNECT = 0;
     SUBSCRIBE = 1;
@@ -27,12 +29,49 @@ message Command {
   }
   MethodType method = 2;
   bytes params = 3;
+
+  // Client can send one of the following requests. Server will only take the
+  // first non-null request out of these and may return an error if client passed
+  // more than one request. We are not using oneof here due to JSON interoperability
+  // concerns.
+  ConnectRequest connect = 4;
+  SubscribeRequest subscribe = 5;
+  UnsubscribeRequest unsubscribe = 6;
+  PublishRequest publish = 7;
+  PresenceRequest presence = 8;
+  PresenceStatsRequest presence_stats = 9;
+  HistoryRequest history = 10;
+  PingRequest ping = 11;
+  SendRequest send = 12;
+  RPCRequest rpc = 13;
+  RefreshRequest refresh = 14;
+  SubRefreshRequest sub_refresh = 15;
 }
 
 message Reply {
+  // id will only be set to a value > 0 for replies to commands. For pushes
+  // it will have zero value.
   uint32 id = 1;
+  // error can only be set in replies to commands. For pushes it will have zero value.
   Error error = 2;
+
+  // result is DEPRECATED in favor of fields below.
   bytes result = 3;
+
+  // Server can send one of the following fields. We are not using oneof
+  // here due to JSON interoperability concerns.
+  Push push = 4;
+  ConnectResult connect = 5;
+  SubscribeResult subscribe = 6;
+  UnsubscribeResult unsubscribe = 7;
+  PublishResult publish = 8;
+  PresenceResult presence = 9;
+  PresenceStatsResult presence_stats = 10;
+  HistoryResult history = 11;
+  PingResult ping = 12;
+  RPCResult rpc = 13;
+  RefreshResult refresh = 14;
+  SubRefreshResult sub_refresh = 15;
 }
 
 message Push {
@@ -47,9 +86,24 @@ message Push {
     DISCONNECT = 7;
     REFRESH = 8;
   }
+  // type is DEPRECATED in favor of non-null single message.
   PushType type = 1;
   string channel = 2;
+
+  // data is DEPRECATED in favor of non-null single message.
   bytes data = 3;
+
+  // Push can contain one of the following fields. We are not using oneof
+  // here due to JSON interoperability concerns.
+  Publication pub = 4;
+  Join join = 5;
+  Leave leave = 6;
+  Unsubscribe unsubscribe = 7;
+  Message message = 8;
+  Subscribe subscribe = 9;
+  Connect connect = 10;
+  Disconnect disconnect = 11;
+  Refresh refresh = 12;
 }
 
 message ClientInfo {

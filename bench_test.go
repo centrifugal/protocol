@@ -13,9 +13,7 @@ func benchPayload() []byte {
 	for i := 0; i < size; i++ {
 		p = append(p, 'i')
 	}
-	return []byte(`{
-"input":"` + string(p) + `
-"}`)
+	return []byte(`{"input":"` + string(p) + `"}`)
 }
 
 var preparedPayload = benchPayload()

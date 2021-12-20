@@ -6,41 +6,29 @@ import (
 )
 
 func newMarshalProtobuf() ([]byte, error) {
-	pub := &Publication{
-		Data: preparedPayload,
-	}
-	push := &Push{
-		Channel: "test",
-		Pub:     pub,
-	}
 	r := &Reply{
-		Push: push,
+		Push: &Push{
+			Channel: "test",
+			Pub: &Publication{
+				Data: preparedPayload,
+			},
+		},
 	}
 	encoder := NewProtobufReplyEncoder()
 	return encoder.Encode(r)
 }
 
 func newMarshalJSON() ([]byte, error) {
-	pub := &Publication{
-		Data: preparedPayload,
-	}
-	push := &Push{
-		Channel: "test",
-		Pub:     pub,
-	}
 	r := &Reply{
-		Push: push,
+		Push: &Push{
+			Channel: "test",
+			Pub: &Publication{
+				Data: preparedPayload,
+			},
+		},
 	}
-	jw := newWriter()
-	r.MarshalEasyJSON(jw)
-	res, err := jw.BuildBytes()
-	if err != nil {
-		return nil, err
-	}
-	if err := isValidJSON(res); err != nil {
-		return nil, err
-	}
-	return res, nil
+	encoder := NewJSONReplyEncoder()
+	return encoder.Encode(r)
 }
 
 func BenchmarkReplyProtobufMarshalNew(b *testing.B) {

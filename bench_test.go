@@ -18,42 +18,52 @@ func benchPayload() []byte {
 
 var preparedPayload = benchPayload()
 
-func marshalProtobuf() ([]byte, error) {
+func marshalProtobuf() ([]byte, *Reply, error) {
 	pub := &Publication{
 		Data: preparedPayload,
 	}
 	pushBytes, err := EncodePublicationPush(TypeProtobuf, "test", pub)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	r := &Reply{
 		Result: pushBytes,
 	}
 	encoder := NewProtobufReplyEncoder()
-	return encoder.Encode(r)
+	res, err := encoder.Encode(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	return res, r, nil
 }
 
-func marshalJSON() ([]byte, error) {
+func marshalJSON() ([]byte, *Reply, error) {
 	pub := &Publication{
 		Data: preparedPayload,
 	}
 	pushBytes, err := EncodePublicationPush(TypeJSON, "test", pub)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	r := &Reply{
 		Result: pushBytes,
 	}
 	encoder := NewJSONReplyEncoder()
-	return encoder.Encode(r)
+	res, err := encoder.Encode(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	return res, r, nil
 }
 
 func BenchmarkReplyProtobufMarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_, err := marshalProtobuf()
+		d, r, err := marshalProtobuf()
 		if err != nil {
 			b.Fatal(err)
 		}
+		benchData = d
+		benchReply = r
 	}
 	b.ReportAllocs()
 }
@@ -62,10 +72,12 @@ func BenchmarkReplyProtobufMarshalParallel(b *testing.B) {
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := marshalProtobuf()
+			d, r, err := marshalProtobuf()
 			if err != nil {
 				b.Fatal(err)
 			}
+			benchData = d
+			benchReply = r
 		}
 	})
 }
@@ -84,7 +96,7 @@ func BenchmarkReplyProtobufUnmarshal(b *testing.B) {
 	data, _ = encoder.Encode(cmd)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		unmarshalProtobuf(b, data)
+		benchConnectRequest = unmarshalProtobuf(b, data)
 	}
 	b.ReportAllocs()
 }
@@ -104,13 +116,13 @@ func BenchmarkReplyProtobufUnmarshalParallel(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			unmarshalProtobuf(b, data)
+			benchConnectRequest = unmarshalProtobuf(b, data)
 		}
 	})
 	b.ReportAllocs()
 }
 
-func unmarshalProtobuf(b *testing.B, data []byte) {
+func unmarshalProtobuf(b *testing.B, data []byte) *ConnectRequest {
 	decoder := GetCommandDecoder(TypeProtobuf, data)
 	defer PutCommandDecoder(TypeProtobuf, decoder)
 	cmd, err := decoder.Decode()
@@ -128,14 +140,17 @@ func unmarshalProtobuf(b *testing.B, data []byte) {
 	if req.Token != "token" {
 		b.Fatal()
 	}
+	return req
 }
 
 func BenchmarkReplyJSONMarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_, err := marshalJSON()
+		d, r, err := marshalJSON()
 		if err != nil {
 			b.Fatal(err)
 		}
+		benchData = d
+		benchReply = r
 	}
 	b.ReportAllocs()
 }
@@ -144,10 +159,12 @@ func BenchmarkReplyJSONMarshalParallel(b *testing.B) {
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := marshalJSON()
+			d, r, err := marshalJSON()
 			if err != nil {
 				b.Fatal(err)
 			}
+			benchData = d
+			benchReply = r
 		}
 	})
 }
@@ -169,7 +186,7 @@ func BenchmarkReplyJSONUnmarshal(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		unmarshalJSON(b, data)
+		benchConnectRequest = unmarshalJSON(b, data)
 	}
 	b.ReportAllocs()
 }
@@ -192,7 +209,7 @@ func BenchmarkReplyJSONUnmarshalParallel(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			unmarshalJSON(b, data)
+			benchConnectRequest = unmarshalJSON(b, data)
 		}
 	})
 	b.ReportAllocs()
@@ -248,7 +265,7 @@ func BenchmarkReplyJSONUnmarshalMultipleParallel(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func unmarshalJSON(b *testing.B, data []byte) {
+func unmarshalJSON(b *testing.B, data []byte) *ConnectRequest {
 	decoder := GetCommandDecoder(TypeJSON, data)
 	defer PutCommandDecoder(TypeJSON, decoder)
 	cmd, err := decoder.Decode()
@@ -263,6 +280,7 @@ func unmarshalJSON(b *testing.B, data []byte) {
 	if req.Token != "token" {
 		b.Fatal()
 	}
+	return req
 }
 
 func unmarshalJSONMultiple(b *testing.B, data []byte) {

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func newMarshalProtobuf() ([]byte, error) {
+func newMarshalProtobuf() ([]byte, *Reply, error) {
 	r := &Reply{
 		Push: &Push{
 			Channel: "test",
@@ -15,10 +15,14 @@ func newMarshalProtobuf() ([]byte, error) {
 		},
 	}
 	encoder := NewProtobufReplyEncoder()
-	return encoder.Encode(r)
+	res, err := encoder.Encode(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	return res, r, nil
 }
 
-func newMarshalJSON() ([]byte, error) {
+func newMarshalJSON() ([]byte, *Reply, error) {
 	r := &Reply{
 		Push: &Push{
 			Channel: "test",
@@ -28,15 +32,30 @@ func newMarshalJSON() ([]byte, error) {
 		},
 	}
 	encoder := NewJSONReplyEncoder()
-	return encoder.Encode(r)
+	res, err := encoder.Encode(r)
+	if err != nil {
+		return nil, nil, err
+	}
+	return res, r, nil
 }
+
+//goland:noinspection GoUnusedGlobalVariable
+var benchData []byte
+
+//goland:noinspection GoUnusedGlobalVariable
+var benchReply *Reply
+
+//goland:noinspection GoUnusedGlobalVariable
+var benchConnectRequest *ConnectRequest
 
 func BenchmarkReplyProtobufMarshalNew(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_, err := newMarshalProtobuf()
+		d, r, err := newMarshalProtobuf()
 		if err != nil {
 			b.Fatal(err)
 		}
+		benchData = d
+		benchReply = r
 	}
 	b.ReportAllocs()
 }
@@ -45,20 +64,24 @@ func BenchmarkReplyProtobufMarshalParallelNew(b *testing.B) {
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := newMarshalProtobuf()
+			d, r, err := newMarshalProtobuf()
 			if err != nil {
 				b.Fatal(err)
 			}
+			benchData = d
+			benchReply = r
 		}
 	})
 }
 
 func BenchmarkReplyJSONMarshalNew(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_, err := newMarshalJSON()
+		d, r, err := newMarshalJSON()
 		if err != nil {
 			b.Fatal(err)
 		}
+		benchData = d
+		benchReply = r
 	}
 	b.ReportAllocs()
 }
@@ -67,10 +90,12 @@ func BenchmarkReplyJSONMarshalParallelNew(b *testing.B) {
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := newMarshalJSON()
+			d, r, err := newMarshalJSON()
 			if err != nil {
 				b.Fatal(err)
 			}
+			benchData = d
+			benchReply = r
 		}
 	})
 }
@@ -89,7 +114,7 @@ func BenchmarkReplyProtobufUnmarshalNew(b *testing.B) {
 	data, _ = encoder.Encode(cmd)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		unmarshalProtobufNew(b, data)
+		benchConnectRequest = unmarshalProtobufNew(b, data)
 	}
 	b.ReportAllocs()
 }
@@ -109,13 +134,13 @@ func BenchmarkReplyProtobufUnmarshalParallelNew(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			unmarshalProtobufNew(b, data)
+			benchConnectRequest = unmarshalProtobufNew(b, data)
 		}
 	})
 	b.ReportAllocs()
 }
 
-func unmarshalProtobufNew(b *testing.B, data []byte) {
+func unmarshalProtobufNew(b *testing.B, data []byte) *ConnectRequest {
 	decoder := GetCommandDecoder(TypeProtobuf, data)
 	defer PutCommandDecoder(TypeProtobuf, decoder)
 	cmd, err := decoder.Decode()
@@ -131,6 +156,7 @@ func unmarshalProtobufNew(b *testing.B, data []byte) {
 	if cmd.Connect.Token != "token" {
 		b.Fatal()
 	}
+	return cmd.Connect
 }
 
 func BenchmarkReplyJSONUnmarshalNew(b *testing.B) {
@@ -147,7 +173,7 @@ func BenchmarkReplyJSONUnmarshalNew(b *testing.B) {
 	data, _ = encoder.Encode(cmd)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		unmarshalJSONNew(b, data)
+		benchConnectRequest = unmarshalJSONNew(b, data)
 	}
 	b.ReportAllocs()
 }
@@ -167,13 +193,13 @@ func BenchmarkReplyJSONUnmarshalParallelNew(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			unmarshalJSONNew(b, data)
+			benchConnectRequest = unmarshalJSONNew(b, data)
 		}
 	})
 	b.ReportAllocs()
 }
 
-func unmarshalJSONNew(b *testing.B, data []byte) {
+func unmarshalJSONNew(b *testing.B, data []byte) *ConnectRequest {
 	decoder := GetCommandDecoder(TypeJSON, data)
 	defer PutCommandDecoder(TypeJSON, decoder)
 	cmd, err := decoder.Decode()
@@ -186,4 +212,5 @@ func unmarshalJSONNew(b *testing.B, data []byte) {
 	if cmd.Connect.Token != "token" {
 		b.Fatal()
 	}
+	return cmd.Connect
 }

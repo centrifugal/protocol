@@ -104,14 +104,13 @@ func BenchmarkReplyProtobufUnmarshalV2(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
-	data, _ := params.MarshalVT()
 	cmd := &Command{
 		Id:      1,
 		Method:  Command_CONNECT,
 		Connect: params,
 	}
 	encoder := NewProtobufCommandEncoder()
-	data, _ = encoder.Encode(cmd)
+	data, _ := encoder.Encode(cmd)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		benchConnectRequest = unmarshalProtobufV2(b, data)
@@ -123,14 +122,13 @@ func BenchmarkReplyProtobufUnmarshalParallelV2(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
-	data, _ := params.MarshalVT()
 	cmd := &Command{
 		Id:      1,
 		Method:  Command_CONNECT,
 		Connect: params,
 	}
 	encoder := NewProtobufCommandEncoder()
-	data, _ = encoder.Encode(cmd)
+	data, _ := encoder.Encode(cmd)
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
@@ -163,14 +161,13 @@ func BenchmarkReplyJSONUnmarshalV2(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
-	data, _ := params.MarshalVT()
 	cmd := &Command{
 		Id:      1,
 		Method:  Command_CONNECT,
 		Connect: params,
 	}
 	encoder := NewJSONCommandEncoder()
-	data, _ = encoder.Encode(cmd)
+	data, _ := encoder.Encode(cmd)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		benchConnectRequest = unmarshalJSONV2(b, data)
@@ -182,14 +179,13 @@ func BenchmarkReplyJSONUnmarshalParallelV2(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
-	data, _ := params.MarshalVT()
 	cmd := &Command{
 		Id:      1,
 		Method:  Command_CONNECT,
 		Connect: params,
 	}
 	encoder := NewJSONCommandEncoder()
-	data, _ = encoder.Encode(cmd)
+	data, _ := encoder.Encode(cmd)
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {

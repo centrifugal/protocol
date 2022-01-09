@@ -50,13 +50,25 @@ func NewJSONPushEncoder() *JSONPushEncoder {
 
 // Encode Push to bytes.
 func (e *JSONPushEncoder) Encode(message *Push) ([]byte, error) {
-	// Check data is valid JSON.
-	if err := isValidJSON(message.Data); err != nil {
-		return nil, err
+	if message.Data != nil {
+		// Check data is valid JSON for ProtocolVersion1.
+		if err := isValidJSON(message.Data); err != nil {
+			return nil, err
+		}
 	}
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	res, err := jw.BuildBytes()
+	if err != nil {
+		return nil, err
+	}
+	if message.Data == nil {
+		// For ProtocolVersion2.
+		if err := isValidJSON(res); err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 // EncodePublication to bytes.

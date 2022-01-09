@@ -13,29 +13,29 @@ const (
 )
 
 var (
-	jsonPushEncoder     = NewJSONPushEncoder()
-	protobufPushEncoder = NewProtobufPushEncoder()
+	DefaultJsonPushEncoder     = NewJSONPushEncoder()
+	DefaultProtobufPushEncoder = NewProtobufPushEncoder()
 )
 
 // GetPushEncoder ...
 func GetPushEncoder(protoType Type) PushEncoder {
 	if protoType == TypeJSON {
-		return jsonPushEncoder
+		return DefaultJsonPushEncoder
 	}
-	return protobufPushEncoder
+	return DefaultProtobufPushEncoder
 }
 
 var (
-	jsonReplyEncoder     = NewJSONReplyEncoder()
-	protobufReplyEncoder = NewProtobufReplyEncoder()
+	DefaultJsonReplyEncoder     = NewJSONReplyEncoder()
+	DefaultProtobufReplyEncoder = NewProtobufReplyEncoder()
 )
 
 // GetReplyEncoder ...
 func GetReplyEncoder(protoType Type) ReplyEncoder {
 	if protoType == TypeJSON {
-		return jsonReplyEncoder
+		return DefaultJsonReplyEncoder
 	}
-	return protobufReplyEncoder
+	return DefaultProtobufReplyEncoder
 }
 
 var (

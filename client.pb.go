@@ -20,7 +20,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// using method with params is a DEPRECATED format.
 type Command_MethodType int32
 
 const (
@@ -219,18 +218,24 @@ func (x *Error) GetMessage() string {
 	return ""
 }
 
+// Command sent from a client to a server.
+// ProtocolVersion1 uses id, method and params fields.
+// ProtocolVersion2 uses id and one of the possible request messages.
 type Command struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id     uint32             `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Id of command to let client match replies to commands.
+	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Method is used in ProtocolVersion1 only.
 	Method Command_MethodType `protobuf:"varint,2,opt,name=method,proto3,enum=centrifugal.centrifuge.protocol.Command_MethodType" json:"method,omitempty"`
-	Params Raw                `protobuf:"bytes,3,opt,name=params,proto3" json:"params,omitempty"`
-	// Client can send one of the following requests. Server will only take the
-	// first non-null request out of these and may return an error if client passed
-	// more than one request. We are not using oneof here due to JSON interoperability
-	// concerns.
+	// Params is used in ProtocolVersion1 only.
+	Params Raw `protobuf:"bytes,3,opt,name=params,proto3" json:"params,omitempty"`
+	// ProtocolVersion2 client can send one of the following requests. Server will
+	// only take the first non-null request out of these and may return an error if
+	// client passed more than one request. We are not using oneof here due to JSON
+	// interoperability concerns.
 	Connect       *ConnectRequest       `protobuf:"bytes,4,opt,name=connect,proto3" json:"connect,omitempty"`
 	Subscribe     *SubscribeRequest     `protobuf:"bytes,5,opt,name=subscribe,proto3" json:"subscribe,omitempty"`
 	Unsubscribe   *UnsubscribeRequest   `protobuf:"bytes,6,opt,name=unsubscribe,proto3" json:"unsubscribe,omitempty"`
@@ -382,20 +387,23 @@ func (x *Command) GetSubRefresh() *SubRefreshRequest {
 	return nil
 }
 
+// Reply sent from a server to a client.
+// ProtocolVersion1 uses id, error and result fields.
+// ProtocolVersion2 uses id and one of the possible concrete result messages.
 type Reply struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// id will only be set to a value > 0 for replies to commands. For pushes
+	// Id will only be set to a value > 0 for replies to commands. For pushes
 	// it will have zero value.
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// error can only be set in replies to commands. For pushes it will have zero value.
+	// Error can only be set in replies to commands. For pushes it will have zero value.
 	Error *Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
-	// result is DEPRECATED in favor of fields below.
+	// Result is used in ProtocolVersion1 only.
 	Result Raw `protobuf:"bytes,3,opt,name=result,proto3" json:"result,omitempty"`
-	// Server can send one of the following fields. We are not using oneof
-	// here due to JSON interoperability concerns.
+	// ProtocolVersion2 server can send one of the following fields. We are not using
+	// oneof here due to JSON interoperability concerns.
 	Push          *Push                `protobuf:"bytes,4,opt,name=push,proto3" json:"push,omitempty"`
 	Connect       *ConnectResult       `protobuf:"bytes,5,opt,name=connect,proto3" json:"connect,omitempty"`
 	Subscribe     *SubscribeResult     `protobuf:"bytes,6,opt,name=subscribe,proto3" json:"subscribe,omitempty"`
@@ -547,18 +555,22 @@ func (x *Reply) GetSubRefresh() *SubRefreshResult {
 	return nil
 }
 
+// Push can be sent to a client as part of Reply in case of bidirectional transport or
+// without additional wrapping in case of unidirectional transports.
+// ProtocolVersion1 uses type, channel and data fields.
+// ProtocolVersion2 uses channel and one of the possible concrete push messages.
 type Push struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// type is DEPRECATED in favor of non-null single message.
+	// Type is used in ProtocolVersion1 only.
 	Type    Push_PushType `protobuf:"varint,1,opt,name=type,proto3,enum=centrifugal.centrifuge.protocol.Push_PushType" json:"type,omitempty"`
 	Channel string        `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"`
-	// data is DEPRECATED in favor of non-null single message.
+	// Data is used in ProtocolVersion1 only.
 	Data Raw `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
-	// Push can contain one of the following fields. We are not using oneof
-	// here due to JSON interoperability concerns.
+	// ProtocolVersion2 server can push one of the following fields to the client. We are
+	// not using oneof here due to JSON interoperability concerns.
 	Pub         *Publication `protobuf:"bytes,4,opt,name=pub,proto3" json:"pub,omitempty"`
 	Join        *Join        `protobuf:"bytes,5,opt,name=join,proto3" json:"join,omitempty"`
 	Leave       *Leave       `protobuf:"bytes,6,opt,name=leave,proto3" json:"leave,omitempty"`

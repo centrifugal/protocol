@@ -1883,22 +1883,22 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild19(in *jlexer.Lexer,
 			}
 		case "offset":
 			out.Offset = uint64(in.Uint64())
-		case "meta":
+		case "tags":
 			if in.IsNull() {
 				in.Skip()
 			} else {
 				in.Delim('{')
 				if !in.IsDelim('}') {
-					out.Meta = make(map[string]string)
+					out.Tags = make(map[string]string)
 				} else {
-					out.Meta = nil
+					out.Tags = nil
 				}
 				for !in.IsDelim('}') {
 					key := string(in.String())
 					in.WantColon()
 					var v4 string
 					v4 = string(in.String())
-					(out.Meta)[key] = v4
+					(out.Tags)[key] = v4
 					in.WantComma()
 				}
 				in.Delim('}')
@@ -1943,8 +1943,8 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 		}
 		out.Uint64(uint64(in.Offset))
 	}
-	if len(in.Meta) != 0 {
-		const prefix string = ",\"meta\":"
+	if len(in.Tags) != 0 {
+		const prefix string = ",\"tags\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -1954,7 +1954,7 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 		{
 			out.RawByte('{')
 			v5First := true
-			for v5Name, v5Value := range in.Meta {
+			for v5Name, v5Value := range in.Tags {
 				if v5First {
 					v5First = false
 				} else {

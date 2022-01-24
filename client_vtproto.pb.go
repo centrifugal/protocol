@@ -641,9 +641,9 @@ func (m *Publication) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if len(m.Meta) > 0 {
-		for k := range m.Meta {
-			v := m.Meta[k]
+	if len(m.Tags) > 0 {
+		for k := range m.Tags {
+			v := m.Tags[k]
 			baseI := i
 			i -= len(v)
 			copy(dAtA[i:], v)
@@ -2632,8 +2632,8 @@ func (m *Publication) SizeVT() (n int) {
 	if m.Offset != 0 {
 		n += 1 + sov(uint64(m.Offset))
 	}
-	if len(m.Meta) > 0 {
-		for k, v := range m.Meta {
+	if len(m.Tags) > 0 {
+		for k, v := range m.Tags {
 			_ = k
 			_ = v
 			mapEntrySize := 1 + len(k) + sov(uint64(len(k))) + 1 + len(v) + sov(uint64(len(v)))
@@ -5339,7 +5339,7 @@ func (m *Publication) UnmarshalVT(dAtA []byte) error {
 			}
 		case 7:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -5366,8 +5366,8 @@ func (m *Publication) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Meta == nil {
-				m.Meta = make(map[string]string)
+			if m.Tags == nil {
+				m.Tags = make(map[string]string)
 			}
 			var mapkey string
 			var mapvalue string
@@ -5462,7 +5462,7 @@ func (m *Publication) UnmarshalVT(dAtA []byte) error {
 					iNdEx += skippy
 				}
 			}
-			m.Meta[mapkey] = mapvalue
+			m.Tags[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

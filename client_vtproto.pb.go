@@ -946,6 +946,11 @@ func (m *Connect) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.Ping != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.Ping))
+		i--
+		dAtA[i] = 0x38
+	}
 	if m.Ttl != 0 {
 		i = encodeVarint(dAtA, i, uint64(m.Ttl))
 		i--
@@ -1222,6 +1227,11 @@ func (m *ConnectResult) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
+	}
+	if m.Ping != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.Ping))
+		i--
+		dAtA[i] = 0x38
 	}
 	if len(m.Subs) > 0 {
 		for k := range m.Subs {
@@ -2772,6 +2782,9 @@ func (m *Connect) SizeVT() (n int) {
 	if m.Ttl != 0 {
 		n += 1 + sov(uint64(m.Ttl))
 	}
+	if m.Ping != 0 {
+		n += 1 + sov(uint64(m.Ping))
+	}
 	if m.unknownFields != nil {
 		n += len(m.unknownFields)
 	}
@@ -2895,6 +2908,9 @@ func (m *ConnectResult) SizeVT() (n int) {
 			mapEntrySize := 1 + len(k) + sov(uint64(len(k))) + l
 			n += mapEntrySize + 1 + sov(uint64(mapEntrySize))
 		}
+	}
+	if m.Ping != 0 {
+		n += 1 + sov(uint64(m.Ping))
 	}
 	if m.unknownFields != nil {
 		n += len(m.unknownFields)
@@ -6267,6 +6283,25 @@ func (m *Connect) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ping", wireType)
+			}
+			m.Ping = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ping |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skip(dAtA[iNdEx:])
@@ -7106,6 +7141,25 @@ func (m *ConnectResult) UnmarshalVT(dAtA []byte) error {
 			}
 			m.Subs[mapkey] = mapvalue
 			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ping", wireType)
+			}
+			m.Ping = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ping |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skip(dAtA[iNdEx:])

@@ -2913,6 +2913,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild33(in *jlexer.Lexer,
 				}
 				in.Delim('}')
 			}
+		case "ping":
+			out.Ping = uint32(in.Uint32())
 		default:
 			in.SkipRecursive()
 		}
@@ -3000,6 +3002,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild33(out *writer, in C
 			}
 			out.RawByte('}')
 		}
+	}
+	if in.Ping != 0 {
+		const prefix string = ",\"ping\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Uint32(uint32(in.Ping))
 	}
 	out.RawByte('}')
 }
@@ -3219,6 +3231,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild35(in *jlexer.Lexer,
 			out.Expires = bool(in.Bool())
 		case "ttl":
 			out.Ttl = uint32(in.Uint32())
+		case "ping":
+			out.Ping = uint32(in.Uint32())
 		default:
 			in.SkipRecursive()
 		}
@@ -3306,6 +3320,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild35(out *writer, in C
 			out.RawString(prefix)
 		}
 		out.Uint32(uint32(in.Ttl))
+	}
+	if in.Ping != 0 {
+		const prefix string = ",\"ping\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Uint32(uint32(in.Ping))
 	}
 	out.RawByte('}')
 }

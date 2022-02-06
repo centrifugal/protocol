@@ -333,7 +333,7 @@ func (d *ProtobufCommandDecoder) Decode() (*Command, error) {
 	if d.offset < len(d.data) {
 		var c Command
 		l, n := binary.Uvarint(d.data[d.offset:])
-		if l == 0 || n <= 0 {
+		if n <= 0 {
 			return nil, io.EOF
 		}
 		from := d.offset + n

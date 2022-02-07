@@ -2915,6 +2915,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild33(in *jlexer.Lexer,
 			}
 		case "ping":
 			out.Ping = uint32(in.Uint32())
+		case "pong":
+			out.Pong = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -3012,6 +3014,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild33(out *writer, in C
 			out.RawString(prefix)
 		}
 		out.Uint32(uint32(in.Ping))
+	}
+	if in.Pong {
+		const prefix string = ",\"pong\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Pong))
 	}
 	out.RawByte('}')
 }
@@ -3233,6 +3245,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild35(in *jlexer.Lexer,
 			out.Ttl = uint32(in.Uint32())
 		case "ping":
 			out.Ping = uint32(in.Uint32())
+		case "pong":
+			out.Pong = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -3330,6 +3344,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild35(out *writer, in C
 			out.RawString(prefix)
 		}
 		out.Uint32(uint32(in.Ping))
+	}
+	if in.Pong {
+		const prefix string = ",\"pong\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Pong))
 	}
 	out.RawByte('}')
 }

@@ -167,6 +167,7 @@ message Connect {
   bool expires = 5;
   uint32 ttl = 6;
   uint32 ping = 7;
+  bool pong = 8;
 }
 
 message Disconnect {
@@ -196,6 +197,7 @@ message ConnectResult {
   bytes data = 5;
   map<string, SubscribeResult> subs = 6;
   uint32 ping = 7;
+  bool pong = 8;
 }
 
 message RefreshRequest {

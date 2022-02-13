@@ -168,6 +168,7 @@ message Connect {
   uint32 ttl = 6;
   uint32 ping = 7;
   bool pong = 8;
+  string session = 9;
 }
 
 message Disconnect {
@@ -198,6 +199,7 @@ message ConnectResult {
   map<string, SubscribeResult> subs = 6;
   uint32 ping = 7;
   bool pong = 8;
+  string session = 9;
 }
 
 message RefreshRequest {

@@ -2917,6 +2917,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild33(in *jlexer.Lexer,
 			out.Ping = uint32(in.Uint32())
 		case "pong":
 			out.Pong = bool(in.Bool())
+		case "session":
+			out.Session = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -3024,6 +3026,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild33(out *writer, in C
 			out.RawString(prefix)
 		}
 		out.Bool(bool(in.Pong))
+	}
+	if in.Session != "" {
+		const prefix string = ",\"session\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Session))
 	}
 	out.RawByte('}')
 }
@@ -3247,6 +3259,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild35(in *jlexer.Lexer,
 			out.Ping = uint32(in.Uint32())
 		case "pong":
 			out.Pong = bool(in.Bool())
+		case "session":
+			out.Session = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -3354,6 +3368,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild35(out *writer, in C
 			out.RawString(prefix)
 		}
 		out.Bool(bool(in.Pong))
+	}
+	if in.Session != "" {
+		const prefix string = ",\"session\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Session))
 	}
 	out.RawByte('}')
 }

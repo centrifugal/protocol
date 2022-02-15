@@ -9,6 +9,12 @@ message Error {
   string message = 2;
 }
 
+message EmulationRequest {
+  string node = 1;
+  string session = 2;
+  bytes data = 3;
+}
+
 // Command sent from a client to a server.
 // ProtocolVersion1 uses id, method and params fields.
 // ProtocolVersion2 uses id and one of the possible request messages.
@@ -169,6 +175,7 @@ message Connect {
   uint32 ping = 7;
   bool pong = 8;
   string session = 9;
+  string node = 10;
 }
 
 message Disconnect {
@@ -200,6 +207,7 @@ message ConnectResult {
   uint32 ping = 7;
   bool pong = 8;
   string session = 9;
+  string node = 10;
 }
 
 message RefreshRequest {

@@ -134,6 +134,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild2(in *jlexer.Lexer, 
 			continue
 		}
 		switch key {
+		case "type":
+			out.Type = Unsubscribe_Type(in.Int32())
 		default:
 			in.SkipRecursive()
 		}
@@ -148,6 +150,12 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild2(out *writer, in Un
 	out.RawByte('{')
 	first := true
 	_ = first
+	if in.Type != 0 {
+		const prefix string = ",\"type\":"
+		first = false
+		out.RawString(prefix[1:])
+		out.Int32(int32(in.Type))
+	}
 	out.RawByte('}')
 }
 

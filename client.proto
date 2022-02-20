@@ -150,6 +150,11 @@ message Leave {
 
 message Unsubscribe {
   // Field 1 removed (bool resubscribe).
+  enum Type {
+    PERMANENT = 0;
+    INSUFFICIENT_STATE = 1;
+  }
+  Type type = 2;
 }
 
 message Subscribe {

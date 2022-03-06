@@ -2743,6 +2743,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild31(in *jlexer.Lexer,
 			out.Code = uint32(in.Uint32())
 		case "message":
 			out.Message = string(in.String())
+		case "temporary":
+			out.Temporary = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -2772,6 +2774,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild31(out *writer, in E
 			out.RawString(prefix)
 		}
 		out.String(string(in.Message))
+	}
+	if in.Temporary {
+		const prefix string = ",\"temporary\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Temporary))
 	}
 	out.RawByte('}')
 }

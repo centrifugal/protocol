@@ -7,6 +7,7 @@ option go_package = "./;protocol";
 message Error {
   uint32 code = 1;
   string message = 2;
+  bool temporary = 3;
 }
 
 message EmulationRequest {
@@ -152,7 +153,8 @@ message Unsubscribe {
   // Field 1 removed (bool resubscribe).
   enum Type {
     PERMANENT = 0;
-    INSUFFICIENT_STATE = 1;
+    INSUFFICIENT = 1;
+    UNRECOVERABLE = 2;
   }
   Type type = 2;
 }

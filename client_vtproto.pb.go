@@ -865,8 +865,8 @@ func (m *Unsubscribe) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.Type != 0 {
-		i = encodeVarint(dAtA, i, uint64(m.Type))
+	if m.Code != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.Code))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -2838,8 +2838,8 @@ func (m *Unsubscribe) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Type != 0 {
-		n += 1 + sov(uint64(m.Type))
+	if m.Code != 0 {
+		n += 1 + sov(uint64(m.Code))
 	}
 	if m.unknownFields != nil {
 		n += len(m.unknownFields)
@@ -6045,9 +6045,9 @@ func (m *Unsubscribe) UnmarshalVT(dAtA []byte) error {
 		switch fieldNum {
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
 			}
-			m.Type = 0
+			m.Code = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflow
@@ -6057,7 +6057,7 @@ func (m *Unsubscribe) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Type |= Unsubscribe_Type(b&0x7F) << shift
+				m.Code |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

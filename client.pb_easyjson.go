@@ -236,6 +236,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild3(in *jlexer.Lexer, 
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Data).UnmarshalJSON(data))
 			}
+		case "was_recovering":
+			out.WasRecovering = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -348,6 +350,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild3(out *writer, in Su
 			out.RawString(prefix)
 		}
 		out.Raw((in.Data).MarshalJSON())
+	}
+	if in.WasRecovering {
+		const prefix string = ",\"was_recovering\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.WasRecovering))
 	}
 	out.RawByte('}')
 }

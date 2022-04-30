@@ -406,6 +406,10 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild4(in *jlexer.Lexer, 
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Data).UnmarshalJSON(data))
 			}
+		case "positioned":
+			out.Positioned = bool(in.Bool())
+		case "recoverable":
+			out.Recoverable = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -475,6 +479,26 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild4(out *writer, in Su
 			out.RawString(prefix)
 		}
 		out.Raw((in.Data).MarshalJSON())
+	}
+	if in.Positioned {
+		const prefix string = ",\"positioned\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Positioned))
+	}
+	if in.Recoverable {
+		const prefix string = ",\"recoverable\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Recoverable))
 	}
 	out.RawByte('}')
 }

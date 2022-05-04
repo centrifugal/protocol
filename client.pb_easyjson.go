@@ -136,6 +136,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild2(in *jlexer.Lexer, 
 		switch key {
 		case "code":
 			out.Code = uint32(in.Uint32())
+		case "reason":
+			out.Reason = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -155,6 +157,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild2(out *writer, in Un
 		first = false
 		out.RawString(prefix[1:])
 		out.Uint32(uint32(in.Code))
+	}
+	if in.Reason != "" {
+		const prefix string = ",\"reason\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Reason))
 	}
 	out.RawByte('}')
 }

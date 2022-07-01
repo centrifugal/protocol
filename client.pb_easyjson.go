@@ -422,6 +422,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild4(in *jlexer.Lexer, 
 			out.Positioned = bool(in.Bool())
 		case "recoverable":
 			out.Recoverable = bool(in.Bool())
+		case "join_leave":
+			out.JoinLeave = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -511,6 +513,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild4(out *writer, in Su
 			out.RawString(prefix)
 		}
 		out.Bool(bool(in.Recoverable))
+	}
+	if in.JoinLeave {
+		const prefix string = ",\"join_leave\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.JoinLeave))
 	}
 	out.RawByte('}')
 }

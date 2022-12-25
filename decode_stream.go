@@ -4,21 +4,53 @@ import (
 	"bufio"
 	"encoding/binary"
 	"io"
+	"sync"
 
 	"github.com/segmentio/encoding/json"
 )
 
-// StreamCommandDecoder is EXPERIMENTAL.
-type StreamCommandDecoder interface {
-	Decode() (*Command, []byte, error)
+var (
+	streamJsonCommandDecoderPool     sync.Pool
+	streamProtobufCommandDecoderPool sync.Pool
+)
+
+func GetStreamCommandDecoder(protoType Type, reader io.Reader) StreamCommandDecoder {
+	if protoType == TypeJSON {
+		e := streamJsonCommandDecoderPool.Get()
+		if e == nil {
+			return NewJSONStreamCommandDecoder(reader)
+		}
+		commandDecoder := e.(*JSONStreamCommandDecoder)
+		commandDecoder.Reset(reader)
+		return commandDecoder
+	}
+	e := streamProtobufCommandDecoderPool.Get()
+	if e == nil {
+		return NewProtobufStreamCommandDecoder(reader)
+	}
+	commandDecoder := e.(*ProtobufStreamCommandDecoder)
+	commandDecoder.Reset(reader)
+	return commandDecoder
 }
 
-// JSONStreamCommandDecoder is EXPERIMENTAL.
+func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
+	e.Reset(nil)
+	if protoType == TypeJSON {
+		streamJsonCommandDecoderPool.Put(e)
+		return
+	}
+	streamProtobufCommandDecoderPool.Put(e)
+}
+
+type StreamCommandDecoder interface {
+	Decode() (*Command, []byte, error)
+	Reset(reader io.Reader)
+}
+
 type JSONStreamCommandDecoder struct {
 	reader *bufio.Reader
 }
 
-// NewJSONStreamCommandDecoder is EXPERIMENTAL.
 func NewJSONStreamCommandDecoder(reader io.Reader) *JSONStreamCommandDecoder {
 	return &JSONStreamCommandDecoder{reader: bufio.NewReader(reader)}
 }
@@ -26,6 +58,14 @@ func NewJSONStreamCommandDecoder(reader io.Reader) *JSONStreamCommandDecoder {
 func (d *JSONStreamCommandDecoder) Decode() (*Command, []byte, error) {
 	cmdBytes, err := d.reader.ReadBytes('\n')
 	if err != nil {
+		if err == io.EOF && len(cmdBytes) > 0 {
+			var c Command
+			_, err = json.Parse(cmdBytes, &c, json.ZeroCopy)
+			if err != nil {
+				return nil, nil, err
+			}
+			return &c, cmdBytes, err
+		}
 		return nil, nil, err
 	}
 	var c Command
@@ -36,12 +76,14 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, []byte, error) {
 	return &c, cmdBytes, nil
 }
 
-// ProtobufStreamCommandDecoder is EXPERIMENTAL.
+func (d *JSONStreamCommandDecoder) Reset(reader io.Reader) {
+	d.reader.Reset(reader)
+}
+
 type ProtobufStreamCommandDecoder struct {
 	reader *bufio.Reader
 }
 
-// NewProtobufStreamCommandDecoder is EXPERIMENTAL.
 func NewProtobufStreamCommandDecoder(reader io.Reader) *ProtobufStreamCommandDecoder {
 	return &ProtobufStreamCommandDecoder{reader: bufio.NewReader(reader)}
 }
@@ -67,58 +109,6 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, []byte, error) {
 	return &c, cmdBytes, nil
 }
 
-//
-//// StreamReplyDecoder ...
-//type StreamReplyDecoder interface {
-//	Decode() (*Reply, error)
-//}
-//
-//type JSONStreamReplyDecoder struct {
-//	reader *bufio.Reader
-//}
-//
-//func NewJSONStreamReplyDecoder(reader io.Reader) *JSONStreamReplyDecoder {
-//	return &JSONStreamReplyDecoder{reader: bufio.NewReader(reader)}
-//}
-//
-//func (d *JSONStreamReplyDecoder) Decode() (*Reply, error) {
-//	cmdBytes, err := d.reader.ReadBytes('\n')
-//	if err != nil {
-//		return nil, err
-//	}
-//	var c Reply
-//	_, err = json.Parse(cmdBytes, &c, json.ZeroCopy)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return &c, nil
-//}
-//
-//type ProtobufStreamReplyDecoder struct {
-//	reader *bufio.Reader
-//}
-//
-//func NewProtobufStreamReplyDecoder(reader io.Reader) *ProtobufStreamReplyDecoder {
-//	return &ProtobufStreamReplyDecoder{reader: bufio.NewReader(reader)}
-//}
-//
-//func (d *ProtobufStreamReplyDecoder) Decode() (*Reply, error) {
-//	msgLength, err := binary.ReadUvarint(d.reader)
-//	if err != nil {
-//		return nil, err
-//	}
-//	cmdBytes := make([]byte, msgLength)
-//	n, err := d.reader.Read(cmdBytes)
-//	if err != nil {
-//		return nil, err
-//	}
-//	if uint64(n) != msgLength {
-//		return nil, io.ErrShortBuffer
-//	}
-//	var c Reply
-//	err = c.UnmarshalVT(cmdBytes)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return &c, nil
-//}
+func (d *ProtobufStreamCommandDecoder) Reset(reader io.Reader) {
+	d.reader.Reset(reader)
+}

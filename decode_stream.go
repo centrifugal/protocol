@@ -43,7 +43,7 @@ func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
 }
 
 type StreamCommandDecoder interface {
-	Decode() (*Command, []byte, error)
+	Decode() (*Command, error)
 	Reset(reader io.Reader)
 }
 
@@ -55,25 +55,25 @@ func NewJSONStreamCommandDecoder(reader io.Reader) *JSONStreamCommandDecoder {
 	return &JSONStreamCommandDecoder{reader: bufio.NewReader(reader)}
 }
 
-func (d *JSONStreamCommandDecoder) Decode() (*Command, []byte, error) {
-	cmdBytes, err := d.reader.ReadBytes('\n')
+func (d *JSONStreamCommandDecoder) Decode() (*Command, error) {
+	cmdBytes, err := d.reader.ReadSlice('\n')
 	if err != nil {
 		if err == io.EOF && len(cmdBytes) > 0 {
 			var c Command
-			_, err = json.Parse(cmdBytes, &c, json.ZeroCopy)
+			_, err = json.Parse(cmdBytes, &c, 0)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
-			return &c, cmdBytes, err
+			return &c, err
 		}
-		return nil, nil, err
+		return nil, err
 	}
 	var c Command
-	_, err = json.Parse(cmdBytes, &c, json.ZeroCopy)
+	_, err = json.Parse(cmdBytes, &c, 0)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return &c, cmdBytes, nil
+	return &c, nil
 }
 
 func (d *JSONStreamCommandDecoder) Reset(reader io.Reader) {
@@ -88,25 +88,27 @@ func NewProtobufStreamCommandDecoder(reader io.Reader) *ProtobufStreamCommandDec
 	return &ProtobufStreamCommandDecoder{reader: bufio.NewReader(reader)}
 }
 
-func (d *ProtobufStreamCommandDecoder) Decode() (*Command, []byte, error) {
+func (d *ProtobufStreamCommandDecoder) Decode() (*Command, error) {
 	msgLength, err := binary.ReadUvarint(d.reader)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	cmdBytes := make([]byte, msgLength)
-	n, err := d.reader.Read(cmdBytes)
+	bb := getByteBuffer(int(msgLength))
+	defer putByteBuffer(bb)
+
+	n, err := d.reader.Read(bb.B[:int(msgLength)])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if uint64(n) != msgLength {
-		return nil, nil, io.ErrShortBuffer
+		return nil, io.ErrShortBuffer
 	}
 	var c Command
-	err = c.UnmarshalVT(cmdBytes)
+	err = c.UnmarshalVT(bb.B[:int(msgLength)])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return &c, cmdBytes, nil
+	return &c, nil
 }
 
 func (d *ProtobufStreamCommandDecoder) Reset(reader io.Reader) {

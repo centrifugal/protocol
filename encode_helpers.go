@@ -79,10 +79,10 @@ func newRefreshPush(data Raw) *Push {
 	}
 }
 
-// At the moment this is hardcoded to a value which should be enough for most our messages
-// sent. If we will have a message with field names total size greater than this value then
-// byte buffer won't be reused in JSON case (so need to take care of this to not loose
-// performance at some point). Would be nice to add additional size for messages like
+// MaxJSONPushFieldsSize at the moment this is hardcoded to a value which should be enough for
+// most our messages sent. If we have a message with field names total size greater than
+// this value then byte buffer won't be reused in JSON case (so need to take care of this to not
+// lose performance at some point). Would be nice to add additional size for messages like
 // Connect push which can have variable length Connect.Subs field.
 const MaxJSONPushFieldsSize = 64
 

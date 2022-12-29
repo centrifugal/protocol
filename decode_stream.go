@@ -43,7 +43,7 @@ func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
 }
 
 type StreamCommandDecoder interface {
-	Decode() (*Command, error)
+	Decode() (*Command, int, error)
 	Reset(reader io.Reader)
 }
 
@@ -55,25 +55,25 @@ func NewJSONStreamCommandDecoder(reader io.Reader) *JSONStreamCommandDecoder {
 	return &JSONStreamCommandDecoder{reader: bufio.NewReader(reader)}
 }
 
-func (d *JSONStreamCommandDecoder) Decode() (*Command, error) {
+func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	cmdBytes, err := d.reader.ReadSlice('\n')
 	if err != nil {
 		if err == io.EOF && len(cmdBytes) > 0 {
 			var c Command
 			_, err = json.Parse(cmdBytes, &c, 0)
 			if err != nil {
-				return nil, err
+				return nil, 0, err
 			}
-			return &c, err
+			return &c, len(cmdBytes), err
 		}
-		return nil, err
+		return nil, 0, err
 	}
 	var c Command
 	_, err = json.Parse(cmdBytes, &c, 0)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return &c, nil
+	return &c, len(cmdBytes), nil
 }
 
 func (d *JSONStreamCommandDecoder) Reset(reader io.Reader) {
@@ -88,27 +88,27 @@ func NewProtobufStreamCommandDecoder(reader io.Reader) *ProtobufStreamCommandDec
 	return &ProtobufStreamCommandDecoder{reader: bufio.NewReader(reader)}
 }
 
-func (d *ProtobufStreamCommandDecoder) Decode() (*Command, error) {
+func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	msgLength, err := binary.ReadUvarint(d.reader)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	bb := getByteBuffer(int(msgLength))
 	defer putByteBuffer(bb)
 
 	n, err := d.reader.Read(bb.B[:int(msgLength)])
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	if uint64(n) != msgLength {
-		return nil, io.ErrShortBuffer
+		return nil, 0, io.ErrShortBuffer
 	}
 	var c Command
 	err = c.UnmarshalVT(bb.B[:int(msgLength)])
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return &c, nil
+	return &c, int(msgLength) + 8, nil
 }
 
 func (d *ProtobufStreamCommandDecoder) Reset(reader io.Reader) {

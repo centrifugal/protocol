@@ -4,121 +4,113 @@ import (
 	"bufio"
 	"encoding/binary"
 	"io"
+	"sync"
 
 	"github.com/segmentio/encoding/json"
 )
 
-// StreamCommandDecoder is EXPERIMENTAL.
-type StreamCommandDecoder interface {
-	Decode() (*Command, []byte, error)
+var (
+	streamJsonCommandDecoderPool     sync.Pool
+	streamProtobufCommandDecoderPool sync.Pool
+)
+
+func GetStreamCommandDecoder(protoType Type, reader io.Reader) StreamCommandDecoder {
+	if protoType == TypeJSON {
+		e := streamJsonCommandDecoderPool.Get()
+		if e == nil {
+			return NewJSONStreamCommandDecoder(reader)
+		}
+		commandDecoder := e.(*JSONStreamCommandDecoder)
+		commandDecoder.Reset(reader)
+		return commandDecoder
+	}
+	e := streamProtobufCommandDecoderPool.Get()
+	if e == nil {
+		return NewProtobufStreamCommandDecoder(reader)
+	}
+	commandDecoder := e.(*ProtobufStreamCommandDecoder)
+	commandDecoder.Reset(reader)
+	return commandDecoder
 }
 
-// JSONStreamCommandDecoder is EXPERIMENTAL.
+func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
+	e.Reset(nil)
+	if protoType == TypeJSON {
+		streamJsonCommandDecoderPool.Put(e)
+		return
+	}
+	streamProtobufCommandDecoderPool.Put(e)
+}
+
+type StreamCommandDecoder interface {
+	Decode() (*Command, error)
+	Reset(reader io.Reader)
+}
+
 type JSONStreamCommandDecoder struct {
 	reader *bufio.Reader
 }
 
-// NewJSONStreamCommandDecoder is EXPERIMENTAL.
 func NewJSONStreamCommandDecoder(reader io.Reader) *JSONStreamCommandDecoder {
 	return &JSONStreamCommandDecoder{reader: bufio.NewReader(reader)}
 }
 
-func (d *JSONStreamCommandDecoder) Decode() (*Command, []byte, error) {
-	cmdBytes, err := d.reader.ReadBytes('\n')
+func (d *JSONStreamCommandDecoder) Decode() (*Command, error) {
+	cmdBytes, err := d.reader.ReadSlice('\n')
 	if err != nil {
-		return nil, nil, err
+		if err == io.EOF && len(cmdBytes) > 0 {
+			var c Command
+			_, err = json.Parse(cmdBytes, &c, 0)
+			if err != nil {
+				return nil, err
+			}
+			return &c, err
+		}
+		return nil, err
 	}
 	var c Command
-	_, err = json.Parse(cmdBytes, &c, json.ZeroCopy)
+	_, err = json.Parse(cmdBytes, &c, 0)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return &c, cmdBytes, nil
+	return &c, nil
 }
 
-// ProtobufStreamCommandDecoder is EXPERIMENTAL.
+func (d *JSONStreamCommandDecoder) Reset(reader io.Reader) {
+	d.reader.Reset(reader)
+}
+
 type ProtobufStreamCommandDecoder struct {
 	reader *bufio.Reader
 }
 
-// NewProtobufStreamCommandDecoder is EXPERIMENTAL.
 func NewProtobufStreamCommandDecoder(reader io.Reader) *ProtobufStreamCommandDecoder {
 	return &ProtobufStreamCommandDecoder{reader: bufio.NewReader(reader)}
 }
 
-func (d *ProtobufStreamCommandDecoder) Decode() (*Command, []byte, error) {
+func (d *ProtobufStreamCommandDecoder) Decode() (*Command, error) {
 	msgLength, err := binary.ReadUvarint(d.reader)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	cmdBytes := make([]byte, msgLength)
-	n, err := d.reader.Read(cmdBytes)
+	bb := getByteBuffer(int(msgLength))
+	defer putByteBuffer(bb)
+
+	n, err := d.reader.Read(bb.B[:int(msgLength)])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if uint64(n) != msgLength {
-		return nil, nil, io.ErrShortBuffer
+		return nil, io.ErrShortBuffer
 	}
 	var c Command
-	err = c.UnmarshalVT(cmdBytes)
+	err = c.UnmarshalVT(bb.B[:int(msgLength)])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return &c, cmdBytes, nil
+	return &c, nil
 }
 
-//
-//// StreamReplyDecoder ...
-//type StreamReplyDecoder interface {
-//	Decode() (*Reply, error)
-//}
-//
-//type JSONStreamReplyDecoder struct {
-//	reader *bufio.Reader
-//}
-//
-//func NewJSONStreamReplyDecoder(reader io.Reader) *JSONStreamReplyDecoder {
-//	return &JSONStreamReplyDecoder{reader: bufio.NewReader(reader)}
-//}
-//
-//func (d *JSONStreamReplyDecoder) Decode() (*Reply, error) {
-//	cmdBytes, err := d.reader.ReadBytes('\n')
-//	if err != nil {
-//		return nil, err
-//	}
-//	var c Reply
-//	_, err = json.Parse(cmdBytes, &c, json.ZeroCopy)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return &c, nil
-//}
-//
-//type ProtobufStreamReplyDecoder struct {
-//	reader *bufio.Reader
-//}
-//
-//func NewProtobufStreamReplyDecoder(reader io.Reader) *ProtobufStreamReplyDecoder {
-//	return &ProtobufStreamReplyDecoder{reader: bufio.NewReader(reader)}
-//}
-//
-//func (d *ProtobufStreamReplyDecoder) Decode() (*Reply, error) {
-//	msgLength, err := binary.ReadUvarint(d.reader)
-//	if err != nil {
-//		return nil, err
-//	}
-//	cmdBytes := make([]byte, msgLength)
-//	n, err := d.reader.Read(cmdBytes)
-//	if err != nil {
-//		return nil, err
-//	}
-//	if uint64(n) != msgLength {
-//		return nil, io.ErrShortBuffer
-//	}
-//	var c Reply
-//	err = c.UnmarshalVT(cmdBytes)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return &c, nil
-//}
+func (d *ProtobufStreamCommandDecoder) Reset(reader io.Reader) {
+	d.reader.Reset(reader)
+}

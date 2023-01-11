@@ -56,7 +56,7 @@ func NewJSONStreamCommandDecoder(reader io.Reader) *JSONStreamCommandDecoder {
 }
 
 func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
-	cmdBytes, err := d.reader.ReadSlice('\n')
+	cmdBytes, err := d.reader.ReadBytes('\n')
 	if err != nil {
 		if err == io.EOF && len(cmdBytes) > 0 {
 			var c Command
@@ -96,7 +96,7 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	bb := getByteBuffer(int(msgLength))
 	defer putByteBuffer(bb)
 
-	n, err := d.reader.Read(bb.B[:int(msgLength)])
+	n, err := io.ReadFull(d.reader, bb.B[:int(msgLength)])
 	if err != nil {
 		return nil, 0, err
 	}

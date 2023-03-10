@@ -50,23 +50,14 @@ func NewJSONPushEncoder() *JSONPushEncoder {
 
 // Encode Push to bytes.
 func (e *JSONPushEncoder) Encode(message *Push) ([]byte, error) {
-	if message.Data != nil {
-		// Check data is valid JSON for ProtocolVersion1.
-		if err := isValidJSON(message.Data); err != nil {
-			return nil, err
-		}
-	}
 	jw := newWriter()
 	message.MarshalEasyJSON(jw)
 	res, err := jw.BuildBytes()
 	if err != nil {
 		return nil, err
 	}
-	if message.Data == nil {
-		// For ProtocolVersion2.
-		if err := isValidJSON(res); err != nil {
-			return nil, err
-		}
+	if err := isValidJSON(res); err != nil {
+		return nil, err
 	}
 	return res, nil
 }
@@ -298,24 +289,14 @@ func NewJSONReplyEncoder() *JSONReplyEncoder {
 
 // Encode Reply to bytes.
 func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
-	if r.Id != 0 && r.Result != nil {
-		// For ProtocolVersion1.
-		// Only check command result reply. Push reply JSON validation is done in PushEncoder.
-		if err := isValidJSON(r.Result); err != nil {
-			return nil, err
-		}
-	}
 	jw := newWriter()
 	r.MarshalEasyJSON(jw)
 	result, err := jw.BuildBytes()
 	if err != nil {
 		return nil, err
 	}
-	if r.Push != nil || (r.Id != 0 && r.Result == nil) {
-		// For ProtocolVersion2.
-		if err := isValidJSON(result); err != nil {
-			return nil, err
-		}
+	if err := isValidJSON(result); err != nil {
+		return nil, err
 	}
 	return result, nil
 }

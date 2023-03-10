@@ -920,10 +920,6 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild10(in *jlexer.Lexer,
 				}
 				(*out.Error).UnmarshalEasyJSON(in)
 			}
-		case "result":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.Result).UnmarshalJSON(data))
-			}
 		case "push":
 			if in.IsNull() {
 				in.Skip()
@@ -1073,16 +1069,6 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild10(out *writer, in R
 			out.RawString(prefix)
 		}
 		(*in.Error).MarshalEasyJSON(out)
-	}
-	if len(in.Result) != 0 {
-		const prefix string = ",\"result\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Raw((in.Result).MarshalJSON())
 	}
 	if in.Push != nil {
 		const prefix string = ",\"push\":"
@@ -1564,14 +1550,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild16(in *jlexer.Lexer,
 			continue
 		}
 		switch key {
-		case "type":
-			out.Type = Push_PushType(in.Int32())
 		case "channel":
 			out.Channel = string(in.String())
-		case "data":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.Data).UnmarshalJSON(data))
-			}
 		case "pub":
 			if in.IsNull() {
 				in.Skip()
@@ -1676,31 +1656,11 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild16(out *writer, in P
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Type != 0 {
-		const prefix string = ",\"type\":"
-		first = false
-		out.RawString(prefix[1:])
-		out.Int32(int32(in.Type))
-	}
 	if in.Channel != "" {
 		const prefix string = ",\"channel\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
+		first = false
+		out.RawString(prefix[1:])
 		out.String(string(in.Channel))
-	}
-	if len(in.Data) != 0 {
-		const prefix string = ",\"data\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Raw((in.Data).MarshalJSON())
 	}
 	if in.Pub != nil {
 		const prefix string = ",\"pub\":"
@@ -3595,12 +3555,6 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild37(in *jlexer.Lexer,
 		switch key {
 		case "id":
 			out.Id = uint32(in.Uint32())
-		case "method":
-			out.Method = Command_MethodType(in.Int32())
-		case "params":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.Params).UnmarshalJSON(data))
-			}
 		case "connect":
 			if in.IsNull() {
 				in.Skip()
@@ -3740,26 +3694,6 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild37(out *writer, in C
 		first = false
 		out.RawString(prefix[1:])
 		out.Uint32(uint32(in.Id))
-	}
-	if in.Method != 0 {
-		const prefix string = ",\"method\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Int32(int32(in.Method))
-	}
-	if len(in.Params) != 0 {
-		const prefix string = ",\"params\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Raw((in.Params).MarshalJSON())
 	}
 	if in.Connect != nil {
 		const prefix string = ",\"connect\":"

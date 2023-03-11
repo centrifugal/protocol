@@ -113,14 +113,3 @@ func GetResultEncoder(protoType Type) ResultEncoder {
 
 // PutResultEncoder ...
 func PutResultEncoder(_ Type, _ ReplyEncoder) {}
-
-// GetParamsDecoder ...
-func GetParamsDecoder(protoType Type) ParamsDecoder {
-	if protoType == TypeJSON {
-		return NewJSONParamsDecoder()
-	}
-	return NewProtobufParamsDecoder()
-}
-
-// PutParamsDecoder ...
-func PutParamsDecoder(_ Type, _ ParamsDecoder) {}

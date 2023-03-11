@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 
 	fastJSON "github.com/segmentio/encoding/json"
 )
@@ -593,47 +592,4 @@ func (e *ProtobufCommandEncoder) Encode(cmd *Command) ([]byte, error) {
 	buf.Write(bs[:n])
 	buf.Write(commandBytes)
 	return buf.Bytes(), nil
-}
-
-// ParamsEncoder ...
-type ParamsEncoder interface {
-	Encode(request interface{}) ([]byte, error)
-}
-
-var _ ParamsEncoder = NewJSONParamsEncoder()
-
-// JSONParamsEncoder ...
-type JSONParamsEncoder struct{}
-
-// NewJSONParamsEncoder ...
-func NewJSONParamsEncoder() *JSONParamsEncoder {
-	return &JSONParamsEncoder{}
-}
-
-// Encode ...
-func (d *JSONParamsEncoder) Encode(r interface{}) ([]byte, error) {
-	return fastJSON.Marshal(r)
-}
-
-var _ ParamsEncoder = NewProtobufParamsEncoder()
-
-// ProtobufParamsEncoder ...
-type ProtobufParamsEncoder struct{}
-
-// NewProtobufParamsEncoder ...
-func NewProtobufParamsEncoder() *ProtobufParamsEncoder {
-	return &ProtobufParamsEncoder{}
-}
-
-type vtMarshaler interface {
-	MarshalVT() (dAtA []byte, err error)
-}
-
-// Encode ...
-func (d *ProtobufParamsEncoder) Encode(r interface{}) ([]byte, error) {
-	m, ok := r.(vtMarshaler)
-	if !ok {
-		return nil, fmt.Errorf("can not marshal type %T to Protobuf", r)
-	}
-	return m.MarshalVT()
 }

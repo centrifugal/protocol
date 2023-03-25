@@ -5,6 +5,17 @@ import (
 	"testing"
 )
 
+func benchPayload() []byte {
+	size := 256
+	var p []byte
+	for i := 0; i < size; i++ {
+		p = append(p, 'i')
+	}
+	return []byte(`{"input":"` + string(p) + `"}`)
+}
+
+var preparedPayload = benchPayload()
+
 func marshalProtobufV2() ([]byte, *Reply, error) {
 	r := &Reply{
 		Push: &Push{
@@ -106,7 +117,6 @@ func BenchmarkReplyProtobufUnmarshalV2(b *testing.B) {
 	}
 	cmd := &Command{
 		Id:      1,
-		Method:  Command_CONNECT,
 		Connect: params,
 	}
 	encoder := NewProtobufCommandEncoder()
@@ -124,7 +134,6 @@ func BenchmarkReplyProtobufUnmarshalParallelV2(b *testing.B) {
 	}
 	cmd := &Command{
 		Id:      1,
-		Method:  Command_CONNECT,
 		Connect: params,
 	}
 	encoder := NewProtobufCommandEncoder()
@@ -163,7 +172,6 @@ func BenchmarkReplyJSONUnmarshalV2(b *testing.B) {
 	}
 	cmd := &Command{
 		Id:      1,
-		Method:  Command_CONNECT,
 		Connect: params,
 	}
 	encoder := NewJSONCommandEncoder()
@@ -181,7 +189,6 @@ func BenchmarkReplyJSONUnmarshalParallelV2(b *testing.B) {
 	}
 	cmd := &Command{
 		Id:      1,
-		Method:  Command_CONNECT,
 		Connect: params,
 	}
 	encoder := NewJSONCommandEncoder()

@@ -89,16 +89,16 @@ func TestJSONCommandDecoder_DifferentNumberOfMessages(t *testing.T) {
 }
 
 func TestJSONCommandDecoder_Decode_Many_ExtraNewLine(t *testing.T) {
-	data := []byte(`{"method":1,"params":{"channel":"chat:1","recover":true,"epoch":"WHBN"},"id":222}
-{"method":1,"params":{"channel":"chat:2","recover":true,"epoch":"yenC"},"id":223}
-{"method":1,"params":{"channel":"chat:index"},"id":224}
+	data := []byte(`{"subscribe":{"channel":"chat:1","recover":true,"epoch":"WHBN"},"id":222}
+{"subscribe":{"channel":"chat:2","recover":true,"epoch":"yenC"},"id":223}
+{"subscribe":{"channel":"chat:index"},"id":224}
 `)
 	decoder := GetCommandDecoder(TypeJSON, data)
 	commands := readCommands(t, decoder)
 	require.Len(t, commands, 3)
-	require.Contains(t, string(commands[0].Params), "chat:1")
-	require.Contains(t, string(commands[1].Params), "chat:2")
-	require.Contains(t, string(commands[2].Params), "chat:index")
+	require.Equal(t, "chat:1", commands[0].Subscribe.Channel)
+	require.Equal(t, "chat:2", commands[1].Subscribe.Channel)
+	require.Equal(t, "chat:index", commands[2].Subscribe.Channel)
 }
 
 func TestJSONCommandDecoder_Decode_Many_UnexpectedEOF(t *testing.T) {

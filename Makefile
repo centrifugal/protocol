@@ -1,7 +1,7 @@
-all: proto
+all: generate
 
-proto:
+generate:
 	bash generate.sh
 
 test:
-	go test -v
+	go test -v ./...

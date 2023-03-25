@@ -456,7 +456,6 @@ func (x *Reply) GetSubRefresh() *SubRefreshResult {
 
 // Push can be sent to a client as part of Reply in case of bidirectional transport or
 // without additional wrapping in case of unidirectional transports.
-// ProtocolVersion1 uses type, channel and data fields.
 // ProtocolVersion2 uses channel and one of the possible concrete push messages.
 type Push struct {
 	state         protoimpl.MessageState

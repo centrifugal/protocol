@@ -38,7 +38,6 @@ const (
 	FrameTypeHistory
 	FrameTypeRefresh
 	FrameTypeSubRefresh
-	FrameTypePing
 	FrameTypeSend
 )
 

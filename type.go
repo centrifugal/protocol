@@ -90,8 +90,6 @@ func (f FrameType) String() string {
 		return "refresh"
 	case FrameTypeSend:
 		return "send"
-	case FrameTypePing:
-		return "ping"
 
 	default:
 		return "unknown"

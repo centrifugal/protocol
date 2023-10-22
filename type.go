@@ -12,6 +12,89 @@ const (
 	TypeProtobuf Type = "protobuf"
 )
 
+type FrameType uint8
+
+const (
+	FrameTypeServerPing FrameType = iota + 1
+	FrameTypeClientPong
+
+	FrameTypePushConnect
+	FrameTypePushSubscribe
+	FrameTypePushPublication
+	FrameTypePushJoin
+	FrameTypePushLeave
+	FrameTypePushUnsubscribe
+	FrameTypePushMessage
+	FrameTypePushRefresh
+	FrameTypePushDisconnect
+
+	FrameTypeConnect
+	FrameTypeSubscribe
+	FrameTypePublish
+	FrameTypeUnsubscribe
+	FrameTypeRPC
+	FrameTypePresence
+	FrameTypePresenceStats
+	FrameTypeHistory
+	FrameTypeRefresh
+	FrameTypeSubRefresh
+	FrameTypeSend
+)
+
+func (f FrameType) String() string {
+	switch f {
+	case FrameTypeServerPing:
+		return "server_ping"
+	case FrameTypeClientPong:
+		return "client_pong"
+
+	case FrameTypePushConnect:
+		return "push_connect"
+	case FrameTypePushSubscribe:
+		return "push_subscribe"
+	case FrameTypePushPublication:
+		return "push_publication"
+	case FrameTypePushJoin:
+		return "push_join"
+	case FrameTypePushLeave:
+		return "push_leave"
+	case FrameTypePushUnsubscribe:
+		return "push_unsubscribe"
+	case FrameTypePushMessage:
+		return "push_message"
+	case FrameTypePushRefresh:
+		return "push_refresh"
+	case FrameTypePushDisconnect:
+		return "push_disconnect"
+
+	case FrameTypeConnect:
+		return "connect"
+	case FrameTypeSubscribe:
+		return "subscribe"
+	case FrameTypePublish:
+		return "publish"
+	case FrameTypeUnsubscribe:
+		return "unsubscribe"
+	case FrameTypeRPC:
+		return "rpc"
+	case FrameTypePresence:
+		return "presence"
+	case FrameTypePresenceStats:
+		return "presence_stats"
+	case FrameTypeHistory:
+		return "history"
+	case FrameTypeSubRefresh:
+		return "sub_refresh"
+	case FrameTypeRefresh:
+		return "refresh"
+	case FrameTypeSend:
+		return "send"
+
+	default:
+		return "unknown"
+	}
+}
+
 var (
 	DefaultJsonPushEncoder     = NewJSONPushEncoder()
 	DefaultProtobufPushEncoder = NewProtobufPushEncoder()

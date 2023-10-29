@@ -16,7 +16,7 @@ func benchPayload() []byte {
 
 var preparedPayload = benchPayload()
 
-func marshalProtobufV2() ([]byte, *Reply, error) {
+func marshalProtobuf() ([]byte, *Reply, error) {
 	r := &Reply{
 		Push: &Push{
 			Channel: "test",
@@ -33,7 +33,7 @@ func marshalProtobufV2() ([]byte, *Reply, error) {
 	return res, r, nil
 }
 
-func marshalJSONV2() ([]byte, *Reply, error) {
+func marshalJSON() ([]byte, *Reply, error) {
 	r := &Reply{
 		Push: &Push{
 			Channel: "test",
@@ -59,9 +59,9 @@ var benchReply *Reply
 //goland:noinspection GoUnusedGlobalVariable
 var benchConnectRequest *ConnectRequest
 
-func BenchmarkReplyProtobufMarshalV2(b *testing.B) {
+func BenchmarkReplyProtobufMarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		d, r, err := marshalProtobufV2()
+		d, r, err := marshalProtobuf()
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -71,11 +71,11 @@ func BenchmarkReplyProtobufMarshalV2(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkReplyProtobufMarshalParallelV2(b *testing.B) {
+func BenchmarkReplyProtobufMarshalParallel(b *testing.B) {
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			d, r, err := marshalProtobufV2()
+			d, r, err := marshalProtobuf()
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -85,9 +85,9 @@ func BenchmarkReplyProtobufMarshalParallelV2(b *testing.B) {
 	})
 }
 
-func BenchmarkReplyJSONMarshalV2(b *testing.B) {
+func BenchmarkReplyJSONMarshal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		d, r, err := marshalJSONV2()
+		d, r, err := marshalJSON()
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -97,11 +97,11 @@ func BenchmarkReplyJSONMarshalV2(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkReplyJSONMarshalParallelV2(b *testing.B) {
+func BenchmarkReplyJSONMarshalParallel(b *testing.B) {
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			d, r, err := marshalJSONV2()
+			d, r, err := marshalJSON()
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -111,7 +111,7 @@ func BenchmarkReplyJSONMarshalParallelV2(b *testing.B) {
 	})
 }
 
-func BenchmarkReplyProtobufUnmarshalV2(b *testing.B) {
+func BenchmarkReplyProtobufUnmarshal(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
@@ -123,12 +123,12 @@ func BenchmarkReplyProtobufUnmarshalV2(b *testing.B) {
 	data, _ := encoder.Encode(cmd)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		benchConnectRequest = unmarshalProtobufV2(b, data)
+		benchConnectRequest = unmarshalProtobuf(b, data)
 	}
 	b.ReportAllocs()
 }
 
-func BenchmarkReplyProtobufUnmarshalParallelV2(b *testing.B) {
+func BenchmarkReplyProtobufUnmarshalParallel(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
@@ -141,13 +141,13 @@ func BenchmarkReplyProtobufUnmarshalParallelV2(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			benchConnectRequest = unmarshalProtobufV2(b, data)
+			benchConnectRequest = unmarshalProtobuf(b, data)
 		}
 	})
 	b.ReportAllocs()
 }
 
-func unmarshalProtobufV2(b *testing.B, data []byte) *ConnectRequest {
+func unmarshalProtobuf(b *testing.B, data []byte) *ConnectRequest {
 	decoder := GetCommandDecoder(TypeProtobuf, data)
 	defer PutCommandDecoder(TypeProtobuf, decoder)
 	cmd, err := decoder.Decode()
@@ -166,7 +166,7 @@ func unmarshalProtobufV2(b *testing.B, data []byte) *ConnectRequest {
 	return cmd.Connect
 }
 
-func BenchmarkReplyJSONUnmarshalV2(b *testing.B) {
+func BenchmarkReplyJSONUnmarshal(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
@@ -178,12 +178,12 @@ func BenchmarkReplyJSONUnmarshalV2(b *testing.B) {
 	data, _ := encoder.Encode(cmd)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		benchConnectRequest = unmarshalJSONV2(b, data)
+		benchConnectRequest = unmarshalJSON(b, data)
 	}
 	b.ReportAllocs()
 }
 
-func BenchmarkReplyJSONUnmarshalParallelV2(b *testing.B) {
+func BenchmarkReplyJSONUnmarshalParallel(b *testing.B) {
 	params := &ConnectRequest{
 		Token: "token",
 	}
@@ -196,13 +196,13 @@ func BenchmarkReplyJSONUnmarshalParallelV2(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			benchConnectRequest = unmarshalJSONV2(b, data)
+			benchConnectRequest = unmarshalJSON(b, data)
 		}
 	})
 	b.ReportAllocs()
 }
 
-func unmarshalJSONV2(b *testing.B, data []byte) *ConnectRequest {
+func unmarshalJSON(b *testing.B, data []byte) *ConnectRequest {
 	decoder := GetCommandDecoder(TypeJSON, data)
 	defer PutCommandDecoder(TypeJSON, decoder)
 	cmd, err := decoder.Decode()

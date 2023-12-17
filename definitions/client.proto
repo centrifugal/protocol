@@ -87,6 +87,9 @@ message Push {
   Connect connect = 10;
   Disconnect disconnect = 11;
   Refresh refresh = 12;
+
+  // Optional stream position.
+  StreamPosition stream_position = 13;
 }
 
 message ClientInfo {

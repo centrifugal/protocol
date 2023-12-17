@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# check GOBIN, if not set export GOBIN=/path/to/go/bin
 # go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 # go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@latest
 # go install github.com/fatih/gomodifytags@v1.13.0

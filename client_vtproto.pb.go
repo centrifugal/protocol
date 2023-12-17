@@ -483,6 +483,16 @@ func (m *Push) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.StreamPosition != nil {
+		size, err := m.StreamPosition.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x6a
+	}
 	if m.Refresh != nil {
 		size, err := m.Refresh.MarshalToSizedBufferVT(dAtA[:i])
 		if err != nil {
@@ -2723,6 +2733,10 @@ func (m *Push) SizeVT() (n int) {
 	}
 	if m.Refresh != nil {
 		l = m.Refresh.SizeVT()
+		n += 1 + l + sov(uint64(l))
+	}
+	if m.StreamPosition != nil {
+		l = m.StreamPosition.SizeVT()
 		n += 1 + l + sov(uint64(l))
 	}
 	n += len(m.unknownFields)
@@ -5161,6 +5175,42 @@ func (m *Push) UnmarshalVT(dAtA []byte) error {
 				m.Refresh = &Refresh{}
 			}
 			if err := m.Refresh.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StreamPosition", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.StreamPosition == nil {
+				m.StreamPosition = &StreamPosition{}
+			}
+			if err := m.StreamPosition.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

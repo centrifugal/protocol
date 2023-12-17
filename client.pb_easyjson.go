@@ -1642,6 +1642,16 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild16(in *jlexer.Lexer,
 				}
 				(*out.Refresh).UnmarshalEasyJSON(in)
 			}
+		case "stream_position":
+			if in.IsNull() {
+				in.Skip()
+				out.StreamPosition = nil
+			} else {
+				if out.StreamPosition == nil {
+					out.StreamPosition = new(StreamPosition)
+				}
+				(*out.StreamPosition).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1751,6 +1761,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild16(out *writer, in P
 			out.RawString(prefix)
 		}
 		(*in.Refresh).MarshalEasyJSON(out)
+	}
+	if in.StreamPosition != nil {
+		const prefix string = ",\"stream_position\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(*in.StreamPosition).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }

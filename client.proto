@@ -102,6 +102,8 @@ message Publication {
   ClientInfo info = 5;
   uint64 offset = 6;
   map<string, string> tags = 7;
+  bool delta = 8;      // When set indicates that Publication is delta encoded.
+  string b64delta = 9; // Only set when need to use binary delta in text protocol. Otherwise data contains delta bytes.
 }
 
 message Join {
@@ -198,6 +200,7 @@ message SubscribeRequest {
   bool positioned = 9;
   bool recoverable = 10;
   bool join_leave = 11;
+  string delta = 12;
 }
 
 message SubscribeResult {

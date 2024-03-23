@@ -424,6 +424,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild4(in *jlexer.Lexer, 
 			out.Recoverable = bool(in.Bool())
 		case "join_leave":
 			out.JoinLeave = bool(in.Bool())
+		case "delta":
+			out.Delta = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -523,6 +525,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild4(out *writer, in Su
 			out.RawString(prefix)
 		}
 		out.Bool(bool(in.JoinLeave))
+	}
+	if in.Delta != "" {
+		const prefix string = ",\"delta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Delta))
 	}
 	out.RawByte('}')
 }
@@ -1931,6 +1943,10 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild19(in *jlexer.Lexer,
 				}
 				in.Delim('}')
 			}
+		case "delta":
+			out.Delta = bool(in.Bool())
+		case "b64delta":
+			out.B64Delta = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -1994,6 +2010,26 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 			}
 			out.RawByte('}')
 		}
+	}
+	if in.Delta {
+		const prefix string = ",\"delta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Delta))
+	}
+	if in.B64Delta != "" {
+		const prefix string = ",\"b64delta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.B64Delta))
 	}
 	out.RawByte('}')
 }

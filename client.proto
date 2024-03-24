@@ -103,7 +103,7 @@ message Publication {
   uint64 offset = 6;
   map<string, string> tags = 7;
   bool delta = 8;      // When set indicates that Publication is delta encoded.
-  string b64delta = 9; // Only set when need to use binary delta in text protocol. Otherwise data contains delta bytes.
+  string b64data = 9;  // Used to send binary data/delta in JSON case.
 }
 
 message Join {

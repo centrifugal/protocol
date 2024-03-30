@@ -60,9 +60,9 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	if err != nil {
 		if err == io.EOF && len(cmdBytes) > 0 {
 			var c Command
-			_, err = json.Parse(cmdBytes, &c, 0)
-			if err != nil {
-				return nil, 0, err
+			_, parseErr := json.Parse(cmdBytes, &c, 0)
+			if parseErr != nil {
+				return nil, 0, parseErr
 			}
 			return &c, len(cmdBytes), err
 		}

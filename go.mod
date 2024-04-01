@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/mailru/easyjson v0.7.7
 	github.com/segmentio/encoding v0.4.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/valyala/bytebufferpool v1.0.0
 	google.golang.org/protobuf v1.33.0
 )

@@ -674,13 +674,6 @@ func (m *Publication) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if len(m.B64Data) > 0 {
-		i -= len(m.B64Data)
-		copy(dAtA[i:], m.B64Data)
-		i = encodeVarint(dAtA, i, uint64(len(m.B64Data)))
-		i--
-		dAtA[i] = 0x4a
-	}
 	if m.Delta {
 		i--
 		if m.Delta {
@@ -2806,10 +2799,6 @@ func (m *Publication) SizeVT() (n int) {
 	}
 	if m.Delta {
 		n += 2
-	}
-	l = len(m.B64Data)
-	if l > 0 {
-		n += 1 + l + sov(uint64(l))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -5669,38 +5658,6 @@ func (m *Publication) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 			m.Delta = bool(v != 0)
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field B64Data", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.B64Data = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skip(dAtA[iNdEx:])

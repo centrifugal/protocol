@@ -102,8 +102,7 @@ message Publication {
   ClientInfo info = 5;
   uint64 offset = 6;
   map<string, string> tags = 7;
-  bool delta = 8;      // When set indicates that Publication is delta encoded.
-  string b64data = 9;  // Used to send binary data/delta in JSON case.
+  bool delta = 8;  // When set indicates that data in Publication is a delta from previous data.
 }
 
 message Join {

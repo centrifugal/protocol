@@ -1945,8 +1945,6 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild19(in *jlexer.Lexer,
 			}
 		case "delta":
 			out.Delta = bool(in.Bool())
-		case "b64data":
-			out.B64Data = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -2020,16 +2018,6 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 			out.RawString(prefix)
 		}
 		out.Bool(bool(in.Delta))
-	}
-	if in.B64Data != "" {
-		const prefix string = ",\"b64data\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.B64Data))
 	}
 	out.RawByte('}')
 }

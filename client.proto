@@ -214,6 +214,7 @@ message SubscribeResult {
   bool positioned = 10;
   bytes data = 11;
   bool was_recovering = 12;
+  bool delta = 13;
 }
 
 message SubRefreshRequest {

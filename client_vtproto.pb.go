@@ -1642,6 +1642,16 @@ func (m *SubscribeResult) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.Delta {
+		i--
+		if m.Delta {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x68
+	}
 	if m.WasRecovering {
 		i--
 		if m.WasRecovering {
@@ -3197,6 +3207,9 @@ func (m *SubscribeResult) SizeVT() (n int) {
 		n += 1 + l + sov(uint64(l))
 	}
 	if m.WasRecovering {
+		n += 2
+	}
+	if m.Delta {
 		n += 2
 	}
 	n += len(m.unknownFields)
@@ -8395,6 +8408,26 @@ func (m *SubscribeResult) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 			m.WasRecovering = bool(v != 0)
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Delta", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Delta = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skip(dAtA[iNdEx:])

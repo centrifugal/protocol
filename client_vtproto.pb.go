@@ -7535,7 +7535,7 @@ func (m *ConnectResult) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TimeMs |= uint64(b&0x7F) << shift
+				m.TimeMs |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

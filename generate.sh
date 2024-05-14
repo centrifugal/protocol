@@ -15,7 +15,7 @@ which easyjson
 
 protoc --go_out=. --plugin protoc-gen-go=${GOBIN}/protoc-gen-go --go-vtproto_out=. \
   --plugin protoc-gen-go-vtproto=${GOBIN}/protoc-gen-go-vtproto \
-  --go-vtproto_opt=features=marshal+unmarshal+size \
+  --go-vtproto_opt=features=marshal+unmarshal+size+unmarshal_unsafe \
   client.proto
 
 gomodifytype -file client.pb.go -all -w -from "[]byte" -to "Raw"

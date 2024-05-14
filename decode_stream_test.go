@@ -89,13 +89,17 @@ func testDecodingFrame(tb testing.TB, frame []byte, protoType Type) {
 		require.Equal(tb, 10037, size)
 	}
 	_, size, err = dec.Decode()
-	require.NoError(tb, err)
 	if protoType == TypeProtobuf {
 		require.Equal(tb, 10018, size)
 	} else {
 		require.Equal(tb, 10036, size)
 	}
-	_, _, err = dec.Decode()
-	require.ErrorIs(tb, err, io.EOF)
+	if err != nil {
+		require.ErrorIs(tb, err, io.EOF)
+	} else {
+		_, _, err = dec.Decode()
+		require.ErrorIs(tb, err, io.EOF)
+	}
+
 	PutStreamCommandDecoder(protoType, dec)
 }

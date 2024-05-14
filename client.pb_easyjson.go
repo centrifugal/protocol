@@ -250,6 +250,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild3(in *jlexer.Lexer, 
 			}
 		case "was_recovering":
 			out.WasRecovering = bool(in.Bool())
+		case "delta":
+			out.Delta = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -373,6 +375,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild3(out *writer, in Su
 		}
 		out.Bool(bool(in.WasRecovering))
 	}
+	if in.Delta {
+		const prefix string = ",\"delta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Delta))
+	}
 	out.RawByte('}')
 }
 
@@ -424,6 +436,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild4(in *jlexer.Lexer, 
 			out.Recoverable = bool(in.Bool())
 		case "join_leave":
 			out.JoinLeave = bool(in.Bool())
+		case "delta":
+			out.Delta = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -523,6 +537,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild4(out *writer, in Su
 			out.RawString(prefix)
 		}
 		out.Bool(bool(in.JoinLeave))
+	}
+	if in.Delta != "" {
+		const prefix string = ",\"delta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Delta))
 	}
 	out.RawByte('}')
 }
@@ -1931,6 +1955,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild19(in *jlexer.Lexer,
 				}
 				in.Delim('}')
 			}
+		case "delta":
+			out.Delta = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -1994,6 +2020,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 			}
 			out.RawByte('}')
 		}
+	}
+	if in.Delta {
+		const prefix string = ",\"delta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Delta))
 	}
 	out.RawByte('}')
 }
@@ -3040,6 +3076,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild34(in *jlexer.Lexer,
 			out.Session = string(in.String())
 		case "node":
 			out.Node = string(in.String())
+		case "time":
+			out.Time = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -3167,6 +3205,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild34(out *writer, in C
 			out.RawString(prefix)
 		}
 		out.String(string(in.Node))
+	}
+	if in.Time != 0 {
+		const prefix string = ",\"time\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Time))
 	}
 	out.RawByte('}')
 }

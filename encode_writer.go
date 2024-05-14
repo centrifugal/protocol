@@ -87,6 +87,10 @@ func (w *writer) Int32(n int32) {
 	_, _ = w.Buffer.WriteString(strconv.FormatInt(int64(n), 10))
 }
 
+func (w *writer) Int64(n int64) {
+	_, _ = w.Buffer.WriteString(strconv.FormatInt(n, 10))
+}
+
 func (w *writer) Bool(v bool) {
 	if v {
 		_, _ = w.Buffer.Write([]byte(`true`))

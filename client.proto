@@ -102,6 +102,7 @@ message Publication {
   ClientInfo info = 5;
   uint64 offset = 6;
   map<string, string> tags = 7;
+  bool delta = 8;  // When set indicates that data in Publication is a delta from previous data.
 }
 
 message Join {
@@ -174,6 +175,7 @@ message ConnectResult {
   bool pong = 8;
   string session = 9;
   string node = 10;
+  int64 time = 11; // Server time as Unix timestamp in milliseconds (not sent by default).
 }
 
 message RefreshRequest {
@@ -198,6 +200,7 @@ message SubscribeRequest {
   bool positioned = 9;
   bool recoverable = 10;
   bool join_leave = 11;
+  string delta = 12;
 }
 
 message SubscribeResult {
@@ -212,6 +215,7 @@ message SubscribeResult {
   bool positioned = 10;
   bytes data = 11;
   bool was_recovering = 12;
+  bool delta = 13;
 }
 
 message SubRefreshRequest {

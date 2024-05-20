@@ -143,6 +143,7 @@ message Connect {
   bool pong = 8;
   string session = 9;
   string node = 10;
+  int64 time = 11; // Server time as Unix timestamp in milliseconds (not sent by default).
 }
 
 message Disconnect {

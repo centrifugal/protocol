@@ -3442,6 +3442,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild36(in *jlexer.Lexer,
 			out.Session = string(in.String())
 		case "node":
 			out.Node = string(in.String())
+		case "time":
+			out.Time = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -3569,6 +3571,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild36(out *writer, in C
 			out.RawString(prefix)
 		}
 		out.String(string(in.Node))
+	}
+	if in.Time != 0 {
+		const prefix string = ",\"time\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Time))
 	}
 	out.RawByte('}')
 }

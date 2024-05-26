@@ -103,6 +103,7 @@ message Publication {
   uint64 offset = 6;
   map<string, string> tags = 7;
   bool delta = 8;  // When set indicates that data in Publication is a delta from previous data.
+  int64 time = 9;  // Optional time of publication as Unix timestamp milliseconds.
 }
 
 message Join {

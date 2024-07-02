@@ -1959,6 +1959,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild19(in *jlexer.Lexer,
 			out.Delta = bool(in.Bool())
 		case "time":
 			out.Time = int64(in.Int64())
+		case "channel":
+			out.Channel = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -2042,6 +2044,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 			out.RawString(prefix)
 		}
 		out.Int64(int64(in.Time))
+	}
+	if in.Channel != "" {
+		const prefix string = ",\"channel\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Channel))
 	}
 	out.RawByte('}')
 }

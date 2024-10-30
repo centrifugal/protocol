@@ -60,14 +60,14 @@ func TestStreamingDecode_JSON(t *testing.T) {
 
 func TestStreamingDecode_JSON_MessageLimit(t *testing.T) {
 	frame := getTestFrame(t, TypeJSON, 10000)
-	dec := GetStreamCommandDecoder(TypeJSON, bytes.NewReader(frame), 100)
+	dec := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), 100)
 	_, _, err := dec.Decode()
 	require.ErrorIs(t, err, ErrMessageTooLarge)
 }
 
 func TestStreamingDecode_Protobuf_MessageLimit(t *testing.T) {
 	frame := getTestFrame(t, TypeProtobuf, 10000)
-	dec := GetStreamCommandDecoder(TypeProtobuf, bytes.NewReader(frame), 100)
+	dec := GetStreamCommandDecoderLimited(TypeProtobuf, bytes.NewReader(frame), 100)
 	_, _, err := dec.Decode()
 	require.ErrorIs(t, err, ErrMessageTooLarge)
 }
@@ -95,7 +95,7 @@ func BenchmarkStreamingDecode_JSON(b *testing.B) {
 }
 
 func testDecodingFrame(tb testing.TB, frame []byte, protoType Type) {
-	dec := GetStreamCommandDecoder(protoType, bytes.NewReader(frame), 200000)
+	dec := GetStreamCommandDecoder(protoType, bytes.NewReader(frame))
 	_, size, err := dec.Decode()
 	require.NoError(tb, err)
 	if protoType == TypeProtobuf {
@@ -129,7 +129,7 @@ func TestJSONStreamCommandDecoder(t *testing.T) {
 
 	testCases := []struct {
 		name             string
-		messageSizeLimit int
+		messageSizeLimit int64
 	}{
 		{
 			name:             "no limit",
@@ -168,4 +168,23 @@ func TestJSONStreamCommandDecoder(t *testing.T) {
 			require.Equal(t, 6, numMessagesRead)
 		})
 	}
+}
+
+func TestJSONStreamCommandDecoder_ReuseDifferentLimit(t *testing.T) {
+	// Sample data emulating a network stream of JSON commands with newlines
+	data := `{"publish":{"channel":"1","data":{}}}
+{"publish":{"channel":"1","data":{}}}`
+	decoder := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewBufferString(data), 10)
+	_, _, err := decoder.Decode()
+	require.ErrorIs(t, err, ErrMessageTooLarge)
+	PutStreamCommandDecoder(TypeJSON, decoder)
+	decoder = GetStreamCommandDecoderLimited(TypeJSON, bytes.NewBufferString(data), 0)
+	cmd, _, err := decoder.Decode()
+	require.NoError(t, err)
+	require.NotNil(t, cmd)
+	require.NotNil(t, cmd.Publish)
+	cmd, _, err = decoder.Decode()
+	require.ErrorIs(t, err, io.EOF)
+	require.NotNil(t, cmd)
+	require.NotNil(t, cmd.Publish)
 }

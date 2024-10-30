@@ -15,7 +15,11 @@ var (
 	streamProtobufCommandDecoderPool sync.Pool
 )
 
-func GetStreamCommandDecoder(protoType Type, reader io.Reader, messageSizeLimit int) StreamCommandDecoder {
+func GetStreamCommandDecoder(protoType Type, reader io.Reader) StreamCommandDecoder {
+	return GetStreamCommandDecoderLimited(protoType, reader, 0)
+}
+
+func GetStreamCommandDecoderLimited(protoType Type, reader io.Reader, messageSizeLimit int64) StreamCommandDecoder {
 	if protoType == TypeJSON {
 		e := streamJsonCommandDecoderPool.Get()
 		if e == nil {
@@ -45,7 +49,7 @@ func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
 
 type StreamCommandDecoder interface {
 	Decode() (*Command, int, error)
-	Reset(reader io.Reader, messageSizeLimit int)
+	Reset(reader io.Reader, messageSizeLimit int64)
 }
 
 // ErrMessageTooLarge for when the message exceeds the limit.
@@ -54,14 +58,14 @@ var ErrMessageTooLarge = errors.New("message size exceeds the limit")
 type JSONStreamCommandDecoder struct {
 	reader           *bufio.Reader
 	limitedReader    *io.LimitedReader
-	messageSizeLimit int
+	messageSizeLimit int64
 }
 
-func NewJSONStreamCommandDecoder(reader io.Reader, messageSizeLimit int) *JSONStreamCommandDecoder {
+func NewJSONStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *JSONStreamCommandDecoder {
 	var limitedReader *io.LimitedReader
 	var bufioReader *bufio.Reader
 	if messageSizeLimit > 0 {
-		limitedReader = &io.LimitedReader{R: reader, N: int64(messageSizeLimit) + 1}
+		limitedReader = &io.LimitedReader{R: reader, N: messageSizeLimit + 1}
 		bufioReader = bufio.NewReader(limitedReader)
 	} else {
 		bufioReader = bufio.NewReader(reader)
@@ -79,7 +83,7 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	}
 	cmdBytes, err := d.reader.ReadBytes('\n')
 	if err != nil {
-		if d.messageSizeLimit > 0 && len(cmdBytes) > d.messageSizeLimit {
+		if d.messageSizeLimit > 0 && int64(len(cmdBytes)) > d.messageSizeLimit {
 			return nil, 0, ErrMessageTooLarge
 		}
 		if err == io.EOF && len(cmdBytes) > 0 {
@@ -101,24 +105,25 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	return &c, len(cmdBytes), nil
 }
 
-func (d *JSONStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int) {
+func (d *JSONStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int64) {
 	d.messageSizeLimit = messageSizeLimit
 	if messageSizeLimit > 0 {
-		limitedReader := &io.LimitedReader{R: reader, N: int64(messageSizeLimit) + 1}
+		limitedReader := &io.LimitedReader{R: reader, N: messageSizeLimit + 1}
 		bufioReader := bufio.NewReader(limitedReader)
 		d.limitedReader = limitedReader
 		d.reader.Reset(bufioReader)
 	} else {
+		d.limitedReader = nil
 		d.reader.Reset(reader)
 	}
 }
 
 type ProtobufStreamCommandDecoder struct {
 	reader           *bufio.Reader
-	messageSizeLimit int
+	messageSizeLimit int64
 }
 
-func NewProtobufStreamCommandDecoder(reader io.Reader, messageSizeLimit int) *ProtobufStreamCommandDecoder {
+func NewProtobufStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *ProtobufStreamCommandDecoder {
 	return &ProtobufStreamCommandDecoder{reader: bufio.NewReader(reader), messageSizeLimit: messageSizeLimit}
 }
 
@@ -150,7 +155,7 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	return &c, int(msgLength) + 8, nil
 }
 
-func (d *ProtobufStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int) {
+func (d *ProtobufStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int64) {
 	d.messageSizeLimit = messageSizeLimit
 	d.reader.Reset(reader)
 }

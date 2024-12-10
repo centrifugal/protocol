@@ -3986,6 +3986,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild38(in *jlexer.Lexer,
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.ChanInfo).UnmarshalJSON(data))
 			}
+		case "subscribed_at":
+			out.SubscribedAt = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -4019,6 +4021,11 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild38(out *writer, in C
 		const prefix string = ",\"chan_info\":"
 		out.RawString(prefix)
 		out.Raw((in.ChanInfo).MarshalJSON())
+	}
+	if in.SubscribedAt != 0 {
+		const prefix string = ",\"subscribed_at\":"
+		out.RawString(prefix)
+		out.Int64(int64(in.SubscribedAt))
 	}
 	out.RawByte('}')
 }

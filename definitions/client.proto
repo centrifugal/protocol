@@ -94,6 +94,7 @@ message ClientInfo {
   string client = 2;
   bytes conn_info = 3;
   bytes chan_info = 4;
+  int64 subscribed_at = 5; // Optional time of subscription as Unix timestamp milliseconds.
 }
 
 message Publication {

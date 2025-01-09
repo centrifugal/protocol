@@ -3,6 +3,7 @@ package protocol
 import (
 	"bytes"
 	"io"
+	"strconv"
 	"testing"
 
 	"github.com/segmentio/encoding/json"
@@ -57,6 +58,20 @@ func TestStreamingDecode_JSON(t *testing.T) {
 	testDecodingFrame(t, frame, TypeJSON)
 }
 
+func TestStreamingDecode_JSON_MessageLimit(t *testing.T) {
+	frame := getTestFrame(t, TypeJSON, 10000)
+	dec := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), 100)
+	_, _, err := dec.Decode()
+	require.ErrorIs(t, err, ErrMessageTooLarge)
+}
+
+func TestStreamingDecode_Protobuf_MessageLimit(t *testing.T) {
+	frame := getTestFrame(t, TypeProtobuf, 10000)
+	dec := GetStreamCommandDecoderLimited(TypeProtobuf, bytes.NewReader(frame), 100)
+	_, _, err := dec.Decode()
+	require.ErrorIs(t, err, ErrMessageTooLarge)
+}
+
 // BenchmarkStreamingDecode_Protobuf is mostly to check correctness under parallel execution
 // and with large enough messages.
 func BenchmarkStreamingDecode_Protobuf(b *testing.B) {
@@ -100,6 +115,76 @@ func testDecodingFrame(tb testing.TB, frame []byte, protoType Type) {
 		_, _, err = dec.Decode()
 		require.ErrorIs(tb, err, io.EOF)
 	}
-
 	PutStreamCommandDecoder(protoType, dec)
+}
+
+func TestJSONStreamCommandDecoder(t *testing.T) {
+	// Sample data emulating a network stream of JSON commands with newlines
+	data := `{"publish":{"channel":"1","data":{}}}
+{"publish":{"channel":"2","data":{}}}
+{"publish":{"channel":"3","data":{}}}
+{"publish":{"channel":"4","data":{}}}
+{"publish":{"channel":"5","data":{}}}
+{"publish":{"channel":"6","data":{}}}`
+
+	testCases := []struct {
+		name             string
+		messageSizeLimit int64
+	}{
+		{
+			name:             "no limit",
+			messageSizeLimit: 0,
+		},
+		{
+			name:             "with limit",
+			messageSizeLimit: 50,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := bytes.NewBufferString(data)
+			decoder := NewJSONStreamCommandDecoder(reader, tc.messageSizeLimit)
+
+			numMessagesRead := 0
+			i := 0
+			for {
+				i++
+				cmd, _, err := decoder.Decode()
+				if err != nil {
+					if err == io.EOF {
+						require.NotNil(t, cmd)
+						require.Equal(t, cmd.Publish.Channel, strconv.Itoa(i))
+						numMessagesRead += 1
+						break // End of data reached.
+					} else {
+						require.NoError(t, err)
+					}
+				}
+				require.NotNil(t, cmd)
+				require.Equal(t, cmd.Publish.Channel, strconv.Itoa(i))
+				numMessagesRead += 1
+			}
+			require.Equal(t, 6, numMessagesRead)
+		})
+	}
+}
+
+func TestJSONStreamCommandDecoder_ReuseDifferentLimit(t *testing.T) {
+	// Sample data emulating a network stream of JSON commands with newlines
+	data := `{"publish":{"channel":"1","data":{}}}
+{"publish":{"channel":"1","data":{}}}`
+	decoder := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewBufferString(data), 10)
+	_, _, err := decoder.Decode()
+	require.ErrorIs(t, err, ErrMessageTooLarge)
+	PutStreamCommandDecoder(TypeJSON, decoder)
+	decoder = GetStreamCommandDecoderLimited(TypeJSON, bytes.NewBufferString(data), 0)
+	cmd, _, err := decoder.Decode()
+	require.NoError(t, err)
+	require.NotNil(t, cmd)
+	require.NotNil(t, cmd.Publish)
+	cmd, _, err = decoder.Decode()
+	require.ErrorIs(t, err, io.EOF)
+	require.NotNil(t, cmd)
+	require.NotNil(t, cmd.Publish)
 }

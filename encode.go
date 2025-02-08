@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-
 	fastJSON "github.com/segmentio/encoding/json"
 )
 
@@ -276,6 +275,7 @@ func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh, reuse ...[]byte) (
 // ReplyEncoder ...
 type ReplyEncoder interface {
 	Encode(*Reply) ([]byte, error)
+	EncodeNoCopy(*Reply) ([]byte, func(), error)
 }
 
 // JSONReplyEncoder ...
@@ -300,6 +300,19 @@ func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
 	return result, nil
 }
 
+func (e *JSONReplyEncoder) EncodeNoCopy(r *Reply) ([]byte, func(), error) {
+	jw := newWriter()
+	r.MarshalEasyJSON(jw)
+	result, doneFn, err := jw.BuildBytesNoCopy()
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := isValidJSON(result); err != nil {
+		return nil, nil, err
+	}
+	return result, doneFn, nil
+}
+
 // ProtobufReplyEncoder ...
 type ProtobufReplyEncoder struct{}
 
@@ -311,6 +324,20 @@ func NewProtobufReplyEncoder() *ProtobufReplyEncoder {
 // Encode Reply to bytes.
 func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
 	return r.MarshalVT()
+}
+
+// EncodeNoCopy Reply to bytes without making copy of buffer byte slice.
+func (e *ProtobufReplyEncoder) EncodeNoCopy(r *Reply) ([]byte, func(), error) {
+	size := r.SizeVT()
+	buf := getByteBuffer(size)
+	n, err := r.MarshalToSizedBufferVT(buf.B[:size])
+	if err != nil {
+		return nil, nil, err
+	}
+	release := func() {
+		putByteBuffer(buf)
+	}
+	return buf.B[:n], release, nil
 }
 
 // DataEncoder ...

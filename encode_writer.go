@@ -50,6 +50,20 @@ func (w *writer) BuildBytes(reuse ...[]byte) ([]byte, error) {
 	return ret, nil
 }
 
+// BuildBytesNoCopy returns writer data as a single byte slice and returns function to call when data is no longer needed.
+func (w *writer) BuildBytesNoCopy() ([]byte, func(), error) {
+	if w.Error != nil {
+		return nil, nil, w.Error
+	}
+	buffer := w.Buffer
+	// Make writer non-usable after building bytes - writes will panic.
+	w.Buffer = nil
+	release := func() {
+		bytebufferpool.Put(buffer)
+	}
+	return buffer.Bytes(), release, nil
+}
+
 // RawByte appends raw binary data to the buffer.
 func (w *writer) RawByte(c byte) {
 	_ = w.Buffer.WriteByte(c)

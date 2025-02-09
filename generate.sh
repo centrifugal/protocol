@@ -15,7 +15,7 @@ which easyjson
 
 protoc --go_out=. --plugin protoc-gen-go=${GOBIN}/protoc-gen-go --go-vtproto_out=. \
   --plugin protoc-gen-go-vtproto=${GOBIN}/protoc-gen-go-vtproto \
-  --go-vtproto_opt=features=marshal+unmarshal+size+pool+unmarshal_unsafe \
+  --go-vtproto_opt=features=marshal+unmarshal+size+pool \
   --go-vtproto_opt=pool=github.com/centrifugal/protocol.ConnectResult \
   --go-vtproto_opt=pool=github.com/centrifugal/protocol.SubscribeResult \
   --go-vtproto_opt=pool=github.com/centrifugal/protocol.PublishResult \

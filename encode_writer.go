@@ -24,12 +24,6 @@ type writer struct {
 	NoEscapeHTML bool
 }
 
-func newWriterBuf(buf *bytebufferpool.ByteBuffer) *writer {
-	return &writer{
-		Buffer: buf,
-	}
-}
-
 func newWriter() *writer {
 	return &writer{
 		Buffer: bytebufferpool.Get(),

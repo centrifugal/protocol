@@ -9,7 +9,6 @@ import (
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"
-	sync "sync"
 )
 
 const (
@@ -2569,210 +2568,6 @@ func (m *SendRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-var vtprotoPool_ConnectResult = sync.Pool{
-	New: func() interface{} {
-		return &ConnectResult{}
-	},
-}
-
-func (m *ConnectResult) ResetVT() {
-	if m != nil {
-		f0 := m.Data[:0]
-		m.Reset()
-		m.Data = f0
-	}
-}
-func (m *ConnectResult) ReturnToVTPool() {
-	if m != nil {
-		m.ResetVT()
-		vtprotoPool_ConnectResult.Put(m)
-	}
-}
-func ConnectResultFromVTPool() *ConnectResult {
-	return vtprotoPool_ConnectResult.Get().(*ConnectResult)
-}
-
-var vtprotoPool_RefreshResult = sync.Pool{
-	New: func() interface{} {
-		return &RefreshResult{}
-	},
-}
-
-func (m *RefreshResult) ResetVT() {
-	if m != nil {
-		m.Reset()
-	}
-}
-func (m *RefreshResult) ReturnToVTPool() {
-	if m != nil {
-		m.ResetVT()
-		vtprotoPool_RefreshResult.Put(m)
-	}
-}
-func RefreshResultFromVTPool() *RefreshResult {
-	return vtprotoPool_RefreshResult.Get().(*RefreshResult)
-}
-
-var vtprotoPool_SubscribeResult = sync.Pool{
-	New: func() interface{} {
-		return &SubscribeResult{}
-	},
-}
-
-func (m *SubscribeResult) ResetVT() {
-	if m != nil {
-		for _, mm := range m.Publications {
-			mm.Reset()
-		}
-		f0 := m.Publications[:0]
-		f1 := m.Data[:0]
-		m.Reset()
-		m.Publications = f0
-		m.Data = f1
-	}
-}
-func (m *SubscribeResult) ReturnToVTPool() {
-	if m != nil {
-		m.ResetVT()
-		vtprotoPool_SubscribeResult.Put(m)
-	}
-}
-func SubscribeResultFromVTPool() *SubscribeResult {
-	return vtprotoPool_SubscribeResult.Get().(*SubscribeResult)
-}
-
-var vtprotoPool_SubRefreshResult = sync.Pool{
-	New: func() interface{} {
-		return &SubRefreshResult{}
-	},
-}
-
-func (m *SubRefreshResult) ResetVT() {
-	if m != nil {
-		m.Reset()
-	}
-}
-func (m *SubRefreshResult) ReturnToVTPool() {
-	if m != nil {
-		m.ResetVT()
-		vtprotoPool_SubRefreshResult.Put(m)
-	}
-}
-func SubRefreshResultFromVTPool() *SubRefreshResult {
-	return vtprotoPool_SubRefreshResult.Get().(*SubRefreshResult)
-}
-
-var vtprotoPool_PublishResult = sync.Pool{
-	New: func() interface{} {
-		return &PublishResult{}
-	},
-}
-
-func (m *PublishResult) ResetVT() {
-	if m != nil {
-		m.Reset()
-	}
-}
-func (m *PublishResult) ReturnToVTPool() {
-	if m != nil {
-		m.ResetVT()
-		vtprotoPool_PublishResult.Put(m)
-	}
-}
-func PublishResultFromVTPool() *PublishResult {
-	return vtprotoPool_PublishResult.Get().(*PublishResult)
-}
-
-var vtprotoPool_PresenceResult = sync.Pool{
-	New: func() interface{} {
-		return &PresenceResult{}
-	},
-}
-
-func (m *PresenceResult) ResetVT() {
-	if m != nil {
-		m.Reset()
-	}
-}
-func (m *PresenceResult) ReturnToVTPool() {
-	if m != nil {
-		m.ResetVT()
-		vtprotoPool_PresenceResult.Put(m)
-	}
-}
-func PresenceResultFromVTPool() *PresenceResult {
-	return vtprotoPool_PresenceResult.Get().(*PresenceResult)
-}
-
-var vtprotoPool_PresenceStatsResult = sync.Pool{
-	New: func() interface{} {
-		return &PresenceStatsResult{}
-	},
-}
-
-func (m *PresenceStatsResult) ResetVT() {
-	if m != nil {
-		m.Reset()
-	}
-}
-func (m *PresenceStatsResult) ReturnToVTPool() {
-	if m != nil {
-		m.ResetVT()
-		vtprotoPool_PresenceStatsResult.Put(m)
-	}
-}
-func PresenceStatsResultFromVTPool() *PresenceStatsResult {
-	return vtprotoPool_PresenceStatsResult.Get().(*PresenceStatsResult)
-}
-
-var vtprotoPool_HistoryResult = sync.Pool{
-	New: func() interface{} {
-		return &HistoryResult{}
-	},
-}
-
-func (m *HistoryResult) ResetVT() {
-	if m != nil {
-		for _, mm := range m.Publications {
-			mm.Reset()
-		}
-		f0 := m.Publications[:0]
-		m.Reset()
-		m.Publications = f0
-	}
-}
-func (m *HistoryResult) ReturnToVTPool() {
-	if m != nil {
-		m.ResetVT()
-		vtprotoPool_HistoryResult.Put(m)
-	}
-}
-func HistoryResultFromVTPool() *HistoryResult {
-	return vtprotoPool_HistoryResult.Get().(*HistoryResult)
-}
-
-var vtprotoPool_RPCResult = sync.Pool{
-	New: func() interface{} {
-		return &RPCResult{}
-	},
-}
-
-func (m *RPCResult) ResetVT() {
-	if m != nil {
-		f0 := m.Data[:0]
-		m.Reset()
-		m.Data = f0
-	}
-}
-func (m *RPCResult) ReturnToVTPool() {
-	if m != nil {
-		m.ResetVT()
-		vtprotoPool_RPCResult.Put(m)
-	}
-}
-func RPCResultFromVTPool() *RPCResult {
-	return vtprotoPool_RPCResult.Get().(*RPCResult)
-}
 func (m *Error) SizeVT() (n int) {
 	if m == nil {
 		return 0
@@ -8756,14 +8551,7 @@ func (m *SubscribeResult) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if len(m.Publications) == cap(m.Publications) {
-				m.Publications = append(m.Publications, &Publication{})
-			} else {
-				m.Publications = m.Publications[:len(m.Publications)+1]
-				if m.Publications[len(m.Publications)-1] == nil {
-					m.Publications[len(m.Publications)-1] = &Publication{}
-				}
-			}
+			m.Publications = append(m.Publications, &Publication{})
 			if err := m.Publications[len(m.Publications)-1].UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -10183,14 +9971,7 @@ func (m *HistoryResult) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if len(m.Publications) == cap(m.Publications) {
-				m.Publications = append(m.Publications, &Publication{})
-			} else {
-				m.Publications = m.Publications[:len(m.Publications)+1]
-				if m.Publications[len(m.Publications)-1] == nil {
-					m.Publications[len(m.Publications)-1] = &Publication{}
-				}
-			}
+			m.Publications = append(m.Publications, &Publication{})
 			if err := m.Publications[len(m.Publications)-1].UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

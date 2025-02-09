@@ -148,7 +148,7 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 		return nil, 0, io.ErrShortBuffer
 	}
 	var c Command
-	err = c.UnmarshalVTUnsafe(bb.B[:int(msgLength)])
+	err = c.UnmarshalVT(bb.B[:int(msgLength)]) // Note, UnmarshalVTUnsafe here will result into issues.
 	if err != nil {
 		return nil, 0, err
 	}

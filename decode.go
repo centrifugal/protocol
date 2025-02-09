@@ -126,7 +126,7 @@ func (d *ProtobufCommandDecoder) Decode() (*Command, error) {
 		to := d.offset + n + int(l)
 		if to > 0 && to <= len(d.data) {
 			cmdBytes := d.data[from:to]
-			err := c.UnmarshalVTUnsafe(cmdBytes)
+			err := c.UnmarshalVT(cmdBytes) // Check whether UnmarshalVTUnsafe here is OK.
 			if err != nil {
 				return nil, err
 			}
@@ -206,7 +206,7 @@ func (d *ProtobufReplyDecoder) Decode() (*Reply, error) {
 		var c Reply
 		l, n := binary.Uvarint(d.data[d.offset:])
 		replyBytes := d.data[d.offset+n : d.offset+n+int(l)]
-		err := c.UnmarshalVTUnsafe(replyBytes)
+		err := c.UnmarshalVT(replyBytes)
 		if err != nil {
 			return nil, err
 		}

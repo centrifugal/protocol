@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package centrifugal.centrifuge.protocol;
 
-option go_package = "./;protocol";
+option go_package = "github.com/centrifugal/protocol";
 
 message Error {
   uint32 code = 1;

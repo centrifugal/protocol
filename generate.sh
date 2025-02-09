@@ -15,8 +15,21 @@ which easyjson
 
 protoc --go_out=. --plugin protoc-gen-go=${GOBIN}/protoc-gen-go --go-vtproto_out=. \
   --plugin protoc-gen-go-vtproto=${GOBIN}/protoc-gen-go-vtproto \
-  --go-vtproto_opt=features=marshal+unmarshal+size \
+  --go-vtproto_opt=features=marshal+unmarshal+size+pool \
+  --go-vtproto_opt=pool=github.com/centrifugal/protocol.ConnectResult \
+  --go-vtproto_opt=pool=github.com/centrifugal/protocol.SubscribeResult \
+  --go-vtproto_opt=pool=github.com/centrifugal/protocol.PublishResult \
+  --go-vtproto_opt=pool=github.com/centrifugal/protocol.RPCResult \
+  --go-vtproto_opt=pool=github.com/centrifugal/protocol.HistoryResult \
+  --go-vtproto_opt=pool=github.com/centrifugal/protocol.PresenceResult \
+  --go-vtproto_opt=pool=github.com/centrifugal/protocol.PresenceStatsResult \
+  --go-vtproto_opt=pool=github.com/centrifugal/protocol.RefreshResult \
+  --go-vtproto_opt=pool=github.com/centrifugal/protocol.SubRefreshResult \
   client.proto
+
+cp github.com/centrifugal/protocol/client.pb.go client.pb.go
+cp github.com/centrifugal/protocol/client_vtproto.pb.go client_vtproto.pb.go
+rm -rf github.com
 
 gomodifytype -file client.pb.go -all -w -from "[]byte" -to "Raw"
 

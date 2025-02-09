@@ -16,14 +16,14 @@ func benchPayload() []byte {
 
 var preparedPayload = benchPayload()
 
-func marshalProtobufConnect(reply *Reply) ([]byte, error) {
-	encoder := DefaultProtobufReplyEncoder
-	res, err := encoder.Encode(reply)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
-}
+//func marshalProtobufConnect(reply *Reply) ([]byte, error) {
+//	encoder := DefaultProtobufReplyEncoder
+//	res, err := encoder.Encode(reply)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return res, nil
+//}
 
 //func marshalProtobufConnectNoCopy(reply *Reply, buf []byte) ([]byte, error) {
 //	encoder := DefaultProtobufReplyEncoder
@@ -67,14 +67,14 @@ func marshalJSON() ([]byte, *Reply, error) {
 	return res, r, nil
 }
 
-func marshalJSONConnect(reply *Reply) ([]byte, error) {
-	encoder := DefaultJsonReplyEncoder
-	res, err := encoder.Encode(reply)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
-}
+//func marshalJSONConnect(reply *Reply) ([]byte, error) {
+//	encoder := DefaultJsonReplyEncoder
+//	res, err := encoder.Encode(reply)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return res, nil
+//}
 
 //func marshalJSONConnectNoCopy(reply *Reply, buf []byte) ([]byte, error) {
 //	encoder := DefaultJsonReplyEncoder
@@ -106,25 +106,25 @@ func BenchmarkReplyMarshalProtobuf(b *testing.B) {
 	b.ReportAllocs()
 }
 
-// This is how we write command replies in Centrifuge.
-func BenchmarkReplyMarshalProtobufConnect(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		res := ConnectResultFromVTPool()
-		res.Client = "clientclientclientclientclientclientclientclientclientclient"
-		res.Version = "0.0.0"
-		res.Ping = 25
-		res.Pong = true
-		r := ReplyPool.AcquireConnectReply(res)
-		d, err := marshalProtobufConnect(r)
-		if err != nil {
-			b.Fatal(err)
-		}
-		benchData = d
-		ReplyPool.ReleaseConnectReply(r)
-		res.ReturnToVTPool()
-	}
-	b.ReportAllocs()
-}
+//// This is how we write command replies in Centrifuge.
+//func BenchmarkReplyMarshalProtobufConnect(b *testing.B) {
+//	for i := 0; i < b.N; i++ {
+//		res := ConnectResultFromVTPool()
+//		res.Client = "clientclientclientclientclientclientclientclientclientclient"
+//		res.Version = "0.0.0"
+//		res.Ping = 25
+//		res.Pong = true
+//		r := ReplyPool.AcquireConnectReply(res)
+//		d, err := marshalProtobufConnect(r)
+//		if err != nil {
+//			b.Fatal(err)
+//		}
+//		benchData = d
+//		ReplyPool.ReleaseConnectReply(r)
+//		res.ReturnToVTPool()
+//	}
+//	b.ReportAllocs()
+//}
 
 //// This is how we write command replies in Centrifuge.
 //func BenchmarkReplyMarshalProtobufConnectNoCopy(b *testing.B) {
@@ -162,26 +162,26 @@ func BenchmarkReplyMarshalProtobufParallel(b *testing.B) {
 	})
 }
 
-func BenchmarkReplyMarshalProtobufConnectParallel(b *testing.B) {
-	b.ReportAllocs()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			res := ConnectResultFromVTPool()
-			res.Client = "clientclientclientclientclientclientclientclientclientclient"
-			res.Version = "0.0.0"
-			res.Ping = 25
-			res.Pong = true
-			r := ReplyPool.AcquireConnectReply(res)
-			d, err := marshalProtobufConnect(r)
-			if err != nil {
-				b.Fatal(err)
-			}
-			benchData = d
-			ReplyPool.ReleaseConnectReply(r)
-			res.ReturnToVTPool()
-		}
-	})
-}
+//func BenchmarkReplyMarshalProtobufConnectParallel(b *testing.B) {
+//	b.ReportAllocs()
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			res := ConnectResultFromVTPool()
+//			res.Client = "clientclientclientclientclientclientclientclientclientclient"
+//			res.Version = "0.0.0"
+//			res.Ping = 25
+//			res.Pong = true
+//			r := ReplyPool.AcquireConnectReply(res)
+//			d, err := marshalProtobufConnect(r)
+//			if err != nil {
+//				b.Fatal(err)
+//			}
+//			benchData = d
+//			ReplyPool.ReleaseConnectReply(r)
+//			res.ReturnToVTPool()
+//		}
+//	})
+//}
 
 //func BenchmarkReplyMarshalProtobufConnectNoCopyParallel(b *testing.B) {
 //	b.ReportAllocs()
@@ -218,24 +218,24 @@ func BenchmarkReplyMarshalJSON(b *testing.B) {
 	b.ReportAllocs()
 }
 
-func BenchmarkReplyMarshalJSONConnect(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		res := ConnectResultFromVTPool()
-		res.Client = "clientclientclientclientclientclientclientclientclientclient"
-		res.Version = "0.0.0"
-		res.Ping = 25
-		res.Pong = true
-		r := ReplyPool.AcquireConnectReply(res)
-		d, err := marshalJSONConnect(r)
-		if err != nil {
-			b.Fatal(err)
-		}
-		benchData = d
-		ReplyPool.ReleaseConnectReply(r)
-		res.ReturnToVTPool()
-	}
-	b.ReportAllocs()
-}
+//func BenchmarkReplyMarshalJSONConnect(b *testing.B) {
+//	for i := 0; i < b.N; i++ {
+//		res := ConnectResultFromVTPool()
+//		res.Client = "clientclientclientclientclientclientclientclientclientclient"
+//		res.Version = "0.0.0"
+//		res.Ping = 25
+//		res.Pong = true
+//		r := ReplyPool.AcquireConnectReply(res)
+//		d, err := marshalJSONConnect(r)
+//		if err != nil {
+//			b.Fatal(err)
+//		}
+//		benchData = d
+//		ReplyPool.ReleaseConnectReply(r)
+//		res.ReturnToVTPool()
+//	}
+//	b.ReportAllocs()
+//}
 
 //func BenchmarkReplyMarshalJSONConnectNoCopy(b *testing.B) {
 //	for i := 0; i < b.N; i++ {
@@ -272,26 +272,26 @@ func BenchmarkReplyMarshalJSONParallel(b *testing.B) {
 	})
 }
 
-func BenchmarkReplyMarshalJSONConnectParallel(b *testing.B) {
-	b.ReportAllocs()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			res := ConnectResultFromVTPool()
-			res.Client = "clientclientclientclientclientclientclientclientclientclient"
-			res.Version = "0.0.0"
-			res.Ping = 25
-			res.Pong = true
-			r := ReplyPool.AcquireConnectReply(res)
-			d, err := marshalJSONConnect(r)
-			if err != nil {
-				b.Fatal(err)
-			}
-			benchData = d
-			ReplyPool.ReleaseConnectReply(r)
-			res.ReturnToVTPool()
-		}
-	})
-}
+//func BenchmarkReplyMarshalJSONConnectParallel(b *testing.B) {
+//	b.ReportAllocs()
+//	b.RunParallel(func(pb *testing.PB) {
+//		for pb.Next() {
+//			res := ConnectResultFromVTPool()
+//			res.Client = "clientclientclientclientclientclientclientclientclientclient"
+//			res.Version = "0.0.0"
+//			res.Ping = 25
+//			res.Pong = true
+//			r := ReplyPool.AcquireConnectReply(res)
+//			d, err := marshalJSONConnect(r)
+//			if err != nil {
+//				b.Fatal(err)
+//			}
+//			benchData = d
+//			ReplyPool.ReleaseConnectReply(r)
+//			res.ReturnToVTPool()
+//		}
+//	})
+//}
 
 //func BenchmarkReplyMarshalJSONConnectNoCopyParallel(b *testing.B) {
 //	b.ReportAllocs()

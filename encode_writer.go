@@ -24,6 +24,12 @@ type writer struct {
 	NoEscapeHTML bool
 }
 
+func newWriterBuf(buf *bytebufferpool.ByteBuffer) *writer {
+	return &writer{
+		Buffer: buf,
+	}
+}
+
 func newWriter() *writer {
 	return &writer{
 		Buffer: bytebufferpool.Get(),
@@ -51,17 +57,14 @@ func (w *writer) BuildBytes(reuse ...[]byte) ([]byte, error) {
 }
 
 // BuildBytesNoCopy returns writer data as a single byte slice and returns function to call when data is no longer needed.
-func (w *writer) BuildBytesNoCopy() ([]byte, func(), error) {
+func (w *writer) BuildBytesNoCopy() ([]byte, error) {
 	if w.Error != nil {
-		return nil, nil, w.Error
+		return nil, w.Error
 	}
 	buffer := w.Buffer
 	// Make writer non-usable after building bytes - writes will panic.
 	w.Buffer = nil
-	release := func() {
-		bytebufferpool.Put(buffer)
-	}
-	return buffer.Bytes(), release, nil
+	return buffer.Bytes(), nil
 }
 
 // RawByte appends raw binary data to the buffer.

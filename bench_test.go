@@ -25,13 +25,13 @@ func marshalProtobufConnect(reply *Reply) ([]byte, error) {
 	return res, nil
 }
 
-func marshalProtobufConnectNoCopy(reply *Reply) ([]byte, func(), error) {
+func marshalProtobufConnectNoCopy(reply *Reply, buf []byte) ([]byte, error) {
 	encoder := DefaultProtobufReplyEncoder
-	res, releaseFn, err := encoder.EncodeNoCopy(reply)
+	res, err := encoder.EncodeNoCopy(reply, buf)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return res, releaseFn, nil
+	return res, nil
 }
 
 func marshalProtobuf() ([]byte, *Reply, error) {
@@ -51,23 +51,6 @@ func marshalProtobuf() ([]byte, *Reply, error) {
 	return res, r, nil
 }
 
-func marshalProtobufNoCopy() ([]byte, *Reply, func(), error) {
-	r := &Reply{
-		Push: &Push{
-			Channel: "test",
-			Pub: &Publication{
-				Data: preparedPayload,
-			},
-		},
-	}
-	encoder := NewProtobufReplyEncoder()
-	res, doneFn, err := encoder.EncodeNoCopy(r)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	return res, r, doneFn, nil
-}
-
 func marshalJSON() ([]byte, *Reply, error) {
 	r := &Reply{
 		Push: &Push{
@@ -84,22 +67,6 @@ func marshalJSON() ([]byte, *Reply, error) {
 	return res, r, nil
 }
 
-func marshalJSONNoCopy() ([]byte, *Reply, func(), error) {
-	r := &Reply{
-		Push: &Push{
-			Channel: "test",
-			Pub: &Publication{
-				Data: preparedPayload,
-			},
-		},
-	}
-	res, doneFn, err := DefaultJsonReplyEncoder.EncodeNoCopy(r)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	return res, r, doneFn, nil
-}
-
 func marshalJSONConnect(reply *Reply) ([]byte, error) {
 	encoder := DefaultJsonReplyEncoder
 	res, err := encoder.Encode(reply)
@@ -109,13 +76,13 @@ func marshalJSONConnect(reply *Reply) ([]byte, error) {
 	return res, nil
 }
 
-func marshalJSONConnectNoCopy(reply *Reply) ([]byte, func(), error) {
+func marshalJSONConnectNoCopy(reply *Reply, buf []byte) ([]byte, error) {
 	encoder := DefaultJsonReplyEncoder
-	res, releaseFn, err := encoder.EncodeNoCopy(reply)
+	res, err := encoder.EncodeNoCopy(reply, buf)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return res, releaseFn, nil
+	return res, nil
 }
 
 //goland:noinspection GoUnusedGlobalVariable
@@ -135,19 +102,6 @@ func BenchmarkReplyMarshalProtobuf(b *testing.B) {
 		}
 		benchData = d
 		benchReply = r
-	}
-	b.ReportAllocs()
-}
-
-func BenchmarkReplyMarshalProtobufNoCopy(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		d, r, doneFn, err := marshalProtobufNoCopy()
-		if err != nil {
-			b.Fatal(err)
-		}
-		benchData = d
-		benchReply = r
-		doneFn()
 	}
 	b.ReportAllocs()
 }
@@ -181,12 +135,13 @@ func BenchmarkReplyMarshalProtobufConnectNoCopy(b *testing.B) {
 		res.Ping = 25
 		res.Pong = true
 		r := ReplyPool.AcquireConnectReply(res)
-		d, releaseFn, err := marshalProtobufConnectNoCopy(r)
+		buf := GetByteBuffer(r.SizeVT())
+		d, err := marshalProtobufConnectNoCopy(r, buf.B)
 		if err != nil {
 			b.Fatal(err)
 		}
 		benchData = d
-		releaseFn()
+		PutByteBuffer(buf)
 		ReplyPool.ReleaseConnectReply(r)
 		res.ReturnToVTPool()
 	}
@@ -203,21 +158,6 @@ func BenchmarkReplyMarshalProtobufParallel(b *testing.B) {
 			}
 			benchData = d
 			benchReply = r
-		}
-	})
-}
-
-func BenchmarkReplyMarshalProtobufNoCopyParallel(b *testing.B) {
-	b.ReportAllocs()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			d, r, doneFn, err := marshalProtobufNoCopy()
-			if err != nil {
-				b.Fatal(err)
-			}
-			benchData = d
-			benchReply = r
-			doneFn()
 		}
 	})
 }
@@ -253,12 +193,13 @@ func BenchmarkReplyMarshalProtobufConnectNoCopyParallel(b *testing.B) {
 			res.Ping = 25
 			res.Pong = true
 			r := ReplyPool.AcquireConnectReply(res)
-			d, releaseFn, err := marshalProtobufConnectNoCopy(r)
+			buf := GetByteBuffer(r.SizeVT())
+			d, err := marshalProtobufConnectNoCopy(r, buf.B)
 			if err != nil {
 				b.Fatal(err)
 			}
 			benchData = d
-			releaseFn()
+			PutByteBuffer(buf)
 			ReplyPool.ReleaseConnectReply(r)
 			res.ReturnToVTPool()
 		}
@@ -273,19 +214,6 @@ func BenchmarkReplyMarshalJSON(b *testing.B) {
 		}
 		benchData = d
 		benchReply = r
-	}
-	b.ReportAllocs()
-}
-
-func BenchmarkReplyMarshalJSONNoCopy(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		d, r, doneFn, err := marshalJSONNoCopy()
-		if err != nil {
-			b.Fatal(err)
-		}
-		benchData = d
-		benchReply = r
-		doneFn()
 	}
 	b.ReportAllocs()
 }
@@ -317,12 +245,13 @@ func BenchmarkReplyMarshalJSONConnectNoCopy(b *testing.B) {
 		res.Ping = 25
 		res.Pong = true
 		r := ReplyPool.AcquireConnectReply(res)
-		d, releaseFn, err := marshalJSONConnectNoCopy(r)
+		buf := GetByteBuffer(r.SizeVT())
+		d, err := marshalJSONConnectNoCopy(r, buf.B)
 		if err != nil {
 			b.Fatal(err)
 		}
 		benchData = d
-		releaseFn()
+		PutByteBuffer(buf)
 		ReplyPool.ReleaseConnectReply(r)
 		res.ReturnToVTPool()
 	}
@@ -339,21 +268,6 @@ func BenchmarkReplyMarshalJSONParallel(b *testing.B) {
 			}
 			benchData = d
 			benchReply = r
-		}
-	})
-}
-
-func BenchmarkReplyMarshalJSONNoCopyParallel(b *testing.B) {
-	b.ReportAllocs()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			d, r, doneFn, err := marshalJSONNoCopy()
-			if err != nil {
-				b.Fatal(err)
-			}
-			benchData = d
-			benchReply = r
-			doneFn()
 		}
 	})
 }
@@ -389,12 +303,13 @@ func BenchmarkReplyMarshalJSONConnectNoCopyParallel(b *testing.B) {
 			res.Ping = 25
 			res.Pong = true
 			r := ReplyPool.AcquireConnectReply(res)
-			d, releaseFn, err := marshalJSONConnectNoCopy(r)
+			buf := GetByteBuffer(r.SizeVT())
+			d, err := marshalJSONConnectNoCopy(r, buf.B)
 			if err != nil {
 				b.Fatal(err)
 			}
 			benchData = d
-			releaseFn()
+			PutByteBuffer(buf)
 			ReplyPool.ReleaseConnectReply(r)
 			res.ReturnToVTPool()
 		}

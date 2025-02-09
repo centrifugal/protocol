@@ -275,7 +275,7 @@ func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh, reuse ...[]byte) (
 // ReplyEncoder ...
 type ReplyEncoder interface {
 	Encode(*Reply) ([]byte, error)
-	EncodeNoCopy(*Reply) ([]byte, func(), error)
+	EncodeNoCopy(*Reply, []byte) ([]byte, error)
 }
 
 // JSONReplyEncoder ...
@@ -300,17 +300,9 @@ func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
 	return result, nil
 }
 
-func (e *JSONReplyEncoder) EncodeNoCopy(r *Reply) ([]byte, func(), error) {
-	jw := newWriter()
-	r.MarshalEasyJSON(jw)
-	result, doneFn, err := jw.BuildBytesNoCopy()
-	if err != nil {
-		return nil, nil, err
-	}
-	if err := isValidJSON(result); err != nil {
-		return nil, nil, err
-	}
-	return result, doneFn, nil
+func (e *JSONReplyEncoder) EncodeNoCopy(r *Reply, _ []byte) ([]byte, error) {
+	// No copy is not supported for JSON encoding. Just use Encode method, ignore pre-allocated buffer.
+	return e.Encode(r)
 }
 
 // ProtobufReplyEncoder ...
@@ -327,17 +319,13 @@ func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
 }
 
 // EncodeNoCopy Reply to bytes without making copy of buffer byte slice.
-func (e *ProtobufReplyEncoder) EncodeNoCopy(r *Reply) ([]byte, func(), error) {
+func (e *ProtobufReplyEncoder) EncodeNoCopy(r *Reply, buf []byte) ([]byte, error) {
 	size := r.SizeVT()
-	buf := getByteBuffer(size)
-	n, err := r.MarshalToSizedBufferVT(buf.B[:size])
+	n, err := r.MarshalToSizedBufferVT(buf[:size])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	release := func() {
-		putByteBuffer(buf)
-	}
-	return buf.B[:n], release, nil
+	return buf[:n], nil
 }
 
 // DataEncoder ...

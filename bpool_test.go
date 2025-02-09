@@ -14,7 +14,7 @@ func TestGetPutConcurrent(t *testing.T) {
 	for i := 0; i < concurrency; i++ {
 		go func() {
 			for capacity := 0; capacity < 100; capacity++ {
-				bb := GetByteBuffer(capacity)
+				bb := getByteBuffer(capacity)
 				if len(bb.B) > 0 {
 					panic(fmt.Errorf("len(bb.B) must be zero; got %d", len(bb.B)))
 				}
@@ -22,7 +22,7 @@ func TestGetPutConcurrent(t *testing.T) {
 					capacity = 0
 				}
 				bb.B = append(bb.B, make([]byte, capacity)...)
-				PutByteBuffer(bb)
+				putByteBuffer(bb)
 			}
 			doneCh <- struct{}{}
 		}()
@@ -40,8 +40,8 @@ func TestGetPutConcurrent(t *testing.T) {
 func TestGetCapacity(t *testing.T) {
 	for i := 1; i < 130; i++ {
 		idx := nextLogBase2(uint32(i))
-		b := GetByteBuffer(i)
+		b := getByteBuffer(i)
 		require.Equal(t, 1<<idx, cap(b.B))
-		PutByteBuffer(b)
+		putByteBuffer(b)
 	}
 }

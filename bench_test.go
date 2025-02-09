@@ -135,13 +135,13 @@ func BenchmarkReplyMarshalProtobufConnect(b *testing.B) {
 //		res.Ping = 25
 //		res.Pong = true
 //		r := ReplyPool.AcquireConnectReply(res)
-//		buf := GetByteBuffer(r.SizeVT())
+//		buf := getByteBuffer(r.SizeVT())
 //		d, err := marshalProtobufConnectNoCopy(r, buf.B)
 //		if err != nil {
 //			b.Fatal(err)
 //		}
 //		benchData = d
-//		PutByteBuffer(buf)
+//		putByteBuffer(buf)
 //		ReplyPool.ReleaseConnectReply(r)
 //		res.ReturnToVTPool()
 //	}
@@ -193,13 +193,13 @@ func BenchmarkReplyMarshalProtobufConnectParallel(b *testing.B) {
 //			res.Ping = 25
 //			res.Pong = true
 //			r := ReplyPool.AcquireConnectReply(res)
-//			buf := GetByteBuffer(r.SizeVT())
+//			buf := getByteBuffer(r.SizeVT())
 //			d, err := marshalProtobufConnectNoCopy(r, buf.B)
 //			if err != nil {
 //				b.Fatal(err)
 //			}
 //			benchData = d
-//			PutByteBuffer(buf)
+//			putByteBuffer(buf)
 //			ReplyPool.ReleaseConnectReply(r)
 //			res.ReturnToVTPool()
 //		}
@@ -245,13 +245,13 @@ func BenchmarkReplyMarshalJSONConnect(b *testing.B) {
 //		res.Ping = 25
 //		res.Pong = true
 //		r := ReplyPool.AcquireConnectReply(res)
-//		buf := GetByteBuffer(r.SizeVT())
+//		buf := getByteBuffer(r.SizeVT())
 //		d, err := marshalJSONConnectNoCopy(r, buf.B)
 //		if err != nil {
 //			b.Fatal(err)
 //		}
 //		benchData = d
-//		PutByteBuffer(buf)
+//		putByteBuffer(buf)
 //		ReplyPool.ReleaseConnectReply(r)
 //		res.ReturnToVTPool()
 //	}
@@ -303,13 +303,13 @@ func BenchmarkReplyMarshalJSONConnectParallel(b *testing.B) {
 //			res.Ping = 25
 //			res.Pong = true
 //			r := ReplyPool.AcquireConnectReply(res)
-//			buf := GetByteBuffer(r.SizeVT())
+//			buf := getByteBuffer(r.SizeVT())
 //			d, err := marshalJSONConnectNoCopy(r, buf.B)
 //			if err != nil {
 //				b.Fatal(err)
 //			}
 //			benchData = d
-//			PutByteBuffer(buf)
+//			putByteBuffer(buf)
 //			ReplyPool.ReleaseConnectReply(r)
 //			res.ReturnToVTPool()
 //		}

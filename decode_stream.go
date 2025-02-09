@@ -137,8 +137,8 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 		return nil, 0, ErrMessageTooLarge
 	}
 
-	bb := GetByteBuffer(int(msgLength))
-	defer PutByteBuffer(bb)
+	bb := getByteBuffer(int(msgLength))
+	defer putByteBuffer(bb)
 
 	n, err := io.ReadFull(d.reader, bb.B[:int(msgLength)])
 	if err != nil {

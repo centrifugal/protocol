@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-
-	"github.com/segmentio/encoding/json"
 )
 
 // CommandDecoder ...
@@ -60,7 +58,7 @@ func (d *JSONCommandDecoder) Decode() (*Command, error) {
 	}
 	var c Command
 	if d.messageCount == 1 {
-		_, err := json.Parse(d.data, &c, json.ZeroCopy)
+		_, err := ParseJSON(d.data, &c, JSONZeroCopy)
 		if err != nil {
 			return nil, err
 		}
@@ -79,7 +77,7 @@ func (d *JSONCommandDecoder) Decode() (*Command, error) {
 		return nil, io.ErrShortBuffer
 	}
 	if len(d.data) >= d.prevNewLine+nextNewLine {
-		_, err := json.Parse(d.data[d.prevNewLine:d.prevNewLine+nextNewLine], &c, json.ZeroCopy)
+		_, err := ParseJSON(d.data[d.prevNewLine:d.prevNewLine+nextNewLine], &c, JSONZeroCopy)
 		if err != nil {
 			return nil, err
 		}
@@ -152,19 +150,19 @@ var _ ReplyDecoder = NewJSONReplyDecoder(nil)
 
 // JSONReplyDecoder ...
 type JSONReplyDecoder struct {
-	decoder *json.Decoder
+	decoder *JSONDecoder
 }
 
 // NewJSONReplyDecoder ...
 func NewJSONReplyDecoder(data []byte) *JSONReplyDecoder {
 	return &JSONReplyDecoder{
-		decoder: json.NewDecoder(bytes.NewReader(data)),
+		decoder: NewJSONDecoder(bytes.NewReader(data)),
 	}
 }
 
 // Reset ...
 func (d *JSONReplyDecoder) Reset(data []byte) error {
-	d.decoder = json.NewDecoder(bytes.NewReader(data))
+	d.decoder = NewJSONDecoder(bytes.NewReader(data))
 	return nil
 }
 

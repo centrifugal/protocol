@@ -6,8 +6,6 @@ import (
 	"errors"
 	"io"
 	"sync"
-
-	"github.com/segmentio/encoding/json"
 )
 
 var (
@@ -88,7 +86,7 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 		}
 		if err == io.EOF && len(cmdBytes) > 0 {
 			var c Command
-			_, parseErr := json.Parse(cmdBytes, &c, 0)
+			_, parseErr := ParseJSON(cmdBytes, &c, 0)
 			if parseErr != nil {
 				return nil, 0, parseErr
 			}
@@ -98,7 +96,7 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	}
 
 	var c Command
-	_, err = json.Parse(cmdBytes, &c, 0)
+	_, err = ParseJSON(cmdBytes, &c, 0)
 	if err != nil {
 		return nil, 0, err
 	}

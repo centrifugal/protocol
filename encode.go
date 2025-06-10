@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	fastJSON "github.com/segmentio/encoding/json"
 )
 
 var errInvalidJSON = errors.New("invalid JSON data")
@@ -14,7 +13,7 @@ func isValidJSON(b []byte) error {
 	if b == nil {
 		return nil
 	}
-	if !fastJSON.Valid(b) {
+	if !ValidJSON(b) {
 		return errInvalidJSON
 	}
 	return nil

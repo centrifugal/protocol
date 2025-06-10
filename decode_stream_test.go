@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/segmentio/encoding/json"
+	"encoding/json"
 
 	"github.com/stretchr/testify/require"
 )

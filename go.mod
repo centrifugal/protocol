@@ -1,11 +1,11 @@
 module github.com/centrifugal/protocol
 
-go 1.22
+go 1.23
 
 require (
 	github.com/mailru/easyjson v0.7.7
 	github.com/planetscale/vtprotobuf v0.6.0
-	github.com/segmentio/encoding v0.4.1
+	github.com/segmentio/encoding v0.5.1
 	github.com/stretchr/testify v1.10.0
 	github.com/valyala/bytebufferpool v1.0.0
 	google.golang.org/protobuf v1.36.6

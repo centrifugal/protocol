@@ -1858,6 +1858,10 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild18(in *jlexer.Lexer,
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Data).UnmarshalJSON(data))
 			}
+		case "meta":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.Meta).UnmarshalJSON(data))
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1887,6 +1891,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild18(out *writer, in P
 			out.RawString(prefix)
 		}
 		out.Raw((in.Data).MarshalJSON())
+	}
+	if len(in.Meta) != 0 {
+		const prefix string = ",\"meta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Raw((in.Meta).MarshalJSON())
 	}
 	out.RawByte('}')
 }
@@ -1922,6 +1936,10 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild19(in *jlexer.Lexer,
 		case "data":
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Data).UnmarshalJSON(data))
+			}
+		case "meta":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.Meta).UnmarshalJSON(data))
 			}
 		case "info":
 			if in.IsNull() {
@@ -1980,6 +1998,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 		first = false
 		out.RawString(prefix[1:])
 		out.Raw((in.Data).MarshalJSON())
+	}
+	if len(in.Meta) != 0 {
+		const prefix string = ",\"meta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Raw((in.Meta).MarshalJSON())
 	}
 	if in.Info != nil {
 		const prefix string = ",\"info\":"

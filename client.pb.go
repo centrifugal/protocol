@@ -1560,6 +1560,7 @@ type SubscribeRequest struct {
 	Recoverable   bool                   `protobuf:"varint,10,opt,name=recoverable,proto3" json:"recoverable,omitempty"`
 	JoinLeave     bool                   `protobuf:"varint,11,opt,name=join_leave,json=joinLeave,proto3" json:"join_leave,omitempty"`
 	Delta         string                 `protobuf:"bytes,12,opt,name=delta,proto3" json:"delta,omitempty"`
+	Filter        string                 `protobuf:"bytes,13,opt,name=filter,proto3" json:"filter,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1660,6 +1661,13 @@ func (x *SubscribeRequest) GetJoinLeave() bool {
 func (x *SubscribeRequest) GetDelta() string {
 	if x != nil {
 		return x.Delta
+	}
+	return ""
+}
+
+func (x *SubscribeRequest) GetFilter() string {
+	if x != nil {
+		return x.Filter
 	}
 	return ""
 }
@@ -2799,7 +2807,7 @@ const file_client_proto_rawDesc = "" +
 	"\x06client\x18\x01 \x01(\tR\x06client\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\tR\aversion\x12\x18\n" +
 	"\aexpires\x18\x03 \x01(\bR\aexpires\x12\x10\n" +
-	"\x03ttl\x18\x04 \x01(\rR\x03ttl\"\xa1\x02\n" +
+	"\x03ttl\x18\x04 \x01(\rR\x03ttl\"\xb9\x02\n" +
 	"\x10SubscribeRequest\x12\x18\n" +
 	"\achannel\x18\x01 \x01(\tR\achannel\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token\x12\x18\n" +
@@ -2814,7 +2822,8 @@ const file_client_proto_rawDesc = "" +
 	" \x01(\bR\vrecoverable\x12\x1d\n" +
 	"\n" +
 	"join_leave\x18\v \x01(\bR\tjoinLeave\x12\x14\n" +
-	"\x05delta\x18\f \x01(\tR\x05deltaJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"\xfa\x02\n" +
+	"\x05delta\x18\f \x01(\tR\x05delta\x12\x16\n" +
+	"\x06filter\x18\r \x01(\tR\x06filterJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"\xfa\x02\n" +
 	"\x0fSubscribeResult\x12\x18\n" +
 	"\aexpires\x18\x01 \x01(\bR\aexpires\x12\x10\n" +
 	"\x03ttl\x18\x02 \x01(\rR\x03ttl\x12 \n" +

@@ -206,6 +206,7 @@ message SubscribeRequest {
   bool recoverable = 10;
   bool join_leave = 11;
   string delta = 12;
+  string filter = 13;
 }
 
 message SubscribeResult {

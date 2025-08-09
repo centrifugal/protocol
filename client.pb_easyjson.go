@@ -438,6 +438,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild4(in *jlexer.Lexer, 
 			out.JoinLeave = bool(in.Bool())
 		case "delta":
 			out.Delta = string(in.String())
+		case "filter":
+			out.Filter = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -547,6 +549,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild4(out *writer, in Su
 			out.RawString(prefix)
 		}
 		out.String(string(in.Delta))
+	}
+	if in.Filter != "" {
+		const prefix string = ",\"filter\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Filter))
 	}
 	out.RawByte('}')
 }

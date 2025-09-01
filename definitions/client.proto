@@ -99,6 +99,7 @@ message ClientInfo {
 message Publication {
   reserved 1, 2, 3;
   bytes data = 4;
+  bytes meta = 11;
   ClientInfo info = 5;
   uint64 offset = 6;
   map<string, string> tags = 7;
@@ -205,6 +206,7 @@ message SubscribeRequest {
   bool recoverable = 10;
   bool join_leave = 11;
   string delta = 12;
+  string filter = 13;
 }
 
 message SubscribeResult {
@@ -241,6 +243,7 @@ message UnsubscribeResult {}
 message PublishRequest {
   string channel = 1;
   bytes data = 2;
+  bytes meta = 3;
 }
 
 message PublishResult {}

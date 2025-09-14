@@ -252,6 +252,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild3(in *jlexer.Lexer, 
 			out.WasRecovering = bool(in.Bool())
 		case "delta":
 			out.Delta = bool(in.Bool())
+		case "id":
+			out.Id = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -385,6 +387,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild3(out *writer, in Su
 		}
 		out.Bool(bool(in.Delta))
 	}
+	if in.Id != 0 {
+		const prefix string = ",\"id\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Id))
+	}
 	out.RawByte('}')
 }
 
@@ -438,6 +450,10 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild4(in *jlexer.Lexer, 
 			out.JoinLeave = bool(in.Bool())
 		case "delta":
 			out.Delta = string(in.String())
+		case "filter":
+			out.Filter = string(in.String())
+		case "use_id":
+			out.UseId = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -547,6 +563,26 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild4(out *writer, in Su
 			out.RawString(prefix)
 		}
 		out.String(string(in.Delta))
+	}
+	if in.Filter != "" {
+		const prefix string = ",\"filter\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Filter))
+	}
+	if in.UseId {
+		const prefix string = ",\"use_id\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.UseId))
 	}
 	out.RawByte('}')
 }
@@ -1574,6 +1610,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild16(in *jlexer.Lexer,
 			continue
 		}
 		switch key {
+		case "id":
+			out.Id = int64(in.Int64())
 		case "channel":
 			out.Channel = string(in.String())
 		case "pub":
@@ -1680,10 +1718,20 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild16(out *writer, in P
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Channel != "" {
-		const prefix string = ",\"channel\":"
+	if in.Id != 0 {
+		const prefix string = ",\"id\":"
 		first = false
 		out.RawString(prefix[1:])
+		out.Int64(int64(in.Id))
+	}
+	if in.Channel != "" {
+		const prefix string = ",\"channel\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.String(string(in.Channel))
 	}
 	if in.Pub != nil {
@@ -1961,6 +2009,10 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild19(in *jlexer.Lexer,
 			out.Time = int64(in.Int64())
 		case "channel":
 			out.Channel = string(in.String())
+		case "meta":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.Meta).UnmarshalJSON(data))
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -2054,6 +2106,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 			out.RawString(prefix)
 		}
 		out.String(string(in.Channel))
+	}
+	if len(in.Meta) != 0 {
+		const prefix string = ",\"meta\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Raw((in.Meta).MarshalJSON())
 	}
 	out.RawByte('}')
 }

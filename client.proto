@@ -173,6 +173,7 @@ message ConnectRequest {
   string name = 4;
   string version = 5;
   map<string, string> headers = 6;
+  int64 flag = 7; // Enable connection level features.
 }
 
 message ConnectResult {
@@ -213,7 +214,7 @@ message SubscribeRequest {
   bool join_leave = 11;
   string delta = 12;
   string filter = 13; // Optional expression for filtering publications on the server side.
-  bool use_id = 14; // Optional flag to indicate that server should assign a numeric ID to the channel and use it in pushes for bandwidth optimization.
+  int64 flag = 14; // Enable subscription level features.
 }
 
 message SubscribeResult {

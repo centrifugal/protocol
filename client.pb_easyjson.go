@@ -452,8 +452,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild4(in *jlexer.Lexer, 
 			out.Delta = string(in.String())
 		case "filter":
 			out.Filter = string(in.String())
-		case "use_id":
-			out.UseId = bool(in.Bool())
+		case "flag":
+			out.Flag = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -574,15 +574,15 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild4(out *writer, in Su
 		}
 		out.String(string(in.Filter))
 	}
-	if in.UseId {
-		const prefix string = ",\"use_id\":"
+	if in.Flag != 0 {
+		const prefix string = ",\"flag\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.Bool(bool(in.UseId))
+		out.Int64(int64(in.Flag))
 	}
 	out.RawByte('}')
 }
@@ -3391,6 +3391,8 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild35(in *jlexer.Lexer,
 				}
 				in.Delim('}')
 			}
+		case "flag":
+			out.Flag = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -3492,6 +3494,16 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild35(out *writer, in C
 			}
 			out.RawByte('}')
 		}
+	}
+	if in.Flag != 0 {
+		const prefix string = ",\"flag\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Flag))
 	}
 	out.RawByte('}')
 }

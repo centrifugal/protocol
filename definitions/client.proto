@@ -308,3 +308,15 @@ message RPCResult {
 message SendRequest{
   bytes data = 1;
 }
+
+// Leaf nodes: op = "", compare must be set
+// Internal nodes: op = "AND" | "OR" | "NOT", children must be non-empty (except NOT has exactly one child)
+// Leaf comparison operators (string-based for JSON).
+message FilterNode {
+  string op = 1; // "" for leaf, "AND", "OR", "NOT"
+  string compare = 2; // // Only meaningful if op == "". Values: "EQ", "NOT_EQ", "IN", "NOT_IN", "EXISTS", "NOT_EXISTS"
+  string key = 3;
+  string value = 4;
+  repeated string value_set = 5;
+  repeated FilterNode children = 6; // Children for "AND", "OR", "NOT".
+}

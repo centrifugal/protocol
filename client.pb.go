@@ -2793,6 +2793,96 @@ func (x *SendRequest) GetData() []byte {
 	return nil
 }
 
+// Leaf nodes: op = "", compare must be set
+// Internal nodes: op = "AND" | "OR" | "NOT", children must be non-empty (except NOT has exactly one child)
+// Leaf comparison operators (string-based for JSON).
+type FilterNode struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Op       string        `protobuf:"bytes,1,opt,name=op,proto3" json:"op,omitempty"`           // "" for leaf, "AND", "OR", "NOT"
+	Compare  string        `protobuf:"bytes,2,opt,name=compare,proto3" json:"compare,omitempty"` // // Only meaningful if op == "". Values: "EQ", "NOT_EQ", "IN", "NOT_IN", "EXISTS", "NOT_EXISTS"
+	Key      string        `protobuf:"bytes,3,opt,name=key,proto3" json:"key,omitempty"`
+	Value    string        `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
+	ValueSet []string      `protobuf:"bytes,5,rep,name=value_set,json=valueSet,proto3" json:"value_set,omitempty"`
+	Children []*FilterNode `protobuf:"bytes,6,rep,name=children,proto3" json:"children,omitempty"` // Children for "AND", "OR", "NOT".
+}
+
+func (x *FilterNode) Reset() {
+	*x = FilterNode{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_client_proto_msgTypes[39]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FilterNode) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FilterNode) ProtoMessage() {}
+
+func (x *FilterNode) ProtoReflect() protoreflect.Message {
+	mi := &file_client_proto_msgTypes[39]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FilterNode.ProtoReflect.Descriptor instead.
+func (*FilterNode) Descriptor() ([]byte, []int) {
+	return file_client_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *FilterNode) GetOp() string {
+	if x != nil {
+		return x.Op
+	}
+	return ""
+}
+
+func (x *FilterNode) GetCompare() string {
+	if x != nil {
+		return x.Compare
+	}
+	return ""
+}
+
+func (x *FilterNode) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *FilterNode) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *FilterNode) GetValueSet() []string {
+	if x != nil {
+		return x.ValueSet
+	}
+	return nil
+}
+
+func (x *FilterNode) GetChildren() []*FilterNode {
+	if x != nil {
+		return x.Children
+	}
+	return nil
+}
+
 var File_client_proto protoreflect.FileDescriptor
 
 var file_client_proto_rawDesc = []byte{
@@ -3251,10 +3341,22 @@ var file_client_proto_rawDesc = []byte{
 	0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x21, 0x0a, 0x0b, 0x53, 0x65,
 	0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74,
-	0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x42, 0x21, 0x5a,
-	0x1f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x65, 0x6e, 0x74,
-	0x72, 0x69, 0x66, 0x75, 0x67, 0x61, 0x6c, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0xc4, 0x01,
+	0x0a, 0x0a, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x4e, 0x6f, 0x64, 0x65, 0x12, 0x0e, 0x0a, 0x02,
+	0x6f, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x6f, 0x70, 0x12, 0x18, 0x0a, 0x07,
+	0x63, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63,
+	0x6f, 0x6d, 0x70, 0x61, 0x72, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x1b,
+	0x0a, 0x09, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x18, 0x05, 0x20, 0x03, 0x28,
+	0x09, 0x52, 0x08, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x53, 0x65, 0x74, 0x12, 0x47, 0x0a, 0x08, 0x63,
+	0x68, 0x69, 0x6c, 0x64, 0x72, 0x65, 0x6e, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2b, 0x2e,
+	0x63, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x66, 0x75, 0x67, 0x61, 0x6c, 0x2e, 0x63, 0x65, 0x6e, 0x74,
+	0x72, 0x69, 0x66, 0x75, 0x67, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2e,
+	0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x08, 0x63, 0x68, 0x69, 0x6c,
+	0x64, 0x72, 0x65, 0x6e, 0x42, 0x21, 0x5a, 0x1f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x63, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x66, 0x75, 0x67, 0x61, 0x6c, 0x2f, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3269,7 +3371,7 @@ func file_client_proto_rawDescGZIP() []byte {
 	return file_client_proto_rawDescData
 }
 
-var file_client_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
+var file_client_proto_msgTypes = make([]protoimpl.MessageInfo, 46)
 var file_client_proto_goTypes = []interface{}{
 	(*Error)(nil),                // 0: centrifugal.centrifuge.protocol.Error
 	(*EmulationRequest)(nil),     // 1: centrifugal.centrifuge.protocol.EmulationRequest
@@ -3310,12 +3412,13 @@ var file_client_proto_goTypes = []interface{}{
 	(*RPCRequest)(nil),           // 36: centrifugal.centrifuge.protocol.RPCRequest
 	(*RPCResult)(nil),            // 37: centrifugal.centrifuge.protocol.RPCResult
 	(*SendRequest)(nil),          // 38: centrifugal.centrifuge.protocol.SendRequest
-	nil,                          // 39: centrifugal.centrifuge.protocol.Publication.TagsEntry
-	nil,                          // 40: centrifugal.centrifuge.protocol.Connect.SubsEntry
-	nil,                          // 41: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry
-	nil,                          // 42: centrifugal.centrifuge.protocol.ConnectRequest.HeadersEntry
-	nil,                          // 43: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry
-	nil,                          // 44: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
+	(*FilterNode)(nil),           // 39: centrifugal.centrifuge.protocol.FilterNode
+	nil,                          // 40: centrifugal.centrifuge.protocol.Publication.TagsEntry
+	nil,                          // 41: centrifugal.centrifuge.protocol.Connect.SubsEntry
+	nil,                          // 42: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry
+	nil,                          // 43: centrifugal.centrifuge.protocol.ConnectRequest.HeadersEntry
+	nil,                          // 44: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry
+	nil,                          // 45: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
 }
 var file_client_proto_depIdxs = []int32{
 	15, // 0: centrifugal.centrifuge.protocol.Command.connect:type_name -> centrifugal.centrifuge.protocol.ConnectRequest
@@ -3353,26 +3456,27 @@ var file_client_proto_depIdxs = []int32{
 	13, // 32: centrifugal.centrifuge.protocol.Push.disconnect:type_name -> centrifugal.centrifuge.protocol.Disconnect
 	14, // 33: centrifugal.centrifuge.protocol.Push.refresh:type_name -> centrifugal.centrifuge.protocol.Refresh
 	5,  // 34: centrifugal.centrifuge.protocol.Publication.info:type_name -> centrifugal.centrifuge.protocol.ClientInfo
-	39, // 35: centrifugal.centrifuge.protocol.Publication.tags:type_name -> centrifugal.centrifuge.protocol.Publication.TagsEntry
+	40, // 35: centrifugal.centrifuge.protocol.Publication.tags:type_name -> centrifugal.centrifuge.protocol.Publication.TagsEntry
 	5,  // 36: centrifugal.centrifuge.protocol.Join.info:type_name -> centrifugal.centrifuge.protocol.ClientInfo
 	5,  // 37: centrifugal.centrifuge.protocol.Leave.info:type_name -> centrifugal.centrifuge.protocol.ClientInfo
-	40, // 38: centrifugal.centrifuge.protocol.Connect.subs:type_name -> centrifugal.centrifuge.protocol.Connect.SubsEntry
-	41, // 39: centrifugal.centrifuge.protocol.ConnectRequest.subs:type_name -> centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry
-	42, // 40: centrifugal.centrifuge.protocol.ConnectRequest.headers:type_name -> centrifugal.centrifuge.protocol.ConnectRequest.HeadersEntry
-	43, // 41: centrifugal.centrifuge.protocol.ConnectResult.subs:type_name -> centrifugal.centrifuge.protocol.ConnectResult.SubsEntry
+	41, // 38: centrifugal.centrifuge.protocol.Connect.subs:type_name -> centrifugal.centrifuge.protocol.Connect.SubsEntry
+	42, // 39: centrifugal.centrifuge.protocol.ConnectRequest.subs:type_name -> centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry
+	43, // 40: centrifugal.centrifuge.protocol.ConnectRequest.headers:type_name -> centrifugal.centrifuge.protocol.ConnectRequest.HeadersEntry
+	44, // 41: centrifugal.centrifuge.protocol.ConnectResult.subs:type_name -> centrifugal.centrifuge.protocol.ConnectResult.SubsEntry
 	6,  // 42: centrifugal.centrifuge.protocol.SubscribeResult.publications:type_name -> centrifugal.centrifuge.protocol.Publication
-	44, // 43: centrifugal.centrifuge.protocol.PresenceResult.presence:type_name -> centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
+	45, // 43: centrifugal.centrifuge.protocol.PresenceResult.presence:type_name -> centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
 	31, // 44: centrifugal.centrifuge.protocol.HistoryRequest.since:type_name -> centrifugal.centrifuge.protocol.StreamPosition
 	6,  // 45: centrifugal.centrifuge.protocol.HistoryResult.publications:type_name -> centrifugal.centrifuge.protocol.Publication
-	20, // 46: centrifugal.centrifuge.protocol.Connect.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
-	19, // 47: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeRequest
-	20, // 48: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
-	5,  // 49: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry.value:type_name -> centrifugal.centrifuge.protocol.ClientInfo
-	50, // [50:50] is the sub-list for method output_type
-	50, // [50:50] is the sub-list for method input_type
-	50, // [50:50] is the sub-list for extension type_name
-	50, // [50:50] is the sub-list for extension extendee
-	0,  // [0:50] is the sub-list for field type_name
+	39, // 46: centrifugal.centrifuge.protocol.FilterNode.children:type_name -> centrifugal.centrifuge.protocol.FilterNode
+	20, // 47: centrifugal.centrifuge.protocol.Connect.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
+	19, // 48: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeRequest
+	20, // 49: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
+	5,  // 50: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry.value:type_name -> centrifugal.centrifuge.protocol.ClientInfo
+	51, // [51:51] is the sub-list for method output_type
+	51, // [51:51] is the sub-list for method input_type
+	51, // [51:51] is the sub-list for extension type_name
+	51, // [51:51] is the sub-list for extension extendee
+	0,  // [0:51] is the sub-list for field type_name
 }
 
 func init() { file_client_proto_init() }
@@ -3849,6 +3953,18 @@ func file_client_proto_init() {
 				return nil
 			}
 		}
+		file_client_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FilterNode); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3856,7 +3972,7 @@ func file_client_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_client_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   45,
+			NumMessages:   46,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

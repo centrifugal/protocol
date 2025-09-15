@@ -315,7 +315,7 @@ message SendRequest{
 message FilterNode {
   string op = 1; // "" for leaf, "and", "or", "not"
   string key = 3;
-  string compare = 2; // // Only meaningful if op == "". Values: "eq", "neq", "in", "nin", "ex", "nex"
+  string compare = 2; // // Only meaningful if op == "". Values: "eq", "neq", "in", "nin", "ex", "nex".
   string value = 4;
   repeated string value_set = 5;
   repeated FilterNode children = 6; // Children for "and", "or", "not".

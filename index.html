@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FilterNode JS Parser Test</title>
+</head>
+<body>
+<h1>FilterNode JS Parser Test</h1>
+
+<textarea id="expr" rows="3" cols="80">count > 42 && price >= 99.5 && ticker.contains("GOO")</textarea><br>
+<button id="parseBtn">Parse Expression</button>
+
+<pre id="output"></pre>
+
+<!-- jsep ES module -->
+<script type="module">
+    import jsep from 'https://cdn.jsdelivr.net/npm/jsep@1.3.6/dist/jsep.min.js';
+
+    // Helper to safely get node value
+    function getNodeValue(node) {
+        if (!node) return undefined;
+        switch(node.type) {
+            case "Literal": return node.value;
+            case "Identifier": return node.name;
+            case "MemberExpression": return node.property?.name ?? node.property?.value;
+            default: throw new Error("Unsupported node type for value: " + node.type);
+        }
+    }
+
+    function exprToFilterNode(node) {
+        switch (node.type) {
+            case "BinaryExpression": {
+                const left = node.left;
+                const right = node.right;
+                const op = node.operator;
+
+                // Logical operators
+                if (op === "&&") {
+                    return { op: "and", children: [exprToFilterNode(left), exprToFilterNode(right)] };
+                } else if (op === "||") {
+                    return { op: "or", children: [exprToFilterNode(left), exprToFilterNode(right)] };
+                }
+
+                // Leaf node
+                let key = getNodeValue(left);
+                let value = getNodeValue(right);
+                let compare = "";
+                let valueSet;
+
+                switch (op) {
+                    case "==": compare="eq"; break;
+                    case "!=": compare="neq"; break;
+                    case ">": compare="igt"; break;
+                    case ">=": compare="igte"; break;
+                    case "<": compare="ilt"; break;
+                    case "<=": compare="ilte"; break;
+                    case "in": compare="in"; valueSet = right.elements.map(e=>getNodeValue(e)); break;
+                    case "not in": compare="nin"; valueSet = right.elements.map(e=>getNodeValue(e)); break;
+                    default: throw new Error("Unsupported operator: " + op);
+                }
+
+                return { op:"", key, compare, value, valueSet };
+            }
+
+            case "UnaryExpression":
+                if (node.operator === "!") return { op: "not", children: [exprToFilterNode(node.argument)] };
+                throw new Error("Unsupported unary operator: " + node.operator);
+
+            case "CallExpression": {
+                let func;
+                if (node.callee.type === "Identifier") {
+                    func = node.callee.name;
+                } else if (node.callee.type === "MemberExpression") {
+                    func = node.callee.property.name; // e.g., "contains", "startsWith"
+                } else {
+                    throw new Error("Unsupported callee type: " + node.callee.type);
+                }
+
+                // get key and value
+                const keyNode = node.callee.object ?? node.arguments[0]; // object for MemberExpression
+                const valNode = node.arguments[node.callee.type === "MemberExpression" ? 0 : 1];
+                const key = getNodeValue(keyNode);
+                const value = getNodeValue(valNode);
+
+                let compare = "";
+                switch(func){
+                    case "contains": compare="contains"; break;
+                    case "startsWith": compare="prefix"; break;
+                    case "endsWith": compare="suffix"; break;
+                    default: throw new Error("Unsupported function: "+func);
+                }
+                return { op:"", key, compare, value };
+            }
+
+            default:
+                throw new Error("Unsupported node type: "+node.type);
+        }
+    }
+
+    document.getElementById("parseBtn").addEventListener("click", ()=>{
+        const expr = document.getElementById("expr").value;
+        try {
+            const ast = jsep(expr);
+            const filterNode = exprToFilterNode(ast);
+            document.getElementById("output").textContent = JSON.stringify(filterNode, null, 2);
+        } catch(e) {
+            document.getElementById("output").textContent = "Error: " + e.message;
+        }
+    });
+</script>
+</body>
+</html>

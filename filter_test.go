@@ -146,7 +146,7 @@ func TestFilterAll(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		got, err := tt.filter.Match(tt.tags)
+		got, err := FilterMatch(tt.filter, tt.tags)
 		if err != nil {
 			t.Errorf("case %d (%s): unexpected error: %v", i, tt.desc, err)
 			continue
@@ -197,7 +197,7 @@ func TestFilterMatchesComplex(t *testing.T) {
 	}
 
 	for i, tt := range cases {
-		got, err := filter.Match(tt.tags)
+		got, err := FilterMatch(filter, tt.tags)
 		if err != nil {
 			t.Errorf("case %d: unexpected error: %v", i, err)
 		}
@@ -222,7 +222,51 @@ func BenchmarkFilterZeroAlloc(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		for _, sub := range subs {
-			_, _ = sub.Match(pubTags)
+			_, _ = FilterMatch(sub, pubTags)
+		}
+	}
+}
+
+func BenchmarkFilterNumericZeroAlloc(b *testing.B) {
+	// Build a filter that requires both an integer and a float condition to pass
+	filter := &FilterNode{
+		Op: FilterOpAnd,
+		Children: []*FilterNode{
+			{
+				Op:      FilterOpLeaf,
+				Key:     "count",
+				Compare: FilterCompareIntGT, // integer comparison
+				Value:   "42",
+			},
+			{
+				Op:      FilterOpLeaf,
+				Key:     "price",
+				Compare: FilterCompareFloatGTE, // float comparison
+				Value:   "99.5",
+			},
+		},
+	}
+
+	const subscribers = 10000
+
+	// Example publication tags
+	tags := map[string]string{
+		"count": "100",
+		"price": "120.0",
+	}
+
+	// Simulate 10k subscribers using the same filter
+	subs := make([]*FilterNode, subscribers)
+	for i := 0; i < subscribers; i++ {
+		subs[i] = filter
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		for _, sub := range subs {
+			_, _ = FilterMatch(sub, tags)
 		}
 	}
 }

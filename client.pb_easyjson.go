@@ -2883,49 +2883,49 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild31(in *jlexer.Lexer,
 		switch key {
 		case "op":
 			out.Op = string(in.String())
-		case "compare":
-			out.Compare = string(in.String())
 		case "key":
 			out.Key = string(in.String())
-		case "value":
-			out.Value = string(in.String())
-		case "value_set":
+		case "cmp":
+			out.Cmp = string(in.String())
+		case "val":
+			out.Val = string(in.String())
+		case "vals":
 			if in.IsNull() {
 				in.Skip()
-				out.ValueSet = nil
+				out.Vals = nil
 			} else {
 				in.Delim('[')
-				if out.ValueSet == nil {
+				if out.Vals == nil {
 					if !in.IsDelim(']') {
-						out.ValueSet = make([]string, 0, 4)
+						out.Vals = make([]string, 0, 4)
 					} else {
-						out.ValueSet = []string{}
+						out.Vals = []string{}
 					}
 				} else {
-					out.ValueSet = (out.ValueSet)[:0]
+					out.Vals = (out.Vals)[:0]
 				}
 				for !in.IsDelim(']') {
 					var v11 string
 					v11 = string(in.String())
-					out.ValueSet = append(out.ValueSet, v11)
+					out.Vals = append(out.Vals, v11)
 					in.WantComma()
 				}
 				in.Delim(']')
 			}
-		case "children":
+		case "nodes":
 			if in.IsNull() {
 				in.Skip()
-				out.Children = nil
+				out.Nodes = nil
 			} else {
 				in.Delim('[')
-				if out.Children == nil {
+				if out.Nodes == nil {
 					if !in.IsDelim(']') {
-						out.Children = make([]*FilterNode, 0, 8)
+						out.Nodes = make([]*FilterNode, 0, 8)
 					} else {
-						out.Children = []*FilterNode{}
+						out.Nodes = []*FilterNode{}
 					}
 				} else {
-					out.Children = (out.Children)[:0]
+					out.Nodes = (out.Nodes)[:0]
 				}
 				for !in.IsDelim(']') {
 					var v12 *FilterNode
@@ -2938,7 +2938,7 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild31(in *jlexer.Lexer,
 						}
 						(*v12).UnmarshalEasyJSON(in)
 					}
-					out.Children = append(out.Children, v12)
+					out.Nodes = append(out.Nodes, v12)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -2963,16 +2963,6 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild31(out *writer, in F
 		out.RawString(prefix[1:])
 		out.String(string(in.Op))
 	}
-	if in.Compare != "" {
-		const prefix string = ",\"compare\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Compare))
-	}
 	if in.Key != "" {
 		const prefix string = ",\"key\":"
 		if first {
@@ -2983,18 +2973,28 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild31(out *writer, in F
 		}
 		out.String(string(in.Key))
 	}
-	if in.Value != "" {
-		const prefix string = ",\"value\":"
+	if in.Cmp != "" {
+		const prefix string = ",\"cmp\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Value))
+		out.String(string(in.Cmp))
 	}
-	if len(in.ValueSet) != 0 {
-		const prefix string = ",\"value_set\":"
+	if in.Val != "" {
+		const prefix string = ",\"val\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Val))
+	}
+	if len(in.Vals) != 0 {
+		const prefix string = ",\"vals\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -3003,7 +3003,7 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild31(out *writer, in F
 		}
 		{
 			out.RawByte('[')
-			for v13, v14 := range in.ValueSet {
+			for v13, v14 := range in.Vals {
 				if v13 > 0 {
 					out.RawByte(',')
 				}
@@ -3012,8 +3012,8 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild31(out *writer, in F
 			out.RawByte(']')
 		}
 	}
-	if len(in.Children) != 0 {
-		const prefix string = ",\"children\":"
+	if len(in.Nodes) != 0 {
+		const prefix string = ",\"nodes\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -3022,7 +3022,7 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild31(out *writer, in F
 		}
 		{
 			out.RawByte('[')
-			for v15, v16 := range in.Children {
+			for v15, v16 := range in.Nodes {
 				if v15 > 0 {
 					out.RawByte(',')
 				}

@@ -6,6 +6,7 @@ require (
 	github.com/google/cel-go v0.26.1
 	github.com/mailru/easyjson v0.7.7
 	github.com/planetscale/vtprotobuf v0.6.0
+	github.com/quagmt/udecimal v1.9.0
 	github.com/segmentio/encoding v0.5.3
 	github.com/stretchr/testify v1.11.1
 	github.com/valyala/bytebufferpool v1.0.0

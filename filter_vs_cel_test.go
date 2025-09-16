@@ -10,31 +10,31 @@ import (
 func buildZeroAllocFilter() *FilterNode {
 	return &FilterNode{
 		Op: FilterOpAnd,
-		Children: []*FilterNode{
+		Nodes: []*FilterNode{
 			{
-				Op:      FilterOpLeaf,
-				Key:     "count",
-				Compare: FilterCompareIntGT,
-				Value:   "42",
+				Op:  FilterOpLeaf,
+				Key: "count",
+				Cmp: FilterCompareGT,
+				Val: "42",
 			},
 			{
-				Op:      FilterOpLeaf,
-				Key:     "price",
-				Compare: FilterCompareFloatGTE,
-				Value:   "99.5",
+				Op:  FilterOpLeaf,
+				Key: "price",
+				Cmp: FilterCompareGTE,
+				Val: "99.5",
 			},
 			{
-				Op:      FilterOpLeaf,
-				Key:     "ticker",
-				Compare: FilterCompareContains,
-				Value:   "GOO",
+				Op:  FilterOpLeaf,
+				Key: "ticker",
+				Cmp: FilterCompareContains,
+				Val: "GOO",
 			},
 		},
 	}
 }
 
 // Benchmark zero-alloc FilterNode
-func BenchmarkCompareFilterNode(b *testing.B) {
+func BenchmarkFilterCompareFilterNode(b *testing.B) {
 	filter := buildZeroAllocFilter()
 	const subscribers = 10000
 
@@ -59,7 +59,7 @@ func BenchmarkCompareFilterNode(b *testing.B) {
 	}
 }
 
-func BenchmarkCompareCEL(b *testing.B) {
+func BenchmarkFilterCompareCEL(b *testing.B) {
 	// CEL environment
 	env, err := cel.NewEnv(
 		cel.Variable("tags", cel.MapType(cel.StringType, cel.StringType)),
@@ -118,7 +118,7 @@ func BenchmarkCompareCEL(b *testing.B) {
 	}
 }
 
-func BenchmarkCompareMemoryFilterNode(b *testing.B) {
+func BenchmarkFilterCompareMemoryFilterNode(b *testing.B) {
 	for b.Loop() {
 		for range 10000 {
 			buildZeroAllocFilter()
@@ -127,7 +127,7 @@ func BenchmarkCompareMemoryFilterNode(b *testing.B) {
 }
 
 // Benchmark memory usage / allocations for CEL
-func BenchmarkCompareCELMemory(b *testing.B) {
+func BenchmarkFilterCompareCELMemory(b *testing.B) {
 	for b.Loop() {
 		for range 10000 {
 			env, err := cel.NewEnv(

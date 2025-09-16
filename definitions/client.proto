@@ -313,10 +313,10 @@ message SendRequest{
 // Internal nodes: op = "AND" | "OR" | "NOT", children must be non-empty (except NOT has exactly one child)
 // Leaf comparison operators (string-based for JSON).
 message FilterNode {
-  string op = 1; // "" for leaf, "AND", "OR", "NOT"
-  string compare = 2; // // Only meaningful if op == "". Values: "EQ", "NOT_EQ", "IN", "NOT_IN", "EXISTS", "NOT_EXISTS"
+  string op = 1; // "" for leaf, "and", "or", "not"
   string key = 3;
-  string value = 4;
-  repeated string value_set = 5;
-  repeated FilterNode children = 6; // Children for "AND", "OR", "NOT".
+  string cmp = 2; // // Only meaningful if op == "". Values: "eq", "neq", "in", "nin", "ex", "nex", "lt", "lte", "gt", "gte", "starts", "ends", "contains".
+  string val = 4;
+  repeated string vals = 5;
+  repeated FilterNode nodes = 6; // Children for "and", "or", "not".
 }

@@ -2632,9 +2632,9 @@ func (m *FilterNode) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if len(m.Children) > 0 {
-		for iNdEx := len(m.Children) - 1; iNdEx >= 0; iNdEx-- {
-			size, err := m.Children[iNdEx].MarshalToSizedBufferVT(dAtA[:i])
+	if len(m.Nodes) > 0 {
+		for iNdEx := len(m.Nodes) - 1; iNdEx >= 0; iNdEx-- {
+			size, err := m.Nodes[iNdEx].MarshalToSizedBufferVT(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -2644,19 +2644,19 @@ func (m *FilterNode) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 			dAtA[i] = 0x32
 		}
 	}
-	if len(m.ValueSet) > 0 {
-		for iNdEx := len(m.ValueSet) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.ValueSet[iNdEx])
-			copy(dAtA[i:], m.ValueSet[iNdEx])
-			i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.ValueSet[iNdEx])))
+	if len(m.Vals) > 0 {
+		for iNdEx := len(m.Vals) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Vals[iNdEx])
+			copy(dAtA[i:], m.Vals[iNdEx])
+			i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Vals[iNdEx])))
 			i--
 			dAtA[i] = 0x2a
 		}
 	}
-	if len(m.Value) > 0 {
-		i -= len(m.Value)
-		copy(dAtA[i:], m.Value)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Value)))
+	if len(m.Val) > 0 {
+		i -= len(m.Val)
+		copy(dAtA[i:], m.Val)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Val)))
 		i--
 		dAtA[i] = 0x22
 	}
@@ -2667,10 +2667,10 @@ func (m *FilterNode) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.Compare) > 0 {
-		i -= len(m.Compare)
-		copy(dAtA[i:], m.Compare)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Compare)))
+	if len(m.Cmp) > 0 {
+		i -= len(m.Cmp)
+		copy(dAtA[i:], m.Cmp)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Cmp)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -3696,7 +3696,7 @@ func (m *FilterNode) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	l = len(m.Compare)
+	l = len(m.Cmp)
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
@@ -3704,18 +3704,18 @@ func (m *FilterNode) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	l = len(m.Value)
+	l = len(m.Val)
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	if len(m.ValueSet) > 0 {
-		for _, s := range m.ValueSet {
+	if len(m.Vals) > 0 {
+		for _, s := range m.Vals {
 			l = len(s)
 			n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 		}
 	}
-	if len(m.Children) > 0 {
-		for _, e := range m.Children {
+	if len(m.Nodes) > 0 {
+		for _, e := range m.Nodes {
 			l = e.SizeVT()
 			n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 		}
@@ -10817,7 +10817,7 @@ func (m *FilterNode) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Compare", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Cmp", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -10845,7 +10845,7 @@ func (m *FilterNode) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Compare = string(dAtA[iNdEx:postIndex])
+			m.Cmp = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -10881,7 +10881,7 @@ func (m *FilterNode) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Val", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -10909,11 +10909,11 @@ func (m *FilterNode) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Value = string(dAtA[iNdEx:postIndex])
+			m.Val = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ValueSet", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Vals", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -10941,11 +10941,11 @@ func (m *FilterNode) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValueSet = append(m.ValueSet, string(dAtA[iNdEx:postIndex]))
+			m.Vals = append(m.Vals, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Children", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Nodes", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -10972,8 +10972,8 @@ func (m *FilterNode) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Children = append(m.Children, &FilterNode{})
-			if err := m.Children[len(m.Children)-1].UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+			m.Nodes = append(m.Nodes, &FilterNode{})
+			if err := m.Nodes[len(m.Nodes)-1].UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

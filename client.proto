@@ -309,14 +309,37 @@ message SendRequest{
   bytes data = 1;
 }
 
-// Leaf nodes: op = "", compare must be set
-// Internal nodes: op = "AND" | "OR" | "NOT", children must be non-empty (except NOT has exactly one child)
-// Leaf comparison operators (string-based for JSON).
 message FilterNode {
-  string op = 1; // "" for leaf, "and", "or", "not"
+  // Operation type for this node:
+  // - "" (empty string) → leaf node (comparison)
+  // - "and" → logical AND of child nodes
+  // - "or" → logical OR of child nodes
+  // - "not" → logical NOT of a single child node
+  string op = 1;
+  // Comparison operator for leaf nodes.
+  // Only meaningful if op == "".
+  // Supported values:
+  //   "eq"   → equal
+  //   "neq"  → not equal
+  //   "in"   → value is in vals
+  //   "nin"  → value is not in vals
+  //   "ex"   → key exists in tags
+  //   "nex"  → key does not exist
+  //   "starts" → string starts with val
+  //   "ends"   → string ends with val
+  //   "contains" → string contains val
+  //   "lt"   → numeric/string less than val
+  //   "lte"  → numeric/string less than or equal val
+  //   "gt"   → numeric/string greater than val
+  //   "gte"  → numeric/string greater than or equal val
+  string cmp = 2;
+  // Key for comparison (only valid for leaf nodes).
   string key = 3;
-  string compare = 2; // // Only meaningful if op == "". Values: "eq", "neq", "in", "nin", "ex", "nex".
-  string value = 4;
-  repeated string value_set = 5;
-  repeated FilterNode children = 6; // Children for "and", "or", "not".
+  // Single value used in comparison (e.g. "42").
+  string val = 4;
+  // Multiple values used for set comparisons ("in", "nin").
+  repeated string vals = 5;
+  // Child nodes.
+  // Used for logical operations: "and", "or", "not".
+  repeated FilterNode nodes = 6;
 }

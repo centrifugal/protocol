@@ -1,6 +1,10 @@
 package protocol
 
-import "testing"
+import (
+	"github.com/segmentio/encoding/json"
+	"github.com/stretchr/testify/require"
+	"testing"
+)
 
 func TestFilterAll(t *testing.T) {
 	tests := []struct {
@@ -10,40 +14,55 @@ func TestFilterAll(t *testing.T) {
 		desc     string
 	}{
 		// --- Leaf EQ ---
-		{&FilterNode{Compare: FilterCompareEQ, Key: "env", Value: "prod"}, map[string]string{"env": "prod"}, true, "EQ matches"},
-		{&FilterNode{Compare: FilterCompareEQ, Key: "env", Value: "prod"}, map[string]string{"env": "staging"}, false, "EQ does not match"},
-		{&FilterNode{Compare: FilterCompareEQ, Key: "env", Value: "prod"}, map[string]string{}, false, "EQ missing key"},
+		{&FilterNode{Cmp: FilterCompareEQ, Key: "env", Val: "prod"}, map[string]string{"env": "prod"}, true, "EQ matches"},
+		{&FilterNode{Cmp: FilterCompareEQ, Key: "env", Val: "prod"}, map[string]string{"env": "staging"}, false, "EQ does not match"},
+		{&FilterNode{Cmp: FilterCompareEQ, Key: "env", Val: "prod"}, map[string]string{}, false, "EQ missing key"},
 
 		// --- Leaf NOT_EQ ---
-		{&FilterNode{Compare: FilterCompareNotEQ, Key: "tier", Value: "bronze"}, map[string]string{"tier": "silver"}, true, "NOT_EQ different value"},
-		{&FilterNode{Compare: FilterCompareNotEQ, Key: "tier", Value: "bronze"}, map[string]string{"tier": "bronze"}, false, "NOT_EQ same value"},
-		{&FilterNode{Compare: FilterCompareNotEQ, Key: "tier", Value: "bronze"}, map[string]string{}, true, "NOT_EQ missing key counts as not equal"},
+		{&FilterNode{Cmp: FilterCompareNotEQ, Key: "tier", Val: "bronze"}, map[string]string{"tier": "silver"}, true, "NOT_EQ different value"},
+		{&FilterNode{Cmp: FilterCompareNotEQ, Key: "tier", Val: "bronze"}, map[string]string{"tier": "bronze"}, false, "NOT_EQ same value"},
+		{&FilterNode{Cmp: FilterCompareNotEQ, Key: "tier", Val: "bronze"}, map[string]string{}, true, "NOT_EQ missing key counts as not equal"},
 
 		// --- Leaf IN ---
-		{&FilterNode{Compare: FilterCompareIn, Key: "region", ValueSet: []string{"us", "eu"}}, map[string]string{"region": "us"}, true, "IN value present"},
-		{&FilterNode{Compare: FilterCompareIn, Key: "region", ValueSet: []string{"us", "eu"}}, map[string]string{"region": "asia"}, false, "IN value absent"},
-		{&FilterNode{Compare: FilterCompareIn, Key: "region", ValueSet: []string{"us", "eu"}}, map[string]string{}, false, "IN missing key"},
+		{&FilterNode{Cmp: FilterCompareIn, Key: "region", Vals: []string{"us", "eu"}}, map[string]string{"region": "us"}, true, "IN value present"},
+		{&FilterNode{Cmp: FilterCompareIn, Key: "region", Vals: []string{"us", "eu"}}, map[string]string{"region": "asia"}, false, "IN value absent"},
+		{&FilterNode{Cmp: FilterCompareIn, Key: "region", Vals: []string{"us", "eu"}}, map[string]string{}, false, "IN missing key"},
 
 		// --- Leaf NOT_IN ---
-		{&FilterNode{Compare: FilterCompareNotIn, Key: "region", ValueSet: []string{"us", "eu"}}, map[string]string{"region": "asia"}, true, "NOT_IN value absent"},
-		{&FilterNode{Compare: FilterCompareNotIn, Key: "region", ValueSet: []string{"us", "eu"}}, map[string]string{"region": "us"}, false, "NOT_IN value present"},
-		{&FilterNode{Compare: FilterCompareNotIn, Key: "region", ValueSet: []string{"us", "eu"}}, map[string]string{}, true, "NOT_IN missing key counts as not in set"},
+		{&FilterNode{Cmp: FilterCompareNotIn, Key: "region", Vals: []string{"us", "eu"}}, map[string]string{"region": "asia"}, true, "NOT_IN value absent"},
+		{&FilterNode{Cmp: FilterCompareNotIn, Key: "region", Vals: []string{"us", "eu"}}, map[string]string{"region": "us"}, false, "NOT_IN value present"},
+		{&FilterNode{Cmp: FilterCompareNotIn, Key: "region", Vals: []string{"us", "eu"}}, map[string]string{}, true, "NOT_IN missing key counts as not in set"},
 
 		// --- Leaf EXISTS ---
-		{&FilterNode{Compare: FilterCompareExists, Key: "debug"}, map[string]string{"debug": "1"}, true, "EXISTS present"},
-		{&FilterNode{Compare: FilterCompareExists, Key: "debug"}, map[string]string{}, false, "EXISTS missing"},
+		{&FilterNode{Cmp: FilterCompareExists, Key: "debug"}, map[string]string{"debug": "1"}, true, "EXISTS present"},
+		{&FilterNode{Cmp: FilterCompareExists, Key: "debug"}, map[string]string{}, false, "EXISTS missing"},
 
 		// --- Leaf NOT_EXISTS ---
-		{&FilterNode{Compare: FilterCompareNotExists, Key: "debug"}, map[string]string{}, true, "NOT_EXISTS missing"},
-		{&FilterNode{Compare: FilterCompareNotExists, Key: "debug"}, map[string]string{"debug": "1"}, false, "NOT_EXISTS present"},
+		{&FilterNode{Cmp: FilterCompareNotExists, Key: "debug"}, map[string]string{}, true, "NOT_EXISTS missing"},
+		{&FilterNode{Cmp: FilterCompareNotExists, Key: "debug"}, map[string]string{"debug": "1"}, false, "NOT_EXISTS present"},
+
+		// -- Numeric comparisons ---
+		{&FilterNode{Cmp: FilterCompareGT, Key: "amount", Val: "42"}, map[string]string{"amount": "100"}, true, "GT greater"},
+		{&FilterNode{Cmp: FilterCompareGT, Key: "amount", Val: "42"}, map[string]string{"amount": "10"}, false, "GT less"},
+		{&FilterNode{Cmp: FilterCompareGTE, Key: "amount", Val: "42"}, map[string]string{"amount": "100"}, true, "GTE greater"},
+		{&FilterNode{Cmp: FilterCompareGTE, Key: "amount", Val: "42"}, map[string]string{"amount": "42"}, true, "GTE equal"},
+		{&FilterNode{Cmp: FilterCompareGTE, Key: "amount", Val: "42"}, map[string]string{"amount": "42.00000001"}, true, "GTE equal close"},
+		{&FilterNode{Cmp: FilterCompareGTE, Key: "amount", Val: "42"}, map[string]string{"amount": "41.99999999"}, false, "GTE equal close"},
+		{&FilterNode{Cmp: FilterCompareGTE, Key: "amount", Val: "42"}, map[string]string{"amount": "10"}, false, "GTE less"},
+		{&FilterNode{Cmp: FilterCompareLT, Key: "amount", Val: "42"}, map[string]string{"amount": "10"}, true, "LT less"},
+		{&FilterNode{Cmp: FilterCompareLT, Key: "amount", Val: "42"}, map[string]string{"amount": "100"}, false, "LT greater"},
+		{&FilterNode{Cmp: FilterCompareLT, Key: "amount", Val: "42"}, map[string]string{"amount": "42"}, false, "LT equal"},
+		{&FilterNode{Cmp: FilterCompareLTE, Key: "amount", Val: "42"}, map[string]string{"amount": "10"}, true, "LTE less"},
+		{&FilterNode{Cmp: FilterCompareLTE, Key: "amount", Val: "42"}, map[string]string{"amount": "42"}, true, "LTE equal"},
+		{&FilterNode{Cmp: FilterCompareLTE, Key: "amount", Val: "42"}, map[string]string{"amount": "100"}, false, "LTE greater"},
 
 		// --- AND ---
 		{
 			&FilterNode{
 				Op: FilterOpAnd,
-				Children: []*FilterNode{
-					{Compare: FilterCompareEQ, Key: "env", Value: "prod"},
-					{Compare: FilterCompareExists, Key: "version"},
+				Nodes: []*FilterNode{
+					{Cmp: FilterCompareEQ, Key: "env", Val: "prod"},
+					{Cmp: FilterCompareExists, Key: "version"},
 				},
 			},
 			map[string]string{"env": "prod", "version": "1.0"},
@@ -53,9 +72,9 @@ func TestFilterAll(t *testing.T) {
 		{
 			&FilterNode{
 				Op: FilterOpAnd,
-				Children: []*FilterNode{
-					{Compare: FilterCompareEQ, Key: "env", Value: "prod"},
-					{Compare: FilterCompareExists, Key: "version"},
+				Nodes: []*FilterNode{
+					{Cmp: FilterCompareEQ, Key: "env", Val: "prod"},
+					{Cmp: FilterCompareExists, Key: "version"},
 				},
 			},
 			map[string]string{"env": "prod"},
@@ -67,9 +86,9 @@ func TestFilterAll(t *testing.T) {
 		{
 			&FilterNode{
 				Op: FilterOpOr,
-				Children: []*FilterNode{
-					{Compare: FilterCompareEQ, Key: "env", Value: "prod"},
-					{Compare: FilterCompareEQ, Key: "env", Value: "staging"},
+				Nodes: []*FilterNode{
+					{Cmp: FilterCompareEQ, Key: "env", Val: "prod"},
+					{Cmp: FilterCompareEQ, Key: "env", Val: "staging"},
 				},
 			},
 			map[string]string{"env": "staging"},
@@ -79,9 +98,9 @@ func TestFilterAll(t *testing.T) {
 		{
 			&FilterNode{
 				Op: FilterOpOr,
-				Children: []*FilterNode{
-					{Compare: FilterCompareEQ, Key: "env", Value: "prod"},
-					{Compare: FilterCompareEQ, Key: "env", Value: "staging"},
+				Nodes: []*FilterNode{
+					{Cmp: FilterCompareEQ, Key: "env", Val: "prod"},
+					{Cmp: FilterCompareEQ, Key: "env", Val: "staging"},
 				},
 			},
 			map[string]string{"env": "qa"},
@@ -93,8 +112,8 @@ func TestFilterAll(t *testing.T) {
 		{
 			&FilterNode{
 				Op: FilterOpNot,
-				Children: []*FilterNode{
-					{Compare: FilterCompareExists, Key: "debug"},
+				Nodes: []*FilterNode{
+					{Cmp: FilterCompareExists, Key: "debug"},
 				},
 			},
 			map[string]string{},
@@ -104,8 +123,8 @@ func TestFilterAll(t *testing.T) {
 		{
 			&FilterNode{
 				Op: FilterOpNot,
-				Children: []*FilterNode{
-					{Compare: FilterCompareExists, Key: "debug"},
+				Nodes: []*FilterNode{
+					{Cmp: FilterCompareExists, Key: "debug"},
 				},
 			},
 			map[string]string{"debug": "1"},
@@ -117,22 +136,22 @@ func TestFilterAll(t *testing.T) {
 		{
 			&FilterNode{
 				Op: FilterOpOr,
-				Children: []*FilterNode{
+				Nodes: []*FilterNode{
 					{
 						Op: FilterOpAnd,
-						Children: []*FilterNode{
-							{Compare: FilterCompareEQ, Key: "env", Value: "prod"},
-							{Compare: FilterCompareIn, Key: "region", ValueSet: []string{"us", "eu"}},
+						Nodes: []*FilterNode{
+							{Cmp: FilterCompareEQ, Key: "env", Val: "prod"},
+							{Cmp: FilterCompareIn, Key: "region", Vals: []string{"us", "eu"}},
 						},
 					},
 					{
 						Op: FilterOpAnd,
-						Children: []*FilterNode{
-							{Compare: FilterCompareNotEQ, Key: "tier", Value: "bronze"},
+						Nodes: []*FilterNode{
+							{Cmp: FilterCompareNotEQ, Key: "tier", Val: "bronze"},
 							{
 								Op: FilterOpNot,
-								Children: []*FilterNode{
-									{Compare: FilterCompareExists, Key: "debug"},
+								Nodes: []*FilterNode{
+									{Cmp: FilterCompareExists, Key: "debug"},
 								},
 							},
 						},
@@ -146,6 +165,9 @@ func TestFilterAll(t *testing.T) {
 	}
 
 	for i, tt := range tests {
+		d, err := json.Marshal(tt.filter)
+		require.NoError(t, err)
+		t.Logf("test %d: %s over %#v, expected: %v", i, d, tt.tags, tt.expected)
 		got, err := FilterMatch(tt.filter, tt.tags)
 		if err != nil {
 			t.Errorf("case %d (%s): unexpected error: %v", i, tt.desc, err)
@@ -160,22 +182,22 @@ func TestFilterAll(t *testing.T) {
 func buildComplexFilter() *FilterNode {
 	return &FilterNode{
 		Op: FilterOpOr,
-		Children: []*FilterNode{
+		Nodes: []*FilterNode{
 			{
 				Op: FilterOpAnd,
-				Children: []*FilterNode{
-					{Key: "env", Compare: FilterCompareEQ, Value: "prod"},
-					{Key: "region", Compare: FilterCompareIn, ValueSet: []string{"us", "eu"}},
+				Nodes: []*FilterNode{
+					{Key: "env", Cmp: FilterCompareEQ, Val: "prod"},
+					{Key: "region", Cmp: FilterCompareIn, Vals: []string{"us", "eu"}},
 				},
 			},
 			{
 				Op: FilterOpAnd,
-				Children: []*FilterNode{
-					{Key: "tier", Compare: FilterCompareNotEQ, Value: "bronze"},
+				Nodes: []*FilterNode{
+					{Key: "tier", Cmp: FilterCompareNotEQ, Val: "bronze"},
 					{
 						Op: FilterOpNot,
-						Children: []*FilterNode{
-							{Key: "debug", Compare: FilterCompareExists},
+						Nodes: []*FilterNode{
+							{Key: "debug", Cmp: FilterCompareExists},
 						},
 					},
 				},
@@ -231,18 +253,18 @@ func BenchmarkFilterNumericZeroAlloc(b *testing.B) {
 	// Build a filter that requires both an integer and a float condition to pass
 	filter := &FilterNode{
 		Op: FilterOpAnd,
-		Children: []*FilterNode{
+		Nodes: []*FilterNode{
 			{
-				Op:      FilterOpLeaf,
-				Key:     "count",
-				Compare: FilterCompareIntGT, // integer comparison
-				Value:   "42",
+				Op:  FilterOpLeaf,
+				Key: "count",
+				Cmp: FilterCompareGT, // integer comparison
+				Val: "42",
 			},
 			{
-				Op:      FilterOpLeaf,
-				Key:     "price",
-				Compare: FilterCompareFloatGTE, // float comparison
-				Value:   "99.5",
+				Op:  FilterOpLeaf,
+				Key: "price",
+				Cmp: FilterCompareGTE, // float comparison
+				Val: "99.5",
 			},
 		},
 	}

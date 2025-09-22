@@ -450,8 +450,16 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild4(in *jlexer.Lexer, 
 			out.JoinLeave = bool(in.Bool())
 		case "delta":
 			out.Delta = string(in.String())
-		case "filter":
-			out.Filter = string(in.String())
+		case "tf":
+			if in.IsNull() {
+				in.Skip()
+				out.Tf = nil
+			} else {
+				if out.Tf == nil {
+					out.Tf = new(FilterNode)
+				}
+				(*out.Tf).UnmarshalEasyJSON(in)
+			}
 		case "flag":
 			out.Flag = int64(in.Int64())
 		default:
@@ -564,15 +572,15 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild4(out *writer, in Su
 		}
 		out.String(string(in.Delta))
 	}
-	if in.Filter != "" {
-		const prefix string = ",\"filter\":"
+	if in.Tf != nil {
+		const prefix string = ",\"tf\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Filter))
+		(*in.Tf).MarshalEasyJSON(out)
 	}
 	if in.Flag != 0 {
 		const prefix string = ",\"flag\":"
@@ -2009,10 +2017,6 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild19(in *jlexer.Lexer,
 			out.Time = int64(in.Int64())
 		case "channel":
 			out.Channel = string(in.String())
-		case "meta":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.Meta).UnmarshalJSON(data))
-			}
 		default:
 			in.SkipRecursive()
 		}
@@ -2106,16 +2110,6 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild19(out *writer, in P
 			out.RawString(prefix)
 		}
 		out.String(string(in.Channel))
-	}
-	if len(in.Meta) != 0 {
-		const prefix string = ",\"meta\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Raw((in.Meta).MarshalJSON())
 	}
 	out.RawByte('}')
 }

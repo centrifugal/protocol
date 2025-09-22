@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"slices"
@@ -8,6 +9,20 @@ import (
 
 	"github.com/quagmt/udecimal"
 )
+
+// ⚠️ Challenge
+// Centrifugo’s philosophy is to keep message routing simple and fast — filters might add overhead especially
+// with many subscribers in channel (since in hot broadcast path). We must be careful with filter design
+// to avoid security confusion also – because permissions will be still on channel level, and filter is just
+// an additional layer of filtering for bandwidth/client-side processing optimizations.
+//
+// Thus Filter design decisions:
+// - Must be zero allocation to evaluate, because it is on the hot path with many subscribers.
+// - Must be easy to serialize/deserialize to/from Protobuf and fully JSON compatible.
+// - Must be programmatically constructible.
+// - Must be simple. It's a custom implementation, and we want to avoid too much complexity which can limit the usage.
+// - Must be secure and not be Turing complete. Only filter based on what client can see in the Publication.
+// - Server-side filter may be done separately and must not be controlled by clients.
 
 // Node operations.
 const (
@@ -123,4 +138,78 @@ func FilterMatch(f *FilterNode, tags map[string]string) (bool, error) {
 	default:
 	}
 	return false, fmt.Errorf("invalid filter op: %s", f.Op)
+}
+
+// FilterValidate ensures the filter tree is well-formed and consistent.
+// Call this at subscription time.
+func FilterValidate(f *FilterNode) error {
+	switch f.Op {
+	case FilterOpLeaf:
+		// Leaf must have a comparison operator.
+		if f.Cmp == "" {
+			return errors.New("leaf node must have cmp set")
+		}
+
+		switch f.Cmp {
+		case FilterCompareEQ, FilterCompareNotEQ,
+			FilterComparePrefix, FilterCompareSuffix, FilterCompareContains,
+			FilterCompareGT, FilterCompareGTE, FilterCompareLT, FilterCompareLTE:
+			if f.Val == "" {
+				return fmt.Errorf("%s comparison requires Val", f.Cmp)
+			}
+			if len(f.Vals) > 0 {
+				return fmt.Errorf("%s comparison must not use Vals", f.Cmp)
+			}
+
+		case FilterCompareIn, FilterCompareNotIn:
+			if len(f.Vals) == 0 {
+				return fmt.Errorf("%s comparison requires non-empty Vals", f.Cmp)
+			}
+			if f.Val != "" {
+				return fmt.Errorf("%s comparison must not use Val", f.Cmp)
+			}
+
+		case FilterCompareExists, FilterCompareNotExists:
+			if f.Val != "" || len(f.Vals) > 0 {
+				return fmt.Errorf("%s comparison must not use Val or Vals", f.Cmp)
+			}
+
+		default:
+			return fmt.Errorf("unknown comparison operator: %s", f.Cmp)
+		}
+
+		// All leafs must have a key except exists/nex
+		if f.Key == "" &&
+			f.Cmp != FilterCompareExists &&
+			f.Cmp != FilterCompareNotExists {
+			return errors.New("leaf node requires key")
+		}
+
+	case FilterOpAnd, FilterOpOr:
+		if len(f.Nodes) == 0 {
+			return fmt.Errorf("%s node must have at least one child", f.Op)
+		}
+		for _, c := range f.Nodes {
+			if err := FilterValidate(c); err != nil {
+				return err
+			}
+		}
+
+	case FilterOpNot:
+		if len(f.Nodes) != 1 {
+			return errors.New("not node must have exactly one child")
+		}
+		return FilterValidate(f.Nodes[0])
+
+	default:
+		return fmt.Errorf("invalid op: %s", f.Op)
+	}
+	return nil
+}
+
+func FilterHash(f *FilterNode) [32]byte {
+	bb := getByteBuffer(f.SizeVT())
+	defer putByteBuffer(bb)
+	n, _ := f.MarshalToVT(bb.B)    // get canonical hash.
+	return sha256.Sum256(bb.B[:n]) // SHA-256 hash.
 }

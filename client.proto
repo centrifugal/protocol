@@ -106,7 +106,6 @@ message Publication {
   bool delta = 8;  // When set indicates that data in Publication is a delta from previous data.
   int64 time = 9;  // Optional time of publication as Unix timestamp milliseconds.
   string channel = 10; // Optional channel name if Publication relates to wildcard subscription.
-  bytes meta = 11; // Optional metadata associated with Publication. Metadata is never delivered to subscribers over client protocol. May be used for server side processing.
 }
 
 // Join to channel.
@@ -213,7 +212,7 @@ message SubscribeRequest {
   bool recoverable = 10;
   bool join_leave = 11;
   string delta = 12;
-  string filter = 13; // Optional expression for filtering publications on the server side.
+  FilterNode tf = 13; // Optional server side filter based on publication tags .
   int64 flag = 14; // Enable subscription level features.
 }
 
@@ -316,6 +315,8 @@ message FilterNode {
   // - "or" → logical OR of child nodes
   // - "not" → logical NOT of a single child node
   string op = 1;
+  // Key for comparison (only valid for leaf nodes).
+  string key = 2;
   // Comparison operator for leaf nodes.
   // Only meaningful if op == "".
   // Supported values:
@@ -332,10 +333,8 @@ message FilterNode {
   //   "lte"  → numeric/string less than or equal val
   //   "gt"   → numeric/string greater than val
   //   "gte"  → numeric/string greater than or equal val
-  string cmp = 2;
-  // Key for comparison (only valid for leaf nodes).
-  string key = 3;
-  // Single value used in comparison (e.g. "42").
+  string cmp = 3;
+  // Single value used in most comparisons (e.g. "eq").
   string val = 4;
   // Multiple values used for set comparisons ("in", "nin").
   repeated string vals = 5;

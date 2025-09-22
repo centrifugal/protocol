@@ -6,8 +6,7 @@ import (
 	"github.com/google/cel-go/cel"
 )
 
-// Build a zero-alloc FilterNode tree
-func buildZeroAllocFilter() *FilterNode {
+func buildTestCompareFilter() *FilterNode {
 	return &FilterNode{
 		Op: FilterOpAnd,
 		Nodes: []*FilterNode{
@@ -33,9 +32,35 @@ func buildZeroAllocFilter() *FilterNode {
 	}
 }
 
-// Benchmark zero-alloc FilterNode
-func BenchmarkFilterCompareFilterNode(b *testing.B) {
-	filter := buildZeroAllocFilter()
+func buildTestCompareCELProgram() cel.Program {
+	env, err := cel.NewEnv(
+		cel.Variable("tags", cel.MapType(cel.StringType, cel.StringType)),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	expr := `int(tags["count"]) > 42 && double(tags["price"]) >= 99.5 && tags["ticker"].contains("GOO")`
+
+	ast, issues := env.Parse(expr)
+	if issues != nil && issues.Err() != nil {
+		panic(issues.Err())
+	}
+
+	checked, issues := env.Check(ast)
+	if issues != nil && issues.Err() != nil {
+		panic(issues.Err())
+	}
+
+	prg, err := env.Program(checked)
+	if err != nil {
+		panic(err)
+	}
+	return prg
+}
+
+func BenchmarkFilterCompareFilterNode10k(b *testing.B) {
+	filter := buildTestCompareFilter()
 	const subscribers = 10000
 
 	tags := map[string]string{
@@ -52,38 +77,15 @@ func BenchmarkFilterCompareFilterNode(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, sub := range subs {
 			_, _ = FilterMatch(sub, tags)
 		}
 	}
 }
 
-func BenchmarkFilterCompareCEL(b *testing.B) {
-	// CEL environment
-	env, err := cel.NewEnv(
-		cel.Variable("tags", cel.MapType(cel.StringType, cel.StringType)),
-	)
-	if err != nil {
-		b.Fatal(err)
-	}
-
-	expr := `int(tags["count"]) > 42 && double(tags["price"]) >= 99.5 && tags["ticker"].contains("GOO")`
-
-	ast, issues := env.Parse(expr)
-	if issues != nil && issues.Err() != nil {
-		b.Fatal(issues.Err())
-	}
-
-	checked, issues := env.Check(ast)
-	if issues != nil && issues.Err() != nil {
-		b.Fatal(issues.Err())
-	}
-
-	prg, err := env.Program(checked)
-	if err != nil {
-		b.Fatal(err)
-	}
+func BenchmarkFilterCompareCEL10k(b *testing.B) {
+	prg := buildTestCompareCELProgram()
 
 	const subscribers = 10000
 
@@ -104,7 +106,7 @@ func BenchmarkFilterCompareCEL(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, sub := range subs {
 			out, _, err := sub.Eval(activation)
 			if err != nil {
@@ -120,39 +122,19 @@ func BenchmarkFilterCompareCEL(b *testing.B) {
 
 func BenchmarkFilterCompareMemoryFilterNode(b *testing.B) {
 	for b.Loop() {
-		for range 10000 {
-			buildZeroAllocFilter()
-		}
+		buildTestCompareFilter()
 	}
 }
 
-// Benchmark memory usage / allocations for CEL
+func BenchmarkFilterCompareMemoryFilterNodeHash(b *testing.B) {
+	for b.Loop() {
+		f := buildTestCompareFilter()
+		FilterHash(f)
+	}
+}
+
 func BenchmarkFilterCompareCELMemory(b *testing.B) {
 	for b.Loop() {
-		for range 10000 {
-			env, err := cel.NewEnv(
-				cel.Variable("tags", cel.MapType(cel.StringType, cel.StringType)),
-			)
-			if err != nil {
-				b.Fatal(err)
-			}
-
-			expr := `int(tags["count"]) > 42 && double(tags["price"]) >= 99.5 && tags["ticker"].contains("GOO")`
-
-			ast, issues := env.Parse(expr)
-			if issues != nil && issues.Err() != nil {
-				b.Fatal(issues.Err())
-			}
-
-			checked, issues := env.Check(ast)
-			if issues != nil && issues.Err() != nil {
-				b.Fatal(issues.Err())
-			}
-
-			_, err = env.Program(checked)
-			if err != nil {
-				b.Fatal(err)
-			}
-		}
+		buildTestCompareCELProgram()
 	}
 }

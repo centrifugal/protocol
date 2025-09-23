@@ -2793,7 +2793,7 @@ type FilterNode struct {
 	// Operation type for this node:
 	// - "" (empty string) → leaf node (comparison)
 	// - "and" → logical AND of child nodes
-	// - "or" → logical OR of child nodes
+	// - "or"  → logical OR of child nodes
 	// - "not" → logical NOT of a single child node
 	Op string `protobuf:"bytes,1,opt,name=op,proto3" json:"op,omitempty"`
 	// Key for comparison (only valid for leaf nodes).
@@ -2808,13 +2808,13 @@ type FilterNode struct {
 	//	"nin"  → value is not in vals
 	//	"ex"   → key exists in tags
 	//	"nex"  → key does not exist
-	//	"starts" → string starts with val
-	//	"ends"   → string ends with val
-	//	"contains" → string contains val
-	//	"lt"   → numeric/string less than val
-	//	"lte"  → numeric/string less than or equal val
-	//	"gt"   → numeric/string greater than val
-	//	"gte"  → numeric/string greater than or equal val
+	//	"sw"   → string starts with val
+	//	"ew"   → string ends with val
+	//	"ct"   → string contains val
+	//	"lt"   → numeric less than val
+	//	"lte"  → numeric less than or equal val
+	//	"gt"   → numeric greater than val
+	//	"gte"  → numeric greater than or equal val
 	Cmp string `protobuf:"bytes,3,opt,name=cmp,proto3" json:"cmp,omitempty"`
 	// Single value used in most comparisons (e.g. "eq").
 	Val string `protobuf:"bytes,4,opt,name=val,proto3" json:"val,omitempty"`

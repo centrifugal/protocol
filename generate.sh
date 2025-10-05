@@ -13,8 +13,8 @@ protoc-gen-go --version
 which protoc-gen-go-vtproto
 which easyjson
 
-protoc --go_out=. --plugin protoc-gen-go=${GOBIN}/protoc-gen-go --go-vtproto_out=. \
-  --plugin protoc-gen-go-vtproto=${GOBIN}/protoc-gen-go-vtproto \
+protoc --go_out=. --plugin protoc-gen-go=$(which protoc-gen-go) --go-vtproto_out=. \
+  --plugin protoc-gen-go-vtproto=$(which protoc-gen-go-vtproto) \
   --go-vtproto_opt=features=marshal+unmarshal+size \
   client.proto
 

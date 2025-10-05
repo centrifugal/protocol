@@ -110,7 +110,7 @@ func (w *writer) Bool(v bool) {
 	}
 }
 
-var hex = "0123456789abcdef"
+var hexChars = "0123456789abcdef"
 
 func (w *writer) String(s string) {
 	escapeHTML := !w.NoEscapeHTML
@@ -142,8 +142,8 @@ func (w *writer) String(s string) {
 				// user-controlled strings are rendered into JSON
 				// and served to some browsers.
 				_, _ = w.Buffer.WriteString(`u00`)
-				_ = w.Buffer.WriteByte(hex[b>>4])
-				_ = w.Buffer.WriteByte(hex[b&0xF])
+				_ = w.Buffer.WriteByte(hexChars[b>>4])
+				_ = w.Buffer.WriteByte(hexChars[b&0xF])
 			}
 			i++
 			start = i
@@ -171,7 +171,7 @@ func (w *writer) String(s string) {
 				_, _ = w.Buffer.WriteString(s[start:i])
 			}
 			_, _ = w.Buffer.WriteString(`\u202`)
-			_ = w.Buffer.WriteByte(hex[c&0xF])
+			_ = w.Buffer.WriteByte(hexChars[c&0xF])
 			i += size
 			start = i
 			continue

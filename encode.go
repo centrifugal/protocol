@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+
 	fastJSON "github.com/segmentio/encoding/json"
 )
 
@@ -332,6 +333,7 @@ type DataEncoder interface {
 	Reset()
 	Encode([]byte) error
 	Finish() []byte
+	FinishNoCopy() []byte
 }
 
 // JSONDataEncoder ...
@@ -369,6 +371,10 @@ func (e *JSONDataEncoder) Finish() []byte {
 	return dataCopy
 }
 
+func (e *JSONDataEncoder) FinishNoCopy() []byte {
+	return e.buffer.Bytes()
+}
+
 // ProtobufDataEncoder ...
 type ProtobufDataEncoder struct {
 	buffer bytes.Buffer
@@ -399,6 +405,10 @@ func (e *ProtobufDataEncoder) Finish() []byte {
 	dataCopy := make([]byte, len(data))
 	copy(dataCopy, data)
 	return dataCopy
+}
+
+func (e *ProtobufDataEncoder) FinishNoCopy() []byte {
+	return e.buffer.Bytes()
 }
 
 // ResultEncoder ...

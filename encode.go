@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+
 	fastJSON "github.com/segmentio/encoding/json"
 )
 
@@ -299,11 +300,6 @@ func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
 	return result, nil
 }
 
-//func (e *JSONReplyEncoder) EncodeNoCopy(r *Reply, _ []byte) ([]byte, error) {
-//	// No copy is not supported for JSON encoding. Just use Encode method, ignore pre-allocated buffer.
-//	return e.Encode(r)
-//}
-
 // ProtobufReplyEncoder ...
 type ProtobufReplyEncoder struct{}
 
@@ -317,21 +313,12 @@ func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
 	return r.MarshalVT()
 }
 
-//// EncodeNoCopy Reply to bytes without making copy of buffer byte slice.
-//func (e *ProtobufReplyEncoder) EncodeNoCopy(r *Reply, buf []byte) ([]byte, error) {
-//	size := r.SizeVT()
-//	n, err := r.MarshalToSizedBufferVT(buf[:size])
-//	if err != nil {
-//		return nil, err
-//	}
-//	return buf[:n], nil
-//}
-
 // DataEncoder ...
 type DataEncoder interface {
 	Reset()
 	Encode([]byte) error
 	Finish() []byte
+	FinishNoCopy() []byte
 }
 
 // JSONDataEncoder ...
@@ -369,6 +356,10 @@ func (e *JSONDataEncoder) Finish() []byte {
 	return dataCopy
 }
 
+func (e *JSONDataEncoder) FinishNoCopy() []byte {
+	return e.buffer.Bytes()
+}
+
 // ProtobufDataEncoder ...
 type ProtobufDataEncoder struct {
 	buffer bytes.Buffer
@@ -399,6 +390,10 @@ func (e *ProtobufDataEncoder) Finish() []byte {
 	dataCopy := make([]byte, len(data))
 	copy(dataCopy, data)
 	return dataCopy
+}
+
+func (e *ProtobufDataEncoder) FinishNoCopy() []byte {
+	return e.buffer.Bytes()
 }
 
 // ResultEncoder ...

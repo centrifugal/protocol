@@ -649,6 +649,11 @@ type Publication struct {
 	Delta         bool                   `protobuf:"varint,8,opt,name=delta,proto3" json:"delta,omitempty"`                                                                        // When set indicates that data in Publication is a delta from previous data.
 	Time          int64                  `protobuf:"varint,9,opt,name=time,proto3" json:"time,omitempty"`                                                                          // Optional time of publication as Unix timestamp milliseconds.
 	Channel       string                 `protobuf:"bytes,10,opt,name=channel,proto3" json:"channel,omitempty"`                                                                    // Optional channel name if Publication relates to wildcard subscription.
+	Key           string                 `protobuf:"bytes,11,opt,name=key,proto3" json:"key,omitempty"`                                                                            // Optional key associated with publication.
+	Removed       bool                   `protobuf:"varint,12,opt,name=removed,proto3" json:"removed,omitempty"`                                                                   // When set indicates that this publication is a removal of a previously published item.
+	Score         int64                  `protobuf:"zigzag64,13,opt,name=score,proto3" json:"score,omitempty"`                                                                     // Represents score to order.
+	Epoch         string                 `protobuf:"bytes,14,opt,name=epoch,proto3" json:"epoch,omitempty"`                                                                        // Optional epoch.
+	PrevData      Raw                    `protobuf:"bytes,15,opt,name=prev_data,json=prevData,proto3" json:"prev_data,omitempty"`                                                  // Previous data for delta computation in broker fan-out.
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -730,6 +735,41 @@ func (x *Publication) GetChannel() string {
 		return x.Channel
 	}
 	return ""
+}
+
+func (x *Publication) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *Publication) GetRemoved() bool {
+	if x != nil {
+		return x.Removed
+	}
+	return false
+}
+
+func (x *Publication) GetScore() int64 {
+	if x != nil {
+		return x.Score
+	}
+	return 0
+}
+
+func (x *Publication) GetEpoch() string {
+	if x != nil {
+		return x.Epoch
+	}
+	return ""
+}
+
+func (x *Publication) GetPrevData() []byte {
+	if x != nil {
+		return x.PrevData
+	}
+	return nil
 }
 
 // Join to channel.
@@ -1575,6 +1615,11 @@ type SubscribeRequest struct {
 	Delta         string                 `protobuf:"bytes,12,opt,name=delta,proto3" json:"delta,omitempty"`
 	Tf            *FilterNode            `protobuf:"bytes,13,opt,name=tf,proto3" json:"tf,omitempty"`      // Optional server side filter based on publication tags .
 	Flag          int64                  `protobuf:"varint,14,opt,name=flag,proto3" json:"flag,omitempty"` // Enable subscription level features.
+	Type          int32                  `protobuf:"varint,15,opt,name=type,proto3" json:"type,omitempty"`
+	Phase         int32                  `protobuf:"varint,16,opt,name=phase,proto3" json:"phase,omitempty"`
+	Cursor        string                 `protobuf:"bytes,17,opt,name=cursor,proto3" json:"cursor,omitempty"`
+	Limit         int32                  `protobuf:"varint,18,opt,name=limit,proto3" json:"limit,omitempty"`
+	Asc           bool                   `protobuf:"varint,19,opt,name=asc,proto3" json:"asc,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1693,6 +1738,41 @@ func (x *SubscribeRequest) GetFlag() int64 {
 	return 0
 }
 
+func (x *SubscribeRequest) GetType() int32 {
+	if x != nil {
+		return x.Type
+	}
+	return 0
+}
+
+func (x *SubscribeRequest) GetPhase() int32 {
+	if x != nil {
+		return x.Phase
+	}
+	return 0
+}
+
+func (x *SubscribeRequest) GetCursor() string {
+	if x != nil {
+		return x.Cursor
+	}
+	return ""
+}
+
+func (x *SubscribeRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *SubscribeRequest) GetAsc() bool {
+	if x != nil {
+		return x.Asc
+	}
+	return false
+}
+
 type SubscribeResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Expires       bool                   `protobuf:"varint,1,opt,name=expires,proto3" json:"expires,omitempty"`
@@ -1706,7 +1786,11 @@ type SubscribeResult struct {
 	Data          Raw                    `protobuf:"bytes,11,opt,name=data,proto3" json:"data,omitempty"`
 	WasRecovering bool                   `protobuf:"varint,12,opt,name=was_recovering,json=wasRecovering,proto3" json:"was_recovering,omitempty"`
 	Delta         bool                   `protobuf:"varint,13,opt,name=delta,proto3" json:"delta,omitempty"`
-	Id            int64                  `protobuf:"varint,14,opt,name=id,proto3" json:"id,omitempty"` // Optional numeric channel ID to avoid sending string channel in the following Pushes (bandwidth optimization).
+	Id            int64                  `protobuf:"varint,14,opt,name=id,proto3" json:"id,omitempty"`        // Optional numeric channel ID to avoid sending string channel in the following Pushes (bandwidth optimization).
+	Type          int32                  `protobuf:"varint,15,opt,name=type,proto3" json:"type,omitempty"`    // Server must echo back type.
+	Phase         int32                  `protobuf:"varint,16,opt,name=phase,proto3" json:"phase,omitempty"`  // The result phase of the operation (LIVE = 0, STREAM = 1, STATE = 2)
+	Cursor        string                 `protobuf:"bytes,17,opt,name=cursor,proto3" json:"cursor,omitempty"` // Next page cursor (empty = last page)
+	State         []*Publication         `protobuf:"bytes,18,rep,name=state,proto3" json:"state,omitempty"`   // Channel state entries.
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1823,6 +1907,34 @@ func (x *SubscribeResult) GetId() int64 {
 		return x.Id
 	}
 	return 0
+}
+
+func (x *SubscribeResult) GetType() int32 {
+	if x != nil {
+		return x.Type
+	}
+	return 0
+}
+
+func (x *SubscribeResult) GetPhase() int32 {
+	if x != nil {
+		return x.Phase
+	}
+	return 0
+}
+
+func (x *SubscribeResult) GetCursor() string {
+	if x != nil {
+		return x.Cursor
+	}
+	return ""
+}
+
+func (x *SubscribeResult) GetState() []*Publication {
+	if x != nil {
+		return x.State
+	}
+	return nil
 }
 
 type SubRefreshRequest struct {
@@ -2013,6 +2125,9 @@ type PublishRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Channel       string                 `protobuf:"bytes,1,opt,name=channel,proto3" json:"channel,omitempty"`
 	Data          Raw                    `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	Type          int32                  `protobuf:"varint,3,opt,name=type,proto3" json:"type,omitempty"`       // 0 = regular (default), 1 = map
+	Key           string                 `protobuf:"bytes,4,opt,name=key,proto3" json:"key,omitempty"`          // Map publish: key to publish/remove
+	Removed       bool                   `protobuf:"varint,5,opt,name=removed,proto3" json:"removed,omitempty"` // Map publish: true = remove this key
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2059,6 +2174,27 @@ func (x *PublishRequest) GetData() []byte {
 		return x.Data
 	}
 	return nil
+}
+
+func (x *PublishRequest) GetType() int32 {
+	if x != nil {
+		return x.Type
+	}
+	return 0
+}
+
+func (x *PublishRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *PublishRequest) GetRemoved() bool {
+	if x != nil {
+		return x.Removed
+	}
+	return false
 }
 
 type PublishResult struct {
@@ -2850,7 +2986,7 @@ const file_client_proto_rawDesc = "" +
 	"\x04user\x18\x01 \x01(\tR\x04user\x12\x16\n" +
 	"\x06client\x18\x02 \x01(\tR\x06client\x12\x1b\n" +
 	"\tconn_info\x18\x03 \x01(\fR\bconnInfo\x12\x1b\n" +
-	"\tchan_info\x18\x04 \x01(\fR\bchanInfo\"\xd5\x02\n" +
+	"\tchan_info\x18\x04 \x01(\fR\bchanInfo\"\xca\x03\n" +
 	"\vPublication\x12\x12\n" +
 	"\x04data\x18\x04 \x01(\fR\x04data\x12?\n" +
 	"\x04info\x18\x05 \x01(\v2+.centrifugal.centrifuge.protocol.ClientInfoR\x04info\x12\x16\n" +
@@ -2859,7 +2995,12 @@ const file_client_proto_rawDesc = "" +
 	"\x05delta\x18\b \x01(\bR\x05delta\x12\x12\n" +
 	"\x04time\x18\t \x01(\x03R\x04time\x12\x18\n" +
 	"\achannel\x18\n" +
-	" \x01(\tR\achannel\x1a7\n" +
+	" \x01(\tR\achannel\x12\x10\n" +
+	"\x03key\x18\v \x01(\tR\x03key\x12\x18\n" +
+	"\aremoved\x18\f \x01(\bR\aremoved\x12\x14\n" +
+	"\x05score\x18\r \x01(\x12R\x05score\x12\x14\n" +
+	"\x05epoch\x18\x0e \x01(\tR\x05epoch\x12\x1b\n" +
+	"\tprev_data\x18\x0f \x01(\fR\bprevData\x1a7\n" +
 	"\tTagsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01J\x04\b\x01\x10\x02J\x04\b\x02\x10\x03J\x04\b\x03\x10\x04\"G\n" +
@@ -2940,7 +3081,7 @@ const file_client_proto_rawDesc = "" +
 	"\x06client\x18\x01 \x01(\tR\x06client\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\tR\aversion\x12\x18\n" +
 	"\aexpires\x18\x03 \x01(\bR\aexpires\x12\x10\n" +
-	"\x03ttl\x18\x04 \x01(\rR\x03ttl\"\xf2\x02\n" +
+	"\x03ttl\x18\x04 \x01(\rR\x03ttl\"\xdc\x03\n" +
 	"\x10SubscribeRequest\x12\x18\n" +
 	"\achannel\x18\x01 \x01(\tR\achannel\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token\x12\x18\n" +
@@ -2957,7 +3098,12 @@ const file_client_proto_rawDesc = "" +
 	"join_leave\x18\v \x01(\bR\tjoinLeave\x12\x14\n" +
 	"\x05delta\x18\f \x01(\tR\x05delta\x12;\n" +
 	"\x02tf\x18\r \x01(\v2+.centrifugal.centrifuge.protocol.FilterNodeR\x02tf\x12\x12\n" +
-	"\x04flag\x18\x0e \x01(\x03R\x04flagJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"\x8a\x03\n" +
+	"\x04flag\x18\x0e \x01(\x03R\x04flag\x12\x12\n" +
+	"\x04type\x18\x0f \x01(\x05R\x04type\x12\x14\n" +
+	"\x05phase\x18\x10 \x01(\x05R\x05phase\x12\x16\n" +
+	"\x06cursor\x18\x11 \x01(\tR\x06cursor\x12\x14\n" +
+	"\x05limit\x18\x12 \x01(\x05R\x05limit\x12\x10\n" +
+	"\x03asc\x18\x13 \x01(\bR\x03ascJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"\x90\x04\n" +
 	"\x0fSubscribeResult\x12\x18\n" +
 	"\aexpires\x18\x01 \x01(\bR\aexpires\x12\x10\n" +
 	"\x03ttl\x18\x02 \x01(\rR\x03ttl\x12 \n" +
@@ -2973,7 +3119,11 @@ const file_client_proto_rawDesc = "" +
 	"\x04data\x18\v \x01(\fR\x04data\x12%\n" +
 	"\x0ewas_recovering\x18\f \x01(\bR\rwasRecovering\x12\x14\n" +
 	"\x05delta\x18\r \x01(\bR\x05delta\x12\x0e\n" +
-	"\x02id\x18\x0e \x01(\x03R\x02idJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"C\n" +
+	"\x02id\x18\x0e \x01(\x03R\x02id\x12\x12\n" +
+	"\x04type\x18\x0f \x01(\x05R\x04type\x12\x14\n" +
+	"\x05phase\x18\x10 \x01(\x05R\x05phase\x12\x16\n" +
+	"\x06cursor\x18\x11 \x01(\tR\x06cursor\x12B\n" +
+	"\x05state\x18\x12 \x03(\v2,.centrifugal.centrifuge.protocol.PublicationR\x05stateJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"C\n" +
 	"\x11SubRefreshRequest\x12\x18\n" +
 	"\achannel\x18\x01 \x01(\tR\achannel\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token\">\n" +
@@ -2982,10 +3132,13 @@ const file_client_proto_rawDesc = "" +
 	"\x03ttl\x18\x02 \x01(\rR\x03ttl\".\n" +
 	"\x12UnsubscribeRequest\x12\x18\n" +
 	"\achannel\x18\x01 \x01(\tR\achannel\"\x13\n" +
-	"\x11UnsubscribeResult\">\n" +
+	"\x11UnsubscribeResult\"~\n" +
 	"\x0ePublishRequest\x12\x18\n" +
 	"\achannel\x18\x01 \x01(\tR\achannel\x12\x12\n" +
-	"\x04data\x18\x02 \x01(\fR\x04data\"\x0f\n" +
+	"\x04data\x18\x02 \x01(\fR\x04data\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\x05R\x04type\x12\x10\n" +
+	"\x03key\x18\x04 \x01(\tR\x03key\x12\x18\n" +
+	"\aremoved\x18\x05 \x01(\bR\aremoved\"\x0f\n" +
 	"\rPublishResult\"+\n" +
 	"\x0fPresenceRequest\x12\x18\n" +
 	"\achannel\x18\x01 \x01(\tR\achannel\"\xd5\x01\n" +
@@ -3138,19 +3291,20 @@ var file_client_proto_depIdxs = []int32{
 	44, // 41: centrifugal.centrifuge.protocol.ConnectResult.subs:type_name -> centrifugal.centrifuge.protocol.ConnectResult.SubsEntry
 	39, // 42: centrifugal.centrifuge.protocol.SubscribeRequest.tf:type_name -> centrifugal.centrifuge.protocol.FilterNode
 	6,  // 43: centrifugal.centrifuge.protocol.SubscribeResult.publications:type_name -> centrifugal.centrifuge.protocol.Publication
-	45, // 44: centrifugal.centrifuge.protocol.PresenceResult.presence:type_name -> centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
-	31, // 45: centrifugal.centrifuge.protocol.HistoryRequest.since:type_name -> centrifugal.centrifuge.protocol.StreamPosition
-	6,  // 46: centrifugal.centrifuge.protocol.HistoryResult.publications:type_name -> centrifugal.centrifuge.protocol.Publication
-	39, // 47: centrifugal.centrifuge.protocol.FilterNode.nodes:type_name -> centrifugal.centrifuge.protocol.FilterNode
-	20, // 48: centrifugal.centrifuge.protocol.Connect.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
-	19, // 49: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeRequest
-	20, // 50: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
-	5,  // 51: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry.value:type_name -> centrifugal.centrifuge.protocol.ClientInfo
-	52, // [52:52] is the sub-list for method output_type
-	52, // [52:52] is the sub-list for method input_type
-	52, // [52:52] is the sub-list for extension type_name
-	52, // [52:52] is the sub-list for extension extendee
-	0,  // [0:52] is the sub-list for field type_name
+	6,  // 44: centrifugal.centrifuge.protocol.SubscribeResult.state:type_name -> centrifugal.centrifuge.protocol.Publication
+	45, // 45: centrifugal.centrifuge.protocol.PresenceResult.presence:type_name -> centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
+	31, // 46: centrifugal.centrifuge.protocol.HistoryRequest.since:type_name -> centrifugal.centrifuge.protocol.StreamPosition
+	6,  // 47: centrifugal.centrifuge.protocol.HistoryResult.publications:type_name -> centrifugal.centrifuge.protocol.Publication
+	39, // 48: centrifugal.centrifuge.protocol.FilterNode.nodes:type_name -> centrifugal.centrifuge.protocol.FilterNode
+	20, // 49: centrifugal.centrifuge.protocol.Connect.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
+	19, // 50: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeRequest
+	20, // 51: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
+	5,  // 52: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry.value:type_name -> centrifugal.centrifuge.protocol.ClientInfo
+	53, // [53:53] is the sub-list for method output_type
+	53, // [53:53] is the sub-list for method input_type
+	53, // [53:53] is the sub-list for extension type_name
+	53, // [53:53] is the sub-list for extension extendee
+	0,  // [0:53] is the sub-list for field type_name
 }
 
 func init() { file_client_proto_init() }

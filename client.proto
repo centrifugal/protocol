@@ -106,6 +106,11 @@ message Publication {
   bool delta = 8;  // When set indicates that data in Publication is a delta from previous data.
   int64 time = 9;  // Optional time of publication as Unix timestamp milliseconds.
   string channel = 10; // Optional channel name if Publication relates to wildcard subscription.
+  string key = 11; // Optional key associated with publication.
+  bool removed = 12; // When set indicates that this publication is a removal of a previously published item.
+  sint64 score = 13; // Represents score to order.
+  string epoch = 14; // Optional epoch.
+  bytes prev_data = 15;  // Previous data for delta computation in broker fan-out.
 }
 
 // Join to channel.
@@ -214,6 +219,11 @@ message SubscribeRequest {
   string delta = 12;
   FilterNode tf = 13; // Optional server side filter based on publication tags .
   int64 flag = 14; // Enable subscription level features.
+  int32 type = 15;
+  int32 phase = 16;
+  string cursor = 17;
+  int32 limit = 18;
+  bool asc = 19;
 }
 
 message SubscribeResult {
@@ -230,6 +240,11 @@ message SubscribeResult {
   bool was_recovering = 12;
   bool delta = 13;
   int64 id = 14; // Optional numeric channel ID to avoid sending string channel in the following Pushes (bandwidth optimization).
+
+  int32 type = 15; // Server must echo back type.
+  int32 phase = 16; // The result phase of the operation (LIVE = 0, STREAM = 1, STATE = 2)
+  string cursor = 17; // Next page cursor (empty = last page)
+  repeated Publication state = 18; // Channel state entries.
 }
 
 message SubRefreshRequest {
@@ -251,6 +266,9 @@ message UnsubscribeResult {}
 message PublishRequest {
   string channel = 1;
   bytes data = 2;
+  int32 type = 3;      // 0 = regular (default), 1 = map
+  string key = 4;      // Map publish: key to publish/remove
+  bool removed = 5;    // Map publish: true = remove this key
 }
 
 message PublishResult {}

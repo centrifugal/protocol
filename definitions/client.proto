@@ -111,6 +111,7 @@ message Publication {
   sint64 score = 13; // Represents score to order.
   string epoch = 14; // Optional epoch.
   bytes prev_data = 15;  // Previous data for delta computation in broker fan-out.
+  uint64 version = 16;
 }
 
 // Join to channel.
@@ -247,14 +248,24 @@ message SubscribeResult {
   repeated Publication state = 18; // Channel state entries.
 }
 
+message KeyedItem {
+  string key = 1;
+  uint64 version = 2;
+}
+
 message SubRefreshRequest {
   string channel = 1;
   string token = 2;
+  repeated KeyedItem items = 3;       // items to track (with versions)
+  repeated string untrack_keys = 4;   // item keys to stop tracking
+  int32 type = 5;                     // 0=sub_refresh, 1=track, 2=untrack
+  string signature = 6;              // HMAC signature for track auth
 }
 
 message SubRefreshResult {
   bool expires = 1;
   uint32 ttl = 2;
+  repeated Publication items = 3;
 }
 
 message UnsubscribeRequest {

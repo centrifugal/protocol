@@ -284,7 +284,6 @@ message PublishRequest {
 }
 
 message PublishResult {
-  int32 debounce = 1; // in ms, if >0 SDK should debounce publications to this channel. First one should not be debounced.
 }
 
 message PresenceRequest {

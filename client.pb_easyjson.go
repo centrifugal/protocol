@@ -2199,8 +2199,6 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild17(in *jlexer.Lexer,
 			continue
 		}
 		switch key {
-		case "debounce":
-			out.Debounce = int32(in.Int32())
 		default:
 			in.SkipRecursive()
 		}
@@ -2215,12 +2213,6 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild17(out *writer, in P
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Debounce != 0 {
-		const prefix string = ",\"debounce\":"
-		first = false
-		out.RawString(prefix[1:])
-		out.Int32(int32(in.Debounce))
-	}
 	out.RawByte('}')
 }
 

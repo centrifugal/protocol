@@ -2307,6 +2307,7 @@ func (x *PublishRequest) GetRemoved() bool {
 
 type PublishResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Debounce      uint32                 `protobuf:"varint,1,opt,name=debounce,proto3" json:"debounce,omitempty"` // in ms, if >0 SDK should debounce publications to this channel. First one should not be debounced.
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2339,6 +2340,13 @@ func (x *PublishResult) ProtoReflect() protoreflect.Message {
 // Deprecated: Use PublishResult.ProtoReflect.Descriptor instead.
 func (*PublishResult) Descriptor() ([]byte, []int) {
 	return file_client_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *PublishResult) GetDebounce() uint32 {
+	if x != nil {
+		return x.Debounce
+	}
+	return 0
 }
 
 type PresenceRequest struct {
@@ -3256,8 +3264,9 @@ const file_client_proto_rawDesc = "" +
 	"\x04data\x18\x02 \x01(\fR\x04data\x12\x12\n" +
 	"\x04type\x18\x03 \x01(\x05R\x04type\x12\x10\n" +
 	"\x03key\x18\x04 \x01(\tR\x03key\x12\x18\n" +
-	"\aremoved\x18\x05 \x01(\bR\aremoved\"\x0f\n" +
-	"\rPublishResult\"+\n" +
+	"\aremoved\x18\x05 \x01(\bR\aremoved\"+\n" +
+	"\rPublishResult\x12\x1a\n" +
+	"\bdebounce\x18\x01 \x01(\rR\bdebounce\"+\n" +
 	"\x0fPresenceRequest\x12\x18\n" +
 	"\achannel\x18\x01 \x01(\tR\achannel\"\xd5\x01\n" +
 	"\x0ePresenceResult\x12Y\n" +

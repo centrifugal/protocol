@@ -283,7 +283,9 @@ message PublishRequest {
   bool removed = 5;    // Map publish: true = remove this key
 }
 
-message PublishResult {}
+message PublishResult {
+  int32 debounce = 1; // in ms, if >0 SDK should debounce publications to this channel. First one should not be debounced.
+}
 
 message PresenceRequest {
   string channel = 1;

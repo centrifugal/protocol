@@ -246,7 +246,6 @@ message SubscribeResult {
   int32 phase = 16; // The result phase of the operation (LIVE = 0, STREAM = 1, STATE = 2)
   string cursor = 17; // Next page cursor (empty = last page)
   repeated Publication state = 18; // Channel state entries.
-  uint32 publish_debounce = 19; // in ms, if >0 SDK should debounce publications to this channel. First one should not be debounced.
 }
 
 message KeyedItem {

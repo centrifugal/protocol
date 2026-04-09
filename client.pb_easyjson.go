@@ -291,8 +291,6 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild3(in *jlexer.Lexer, 
 				}
 				in.Delim(']')
 			}
-		case "publish_debounce":
-			out.PublishDebounce = uint32(in.Uint32())
 		default:
 			in.SkipRecursive()
 		}
@@ -488,16 +486,6 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild3(out *writer, in Su
 			}
 			out.RawByte(']')
 		}
-	}
-	if in.PublishDebounce != 0 {
-		const prefix string = ",\"publish_debounce\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.Uint32(uint32(in.PublishDebounce))
 	}
 	out.RawByte('}')
 }
@@ -2200,7 +2188,7 @@ func easyjson19c08265DecodeGithubComCentrifugalProtocolBuild17(in *jlexer.Lexer,
 		}
 		switch key {
 		case "debounce":
-			out.Debounce = uint32(in.Uint32())
+			out.Debounce = int32(in.Int32())
 		default:
 			in.SkipRecursive()
 		}
@@ -2219,7 +2207,7 @@ func easyjson19c08265EncodeGithubComCentrifugalProtocolBuild17(out *writer, in P
 		const prefix string = ",\"debounce\":"
 		first = false
 		out.RawString(prefix[1:])
-		out.Uint32(uint32(in.Debounce))
+		out.Int32(int32(in.Debounce))
 	}
 	out.RawByte('}')
 }

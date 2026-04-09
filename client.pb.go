@@ -1782,26 +1782,25 @@ func (x *SubscribeRequest) GetAsc() bool {
 }
 
 type SubscribeResult struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Expires         bool                   `protobuf:"varint,1,opt,name=expires,proto3" json:"expires,omitempty"`
-	Ttl             uint32                 `protobuf:"varint,2,opt,name=ttl,proto3" json:"ttl,omitempty"`
-	Recoverable     bool                   `protobuf:"varint,3,opt,name=recoverable,proto3" json:"recoverable,omitempty"`
-	Epoch           string                 `protobuf:"bytes,6,opt,name=epoch,proto3" json:"epoch,omitempty"`
-	Publications    []*Publication         `protobuf:"bytes,7,rep,name=publications,proto3" json:"publications,omitempty"`
-	Recovered       bool                   `protobuf:"varint,8,opt,name=recovered,proto3" json:"recovered,omitempty"`
-	Offset          uint64                 `protobuf:"varint,9,opt,name=offset,proto3" json:"offset,omitempty"`
-	Positioned      bool                   `protobuf:"varint,10,opt,name=positioned,proto3" json:"positioned,omitempty"`
-	Data            Raw                    `protobuf:"bytes,11,opt,name=data,proto3" json:"data,omitempty"`
-	WasRecovering   bool                   `protobuf:"varint,12,opt,name=was_recovering,json=wasRecovering,proto3" json:"was_recovering,omitempty"`
-	Delta           bool                   `protobuf:"varint,13,opt,name=delta,proto3" json:"delta,omitempty"`
-	Id              int64                  `protobuf:"varint,14,opt,name=id,proto3" json:"id,omitempty"`                                                  // Optional numeric channel ID to avoid sending string channel in the following Pushes (bandwidth optimization).
-	Type            int32                  `protobuf:"varint,15,opt,name=type,proto3" json:"type,omitempty"`                                              // Server must echo back type.
-	Phase           int32                  `protobuf:"varint,16,opt,name=phase,proto3" json:"phase,omitempty"`                                            // The result phase of the operation (LIVE = 0, STREAM = 1, STATE = 2)
-	Cursor          string                 `protobuf:"bytes,17,opt,name=cursor,proto3" json:"cursor,omitempty"`                                           // Next page cursor (empty = last page)
-	State           []*Publication         `protobuf:"bytes,18,rep,name=state,proto3" json:"state,omitempty"`                                             // Channel state entries.
-	PublishDebounce uint32                 `protobuf:"varint,19,opt,name=publish_debounce,json=publishDebounce,proto3" json:"publish_debounce,omitempty"` // in ms, if >0 SDK should debounce publications to this channel. First one should not be debounced.
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Expires       bool                   `protobuf:"varint,1,opt,name=expires,proto3" json:"expires,omitempty"`
+	Ttl           uint32                 `protobuf:"varint,2,opt,name=ttl,proto3" json:"ttl,omitempty"`
+	Recoverable   bool                   `protobuf:"varint,3,opt,name=recoverable,proto3" json:"recoverable,omitempty"`
+	Epoch         string                 `protobuf:"bytes,6,opt,name=epoch,proto3" json:"epoch,omitempty"`
+	Publications  []*Publication         `protobuf:"bytes,7,rep,name=publications,proto3" json:"publications,omitempty"`
+	Recovered     bool                   `protobuf:"varint,8,opt,name=recovered,proto3" json:"recovered,omitempty"`
+	Offset        uint64                 `protobuf:"varint,9,opt,name=offset,proto3" json:"offset,omitempty"`
+	Positioned    bool                   `protobuf:"varint,10,opt,name=positioned,proto3" json:"positioned,omitempty"`
+	Data          Raw                    `protobuf:"bytes,11,opt,name=data,proto3" json:"data,omitempty"`
+	WasRecovering bool                   `protobuf:"varint,12,opt,name=was_recovering,json=wasRecovering,proto3" json:"was_recovering,omitempty"`
+	Delta         bool                   `protobuf:"varint,13,opt,name=delta,proto3" json:"delta,omitempty"`
+	Id            int64                  `protobuf:"varint,14,opt,name=id,proto3" json:"id,omitempty"`        // Optional numeric channel ID to avoid sending string channel in the following Pushes (bandwidth optimization).
+	Type          int32                  `protobuf:"varint,15,opt,name=type,proto3" json:"type,omitempty"`    // Server must echo back type.
+	Phase         int32                  `protobuf:"varint,16,opt,name=phase,proto3" json:"phase,omitempty"`  // The result phase of the operation (LIVE = 0, STREAM = 1, STATE = 2)
+	Cursor        string                 `protobuf:"bytes,17,opt,name=cursor,proto3" json:"cursor,omitempty"` // Next page cursor (empty = last page)
+	State         []*Publication         `protobuf:"bytes,18,rep,name=state,proto3" json:"state,omitempty"`   // Channel state entries.
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SubscribeResult) Reset() {
@@ -1944,13 +1943,6 @@ func (x *SubscribeResult) GetState() []*Publication {
 		return x.State
 	}
 	return nil
-}
-
-func (x *SubscribeResult) GetPublishDebounce() uint32 {
-	if x != nil {
-		return x.PublishDebounce
-	}
-	return 0
 }
 
 type KeyedItem struct {
@@ -2307,7 +2299,7 @@ func (x *PublishRequest) GetRemoved() bool {
 
 type PublishResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Debounce      uint32                 `protobuf:"varint,1,opt,name=debounce,proto3" json:"debounce,omitempty"` // in ms, if >0 SDK should debounce publications to this channel. First one should not be debounced.
+	Debounce      int32                  `protobuf:"varint,1,opt,name=debounce,proto3" json:"debounce,omitempty"` // in ms, if >0 SDK should debounce publications to this channel. First one should not be debounced.
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2342,7 +2334,7 @@ func (*PublishResult) Descriptor() ([]byte, []int) {
 	return file_client_proto_rawDescGZIP(), []int{27}
 }
 
-func (x *PublishResult) GetDebounce() uint32 {
+func (x *PublishResult) GetDebounce() int32 {
 	if x != nil {
 		return x.Debounce
 	}
@@ -3220,7 +3212,7 @@ const file_client_proto_rawDesc = "" +
 	"\x05phase\x18\x10 \x01(\x05R\x05phase\x12\x16\n" +
 	"\x06cursor\x18\x11 \x01(\tR\x06cursor\x12\x14\n" +
 	"\x05limit\x18\x12 \x01(\x05R\x05limit\x12\x10\n" +
-	"\x03asc\x18\x13 \x01(\bR\x03ascJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"\xbb\x04\n" +
+	"\x03asc\x18\x13 \x01(\bR\x03ascJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"\x90\x04\n" +
 	"\x0fSubscribeResult\x12\x18\n" +
 	"\aexpires\x18\x01 \x01(\bR\aexpires\x12\x10\n" +
 	"\x03ttl\x18\x02 \x01(\rR\x03ttl\x12 \n" +
@@ -3240,8 +3232,7 @@ const file_client_proto_rawDesc = "" +
 	"\x04type\x18\x0f \x01(\x05R\x04type\x12\x14\n" +
 	"\x05phase\x18\x10 \x01(\x05R\x05phase\x12\x16\n" +
 	"\x06cursor\x18\x11 \x01(\tR\x06cursor\x12B\n" +
-	"\x05state\x18\x12 \x03(\v2,.centrifugal.centrifuge.protocol.PublicationR\x05state\x12)\n" +
-	"\x10publish_debounce\x18\x13 \x01(\rR\x0fpublishDebounceJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"7\n" +
+	"\x05state\x18\x12 \x03(\v2,.centrifugal.centrifuge.protocol.PublicationR\x05stateJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"7\n" +
 	"\tKeyedItem\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\x04R\aversion\"\xda\x01\n" +
@@ -3266,7 +3257,7 @@ const file_client_proto_rawDesc = "" +
 	"\x03key\x18\x04 \x01(\tR\x03key\x12\x18\n" +
 	"\aremoved\x18\x05 \x01(\bR\aremoved\"+\n" +
 	"\rPublishResult\x12\x1a\n" +
-	"\bdebounce\x18\x01 \x01(\rR\bdebounce\"+\n" +
+	"\bdebounce\x18\x01 \x01(\x05R\bdebounce\"+\n" +
 	"\x0fPresenceRequest\x12\x18\n" +
 	"\achannel\x18\x01 \x01(\tR\achannel\"\xd5\x01\n" +
 	"\x0ePresenceResult\x12Y\n" +

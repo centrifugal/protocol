@@ -2005,21 +2005,72 @@ func (x *KeyedItem) GetVersion() uint64 {
 	return 0
 }
 
+type TrackBatch struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Signature     string                 `protobuf:"bytes,1,opt,name=signature,proto3" json:"signature,omitempty"` // HMAC over (iat, expiry, user, channel, keys)
+	Items         []*KeyedItem           `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`         // FULL key set the signature was computed over;
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TrackBatch) Reset() {
+	*x = TrackBatch{}
+	mi := &file_client_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrackBatch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrackBatch) ProtoMessage() {}
+
+func (x *TrackBatch) ProtoReflect() protoreflect.Message {
+	mi := &file_client_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrackBatch.ProtoReflect.Descriptor instead.
+func (*TrackBatch) Descriptor() ([]byte, []int) {
+	return file_client_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *TrackBatch) GetSignature() string {
+	if x != nil {
+		return x.Signature
+	}
+	return ""
+}
+
+func (x *TrackBatch) GetItems() []*KeyedItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
 type SubRefreshRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Channel       string                 `protobuf:"bytes,1,opt,name=channel,proto3" json:"channel,omitempty"`
 	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
-	Items         []*KeyedItem           `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`                                // items to track (with versions)
-	UntrackKeys   []string               `protobuf:"bytes,4,rep,name=untrack_keys,json=untrackKeys,proto3" json:"untrack_keys,omitempty"` // item keys to stop tracking
-	Type          int32                  `protobuf:"varint,5,opt,name=type,proto3" json:"type,omitempty"`                                 // 0=sub_refresh, 1=track, 2=untrack
-	Signature     string                 `protobuf:"bytes,6,opt,name=signature,proto3" json:"signature,omitempty"`                        // HMAC signature for track auth
+	Type          int32                  `protobuf:"varint,3,opt,name=type,proto3" json:"type,omitempty"`      // 0=sub_refresh, 1=track, 2=untrack
+	Track         []*TrackBatch          `protobuf:"bytes,4,rep,name=track,proto3" json:"track,omitempty"`     // for type=1
+	Untrack       []string               `protobuf:"bytes,5,rep,name=untrack,proto3" json:"untrack,omitempty"` // for type=2
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SubRefreshRequest) Reset() {
 	*x = SubRefreshRequest{}
-	mi := &file_client_proto_msgTypes[22]
+	mi := &file_client_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2031,7 +2082,7 @@ func (x *SubRefreshRequest) String() string {
 func (*SubRefreshRequest) ProtoMessage() {}
 
 func (x *SubRefreshRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[22]
+	mi := &file_client_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2044,7 +2095,7 @@ func (x *SubRefreshRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubRefreshRequest.ProtoReflect.Descriptor instead.
 func (*SubRefreshRequest) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{22}
+	return file_client_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *SubRefreshRequest) GetChannel() string {
@@ -2061,20 +2112,6 @@ func (x *SubRefreshRequest) GetToken() string {
 	return ""
 }
 
-func (x *SubRefreshRequest) GetItems() []*KeyedItem {
-	if x != nil {
-		return x.Items
-	}
-	return nil
-}
-
-func (x *SubRefreshRequest) GetUntrackKeys() []string {
-	if x != nil {
-		return x.UntrackKeys
-	}
-	return nil
-}
-
 func (x *SubRefreshRequest) GetType() int32 {
 	if x != nil {
 		return x.Type
@@ -2082,11 +2119,18 @@ func (x *SubRefreshRequest) GetType() int32 {
 	return 0
 }
 
-func (x *SubRefreshRequest) GetSignature() string {
+func (x *SubRefreshRequest) GetTrack() []*TrackBatch {
 	if x != nil {
-		return x.Signature
+		return x.Track
 	}
-	return ""
+	return nil
+}
+
+func (x *SubRefreshRequest) GetUntrack() []string {
+	if x != nil {
+		return x.Untrack
+	}
+	return nil
 }
 
 type SubRefreshResult struct {
@@ -2100,7 +2144,7 @@ type SubRefreshResult struct {
 
 func (x *SubRefreshResult) Reset() {
 	*x = SubRefreshResult{}
-	mi := &file_client_proto_msgTypes[23]
+	mi := &file_client_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2112,7 +2156,7 @@ func (x *SubRefreshResult) String() string {
 func (*SubRefreshResult) ProtoMessage() {}
 
 func (x *SubRefreshResult) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[23]
+	mi := &file_client_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2125,7 +2169,7 @@ func (x *SubRefreshResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubRefreshResult.ProtoReflect.Descriptor instead.
 func (*SubRefreshResult) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{23}
+	return file_client_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *SubRefreshResult) GetExpires() bool {
@@ -2158,7 +2202,7 @@ type UnsubscribeRequest struct {
 
 func (x *UnsubscribeRequest) Reset() {
 	*x = UnsubscribeRequest{}
-	mi := &file_client_proto_msgTypes[24]
+	mi := &file_client_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2170,7 +2214,7 @@ func (x *UnsubscribeRequest) String() string {
 func (*UnsubscribeRequest) ProtoMessage() {}
 
 func (x *UnsubscribeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[24]
+	mi := &file_client_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2183,7 +2227,7 @@ func (x *UnsubscribeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnsubscribeRequest.ProtoReflect.Descriptor instead.
 func (*UnsubscribeRequest) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{24}
+	return file_client_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *UnsubscribeRequest) GetChannel() string {
@@ -2201,7 +2245,7 @@ type UnsubscribeResult struct {
 
 func (x *UnsubscribeResult) Reset() {
 	*x = UnsubscribeResult{}
-	mi := &file_client_proto_msgTypes[25]
+	mi := &file_client_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2213,7 +2257,7 @@ func (x *UnsubscribeResult) String() string {
 func (*UnsubscribeResult) ProtoMessage() {}
 
 func (x *UnsubscribeResult) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[25]
+	mi := &file_client_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2226,7 +2270,7 @@ func (x *UnsubscribeResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnsubscribeResult.ProtoReflect.Descriptor instead.
 func (*UnsubscribeResult) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{25}
+	return file_client_proto_rawDescGZIP(), []int{26}
 }
 
 type PublishRequest struct {
@@ -2242,7 +2286,7 @@ type PublishRequest struct {
 
 func (x *PublishRequest) Reset() {
 	*x = PublishRequest{}
-	mi := &file_client_proto_msgTypes[26]
+	mi := &file_client_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2254,7 +2298,7 @@ func (x *PublishRequest) String() string {
 func (*PublishRequest) ProtoMessage() {}
 
 func (x *PublishRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[26]
+	mi := &file_client_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2267,7 +2311,7 @@ func (x *PublishRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishRequest.ProtoReflect.Descriptor instead.
 func (*PublishRequest) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{26}
+	return file_client_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *PublishRequest) GetChannel() string {
@@ -2313,7 +2357,7 @@ type PublishResult struct {
 
 func (x *PublishResult) Reset() {
 	*x = PublishResult{}
-	mi := &file_client_proto_msgTypes[27]
+	mi := &file_client_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2325,7 +2369,7 @@ func (x *PublishResult) String() string {
 func (*PublishResult) ProtoMessage() {}
 
 func (x *PublishResult) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[27]
+	mi := &file_client_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2338,7 +2382,7 @@ func (x *PublishResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishResult.ProtoReflect.Descriptor instead.
 func (*PublishResult) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{27}
+	return file_client_proto_rawDescGZIP(), []int{28}
 }
 
 type PresenceRequest struct {
@@ -2350,7 +2394,7 @@ type PresenceRequest struct {
 
 func (x *PresenceRequest) Reset() {
 	*x = PresenceRequest{}
-	mi := &file_client_proto_msgTypes[28]
+	mi := &file_client_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2362,7 +2406,7 @@ func (x *PresenceRequest) String() string {
 func (*PresenceRequest) ProtoMessage() {}
 
 func (x *PresenceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[28]
+	mi := &file_client_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2375,7 +2419,7 @@ func (x *PresenceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PresenceRequest.ProtoReflect.Descriptor instead.
 func (*PresenceRequest) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{28}
+	return file_client_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *PresenceRequest) GetChannel() string {
@@ -2394,7 +2438,7 @@ type PresenceResult struct {
 
 func (x *PresenceResult) Reset() {
 	*x = PresenceResult{}
-	mi := &file_client_proto_msgTypes[29]
+	mi := &file_client_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2406,7 +2450,7 @@ func (x *PresenceResult) String() string {
 func (*PresenceResult) ProtoMessage() {}
 
 func (x *PresenceResult) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[29]
+	mi := &file_client_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2419,7 +2463,7 @@ func (x *PresenceResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PresenceResult.ProtoReflect.Descriptor instead.
 func (*PresenceResult) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{29}
+	return file_client_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *PresenceResult) GetPresence() map[string]*ClientInfo {
@@ -2438,7 +2482,7 @@ type PresenceStatsRequest struct {
 
 func (x *PresenceStatsRequest) Reset() {
 	*x = PresenceStatsRequest{}
-	mi := &file_client_proto_msgTypes[30]
+	mi := &file_client_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2450,7 +2494,7 @@ func (x *PresenceStatsRequest) String() string {
 func (*PresenceStatsRequest) ProtoMessage() {}
 
 func (x *PresenceStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[30]
+	mi := &file_client_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2463,7 +2507,7 @@ func (x *PresenceStatsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PresenceStatsRequest.ProtoReflect.Descriptor instead.
 func (*PresenceStatsRequest) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{30}
+	return file_client_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *PresenceStatsRequest) GetChannel() string {
@@ -2483,7 +2527,7 @@ type PresenceStatsResult struct {
 
 func (x *PresenceStatsResult) Reset() {
 	*x = PresenceStatsResult{}
-	mi := &file_client_proto_msgTypes[31]
+	mi := &file_client_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2495,7 +2539,7 @@ func (x *PresenceStatsResult) String() string {
 func (*PresenceStatsResult) ProtoMessage() {}
 
 func (x *PresenceStatsResult) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[31]
+	mi := &file_client_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2508,7 +2552,7 @@ func (x *PresenceStatsResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PresenceStatsResult.ProtoReflect.Descriptor instead.
 func (*PresenceStatsResult) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{31}
+	return file_client_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *PresenceStatsResult) GetNumClients() uint32 {
@@ -2535,7 +2579,7 @@ type StreamPosition struct {
 
 func (x *StreamPosition) Reset() {
 	*x = StreamPosition{}
-	mi := &file_client_proto_msgTypes[32]
+	mi := &file_client_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2547,7 +2591,7 @@ func (x *StreamPosition) String() string {
 func (*StreamPosition) ProtoMessage() {}
 
 func (x *StreamPosition) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[32]
+	mi := &file_client_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2560,7 +2604,7 @@ func (x *StreamPosition) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamPosition.ProtoReflect.Descriptor instead.
 func (*StreamPosition) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{32}
+	return file_client_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *StreamPosition) GetOffset() uint64 {
@@ -2589,7 +2633,7 @@ type HistoryRequest struct {
 
 func (x *HistoryRequest) Reset() {
 	*x = HistoryRequest{}
-	mi := &file_client_proto_msgTypes[33]
+	mi := &file_client_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2601,7 +2645,7 @@ func (x *HistoryRequest) String() string {
 func (*HistoryRequest) ProtoMessage() {}
 
 func (x *HistoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[33]
+	mi := &file_client_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2614,7 +2658,7 @@ func (x *HistoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HistoryRequest.ProtoReflect.Descriptor instead.
 func (*HistoryRequest) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{33}
+	return file_client_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *HistoryRequest) GetChannel() string {
@@ -2656,7 +2700,7 @@ type HistoryResult struct {
 
 func (x *HistoryResult) Reset() {
 	*x = HistoryResult{}
-	mi := &file_client_proto_msgTypes[34]
+	mi := &file_client_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2668,7 +2712,7 @@ func (x *HistoryResult) String() string {
 func (*HistoryResult) ProtoMessage() {}
 
 func (x *HistoryResult) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[34]
+	mi := &file_client_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2681,7 +2725,7 @@ func (x *HistoryResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HistoryResult.ProtoReflect.Descriptor instead.
 func (*HistoryResult) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{34}
+	return file_client_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *HistoryResult) GetPublications() []*Publication {
@@ -2713,7 +2757,7 @@ type PingRequest struct {
 
 func (x *PingRequest) Reset() {
 	*x = PingRequest{}
-	mi := &file_client_proto_msgTypes[35]
+	mi := &file_client_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2725,7 +2769,7 @@ func (x *PingRequest) String() string {
 func (*PingRequest) ProtoMessage() {}
 
 func (x *PingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[35]
+	mi := &file_client_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2738,7 +2782,7 @@ func (x *PingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PingRequest.ProtoReflect.Descriptor instead.
 func (*PingRequest) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{35}
+	return file_client_proto_rawDescGZIP(), []int{36}
 }
 
 type PingResult struct {
@@ -2749,7 +2793,7 @@ type PingResult struct {
 
 func (x *PingResult) Reset() {
 	*x = PingResult{}
-	mi := &file_client_proto_msgTypes[36]
+	mi := &file_client_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2761,7 +2805,7 @@ func (x *PingResult) String() string {
 func (*PingResult) ProtoMessage() {}
 
 func (x *PingResult) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[36]
+	mi := &file_client_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2774,7 +2818,7 @@ func (x *PingResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PingResult.ProtoReflect.Descriptor instead.
 func (*PingResult) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{36}
+	return file_client_proto_rawDescGZIP(), []int{37}
 }
 
 type RPCRequest struct {
@@ -2787,7 +2831,7 @@ type RPCRequest struct {
 
 func (x *RPCRequest) Reset() {
 	*x = RPCRequest{}
-	mi := &file_client_proto_msgTypes[37]
+	mi := &file_client_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2799,7 +2843,7 @@ func (x *RPCRequest) String() string {
 func (*RPCRequest) ProtoMessage() {}
 
 func (x *RPCRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[37]
+	mi := &file_client_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2812,7 +2856,7 @@ func (x *RPCRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RPCRequest.ProtoReflect.Descriptor instead.
 func (*RPCRequest) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{37}
+	return file_client_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *RPCRequest) GetData() []byte {
@@ -2838,7 +2882,7 @@ type RPCResult struct {
 
 func (x *RPCResult) Reset() {
 	*x = RPCResult{}
-	mi := &file_client_proto_msgTypes[38]
+	mi := &file_client_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2850,7 +2894,7 @@ func (x *RPCResult) String() string {
 func (*RPCResult) ProtoMessage() {}
 
 func (x *RPCResult) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[38]
+	mi := &file_client_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2863,7 +2907,7 @@ func (x *RPCResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RPCResult.ProtoReflect.Descriptor instead.
 func (*RPCResult) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{38}
+	return file_client_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *RPCResult) GetData() []byte {
@@ -2882,7 +2926,7 @@ type SendRequest struct {
 
 func (x *SendRequest) Reset() {
 	*x = SendRequest{}
-	mi := &file_client_proto_msgTypes[39]
+	mi := &file_client_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2894,7 +2938,7 @@ func (x *SendRequest) String() string {
 func (*SendRequest) ProtoMessage() {}
 
 func (x *SendRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[39]
+	mi := &file_client_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2907,7 +2951,7 @@ func (x *SendRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendRequest.ProtoReflect.Descriptor instead.
 func (*SendRequest) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{39}
+	return file_client_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *SendRequest) GetData() []byte {
@@ -2958,7 +3002,7 @@ type FilterNode struct {
 
 func (x *FilterNode) Reset() {
 	*x = FilterNode{}
-	mi := &file_client_proto_msgTypes[40]
+	mi := &file_client_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2970,7 +3014,7 @@ func (x *FilterNode) String() string {
 func (*FilterNode) ProtoMessage() {}
 
 func (x *FilterNode) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[40]
+	mi := &file_client_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2983,7 +3027,7 @@ func (x *FilterNode) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FilterNode.ProtoReflect.Descriptor instead.
 func (*FilterNode) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{40}
+	return file_client_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *FilterNode) GetOp() string {
@@ -3236,14 +3280,17 @@ const file_client_proto_rawDesc = "" +
 	"\x10publish_debounce\x18\x13 \x01(\rR\x0fpublishDebounceJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"7\n" +
 	"\tKeyedItem\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x04R\aversion\"\xda\x01\n" +
+	"\aversion\x18\x02 \x01(\x04R\aversion\"l\n" +
+	"\n" +
+	"TrackBatch\x12\x1c\n" +
+	"\tsignature\x18\x01 \x01(\tR\tsignature\x12@\n" +
+	"\x05items\x18\x02 \x03(\v2*.centrifugal.centrifuge.protocol.KeyedItemR\x05items\"\xb4\x01\n" +
 	"\x11SubRefreshRequest\x12\x18\n" +
 	"\achannel\x18\x01 \x01(\tR\achannel\x12\x14\n" +
-	"\x05token\x18\x02 \x01(\tR\x05token\x12@\n" +
-	"\x05items\x18\x03 \x03(\v2*.centrifugal.centrifuge.protocol.KeyedItemR\x05items\x12!\n" +
-	"\funtrack_keys\x18\x04 \x03(\tR\vuntrackKeys\x12\x12\n" +
-	"\x04type\x18\x05 \x01(\x05R\x04type\x12\x1c\n" +
-	"\tsignature\x18\x06 \x01(\tR\tsignature\"\x82\x01\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\x05R\x04type\x12A\n" +
+	"\x05track\x18\x04 \x03(\v2+.centrifugal.centrifuge.protocol.TrackBatchR\x05track\x12\x18\n" +
+	"\auntrack\x18\x05 \x03(\tR\auntrack\"\x82\x01\n" +
 	"\x10SubRefreshResult\x12\x18\n" +
 	"\aexpires\x18\x01 \x01(\bR\aexpires\x12\x10\n" +
 	"\x03ttl\x18\x02 \x01(\rR\x03ttl\x12B\n" +
@@ -3315,7 +3362,7 @@ func file_client_proto_rawDescGZIP() []byte {
 	return file_client_proto_rawDescData
 }
 
-var file_client_proto_msgTypes = make([]protoimpl.MessageInfo, 47)
+var file_client_proto_msgTypes = make([]protoimpl.MessageInfo, 48)
 var file_client_proto_goTypes = []any{
 	(*Error)(nil),                // 0: centrifugal.centrifuge.protocol.Error
 	(*EmulationRequest)(nil),     // 1: centrifugal.centrifuge.protocol.EmulationRequest
@@ -3339,58 +3386,59 @@ var file_client_proto_goTypes = []any{
 	(*SubscribeRequest)(nil),     // 19: centrifugal.centrifuge.protocol.SubscribeRequest
 	(*SubscribeResult)(nil),      // 20: centrifugal.centrifuge.protocol.SubscribeResult
 	(*KeyedItem)(nil),            // 21: centrifugal.centrifuge.protocol.KeyedItem
-	(*SubRefreshRequest)(nil),    // 22: centrifugal.centrifuge.protocol.SubRefreshRequest
-	(*SubRefreshResult)(nil),     // 23: centrifugal.centrifuge.protocol.SubRefreshResult
-	(*UnsubscribeRequest)(nil),   // 24: centrifugal.centrifuge.protocol.UnsubscribeRequest
-	(*UnsubscribeResult)(nil),    // 25: centrifugal.centrifuge.protocol.UnsubscribeResult
-	(*PublishRequest)(nil),       // 26: centrifugal.centrifuge.protocol.PublishRequest
-	(*PublishResult)(nil),        // 27: centrifugal.centrifuge.protocol.PublishResult
-	(*PresenceRequest)(nil),      // 28: centrifugal.centrifuge.protocol.PresenceRequest
-	(*PresenceResult)(nil),       // 29: centrifugal.centrifuge.protocol.PresenceResult
-	(*PresenceStatsRequest)(nil), // 30: centrifugal.centrifuge.protocol.PresenceStatsRequest
-	(*PresenceStatsResult)(nil),  // 31: centrifugal.centrifuge.protocol.PresenceStatsResult
-	(*StreamPosition)(nil),       // 32: centrifugal.centrifuge.protocol.StreamPosition
-	(*HistoryRequest)(nil),       // 33: centrifugal.centrifuge.protocol.HistoryRequest
-	(*HistoryResult)(nil),        // 34: centrifugal.centrifuge.protocol.HistoryResult
-	(*PingRequest)(nil),          // 35: centrifugal.centrifuge.protocol.PingRequest
-	(*PingResult)(nil),           // 36: centrifugal.centrifuge.protocol.PingResult
-	(*RPCRequest)(nil),           // 37: centrifugal.centrifuge.protocol.RPCRequest
-	(*RPCResult)(nil),            // 38: centrifugal.centrifuge.protocol.RPCResult
-	(*SendRequest)(nil),          // 39: centrifugal.centrifuge.protocol.SendRequest
-	(*FilterNode)(nil),           // 40: centrifugal.centrifuge.protocol.FilterNode
-	nil,                          // 41: centrifugal.centrifuge.protocol.Publication.TagsEntry
-	nil,                          // 42: centrifugal.centrifuge.protocol.Connect.SubsEntry
-	nil,                          // 43: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry
-	nil,                          // 44: centrifugal.centrifuge.protocol.ConnectRequest.HeadersEntry
-	nil,                          // 45: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry
-	nil,                          // 46: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
+	(*TrackBatch)(nil),           // 22: centrifugal.centrifuge.protocol.TrackBatch
+	(*SubRefreshRequest)(nil),    // 23: centrifugal.centrifuge.protocol.SubRefreshRequest
+	(*SubRefreshResult)(nil),     // 24: centrifugal.centrifuge.protocol.SubRefreshResult
+	(*UnsubscribeRequest)(nil),   // 25: centrifugal.centrifuge.protocol.UnsubscribeRequest
+	(*UnsubscribeResult)(nil),    // 26: centrifugal.centrifuge.protocol.UnsubscribeResult
+	(*PublishRequest)(nil),       // 27: centrifugal.centrifuge.protocol.PublishRequest
+	(*PublishResult)(nil),        // 28: centrifugal.centrifuge.protocol.PublishResult
+	(*PresenceRequest)(nil),      // 29: centrifugal.centrifuge.protocol.PresenceRequest
+	(*PresenceResult)(nil),       // 30: centrifugal.centrifuge.protocol.PresenceResult
+	(*PresenceStatsRequest)(nil), // 31: centrifugal.centrifuge.protocol.PresenceStatsRequest
+	(*PresenceStatsResult)(nil),  // 32: centrifugal.centrifuge.protocol.PresenceStatsResult
+	(*StreamPosition)(nil),       // 33: centrifugal.centrifuge.protocol.StreamPosition
+	(*HistoryRequest)(nil),       // 34: centrifugal.centrifuge.protocol.HistoryRequest
+	(*HistoryResult)(nil),        // 35: centrifugal.centrifuge.protocol.HistoryResult
+	(*PingRequest)(nil),          // 36: centrifugal.centrifuge.protocol.PingRequest
+	(*PingResult)(nil),           // 37: centrifugal.centrifuge.protocol.PingResult
+	(*RPCRequest)(nil),           // 38: centrifugal.centrifuge.protocol.RPCRequest
+	(*RPCResult)(nil),            // 39: centrifugal.centrifuge.protocol.RPCResult
+	(*SendRequest)(nil),          // 40: centrifugal.centrifuge.protocol.SendRequest
+	(*FilterNode)(nil),           // 41: centrifugal.centrifuge.protocol.FilterNode
+	nil,                          // 42: centrifugal.centrifuge.protocol.Publication.TagsEntry
+	nil,                          // 43: centrifugal.centrifuge.protocol.Connect.SubsEntry
+	nil,                          // 44: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry
+	nil,                          // 45: centrifugal.centrifuge.protocol.ConnectRequest.HeadersEntry
+	nil,                          // 46: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry
+	nil,                          // 47: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
 }
 var file_client_proto_depIdxs = []int32{
 	15, // 0: centrifugal.centrifuge.protocol.Command.connect:type_name -> centrifugal.centrifuge.protocol.ConnectRequest
 	19, // 1: centrifugal.centrifuge.protocol.Command.subscribe:type_name -> centrifugal.centrifuge.protocol.SubscribeRequest
-	24, // 2: centrifugal.centrifuge.protocol.Command.unsubscribe:type_name -> centrifugal.centrifuge.protocol.UnsubscribeRequest
-	26, // 3: centrifugal.centrifuge.protocol.Command.publish:type_name -> centrifugal.centrifuge.protocol.PublishRequest
-	28, // 4: centrifugal.centrifuge.protocol.Command.presence:type_name -> centrifugal.centrifuge.protocol.PresenceRequest
-	30, // 5: centrifugal.centrifuge.protocol.Command.presence_stats:type_name -> centrifugal.centrifuge.protocol.PresenceStatsRequest
-	33, // 6: centrifugal.centrifuge.protocol.Command.history:type_name -> centrifugal.centrifuge.protocol.HistoryRequest
-	35, // 7: centrifugal.centrifuge.protocol.Command.ping:type_name -> centrifugal.centrifuge.protocol.PingRequest
-	39, // 8: centrifugal.centrifuge.protocol.Command.send:type_name -> centrifugal.centrifuge.protocol.SendRequest
-	37, // 9: centrifugal.centrifuge.protocol.Command.rpc:type_name -> centrifugal.centrifuge.protocol.RPCRequest
+	25, // 2: centrifugal.centrifuge.protocol.Command.unsubscribe:type_name -> centrifugal.centrifuge.protocol.UnsubscribeRequest
+	27, // 3: centrifugal.centrifuge.protocol.Command.publish:type_name -> centrifugal.centrifuge.protocol.PublishRequest
+	29, // 4: centrifugal.centrifuge.protocol.Command.presence:type_name -> centrifugal.centrifuge.protocol.PresenceRequest
+	31, // 5: centrifugal.centrifuge.protocol.Command.presence_stats:type_name -> centrifugal.centrifuge.protocol.PresenceStatsRequest
+	34, // 6: centrifugal.centrifuge.protocol.Command.history:type_name -> centrifugal.centrifuge.protocol.HistoryRequest
+	36, // 7: centrifugal.centrifuge.protocol.Command.ping:type_name -> centrifugal.centrifuge.protocol.PingRequest
+	40, // 8: centrifugal.centrifuge.protocol.Command.send:type_name -> centrifugal.centrifuge.protocol.SendRequest
+	38, // 9: centrifugal.centrifuge.protocol.Command.rpc:type_name -> centrifugal.centrifuge.protocol.RPCRequest
 	17, // 10: centrifugal.centrifuge.protocol.Command.refresh:type_name -> centrifugal.centrifuge.protocol.RefreshRequest
-	22, // 11: centrifugal.centrifuge.protocol.Command.sub_refresh:type_name -> centrifugal.centrifuge.protocol.SubRefreshRequest
+	23, // 11: centrifugal.centrifuge.protocol.Command.sub_refresh:type_name -> centrifugal.centrifuge.protocol.SubRefreshRequest
 	0,  // 12: centrifugal.centrifuge.protocol.Reply.error:type_name -> centrifugal.centrifuge.protocol.Error
 	4,  // 13: centrifugal.centrifuge.protocol.Reply.push:type_name -> centrifugal.centrifuge.protocol.Push
 	16, // 14: centrifugal.centrifuge.protocol.Reply.connect:type_name -> centrifugal.centrifuge.protocol.ConnectResult
 	20, // 15: centrifugal.centrifuge.protocol.Reply.subscribe:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
-	25, // 16: centrifugal.centrifuge.protocol.Reply.unsubscribe:type_name -> centrifugal.centrifuge.protocol.UnsubscribeResult
-	27, // 17: centrifugal.centrifuge.protocol.Reply.publish:type_name -> centrifugal.centrifuge.protocol.PublishResult
-	29, // 18: centrifugal.centrifuge.protocol.Reply.presence:type_name -> centrifugal.centrifuge.protocol.PresenceResult
-	31, // 19: centrifugal.centrifuge.protocol.Reply.presence_stats:type_name -> centrifugal.centrifuge.protocol.PresenceStatsResult
-	34, // 20: centrifugal.centrifuge.protocol.Reply.history:type_name -> centrifugal.centrifuge.protocol.HistoryResult
-	36, // 21: centrifugal.centrifuge.protocol.Reply.ping:type_name -> centrifugal.centrifuge.protocol.PingResult
-	38, // 22: centrifugal.centrifuge.protocol.Reply.rpc:type_name -> centrifugal.centrifuge.protocol.RPCResult
+	26, // 16: centrifugal.centrifuge.protocol.Reply.unsubscribe:type_name -> centrifugal.centrifuge.protocol.UnsubscribeResult
+	28, // 17: centrifugal.centrifuge.protocol.Reply.publish:type_name -> centrifugal.centrifuge.protocol.PublishResult
+	30, // 18: centrifugal.centrifuge.protocol.Reply.presence:type_name -> centrifugal.centrifuge.protocol.PresenceResult
+	32, // 19: centrifugal.centrifuge.protocol.Reply.presence_stats:type_name -> centrifugal.centrifuge.protocol.PresenceStatsResult
+	35, // 20: centrifugal.centrifuge.protocol.Reply.history:type_name -> centrifugal.centrifuge.protocol.HistoryResult
+	37, // 21: centrifugal.centrifuge.protocol.Reply.ping:type_name -> centrifugal.centrifuge.protocol.PingResult
+	39, // 22: centrifugal.centrifuge.protocol.Reply.rpc:type_name -> centrifugal.centrifuge.protocol.RPCResult
 	18, // 23: centrifugal.centrifuge.protocol.Reply.refresh:type_name -> centrifugal.centrifuge.protocol.RefreshResult
-	23, // 24: centrifugal.centrifuge.protocol.Reply.sub_refresh:type_name -> centrifugal.centrifuge.protocol.SubRefreshResult
+	24, // 24: centrifugal.centrifuge.protocol.Reply.sub_refresh:type_name -> centrifugal.centrifuge.protocol.SubRefreshResult
 	6,  // 25: centrifugal.centrifuge.protocol.Push.pub:type_name -> centrifugal.centrifuge.protocol.Publication
 	7,  // 26: centrifugal.centrifuge.protocol.Push.join:type_name -> centrifugal.centrifuge.protocol.Join
 	8,  // 27: centrifugal.centrifuge.protocol.Push.leave:type_name -> centrifugal.centrifuge.protocol.Leave
@@ -3401,31 +3449,32 @@ var file_client_proto_depIdxs = []int32{
 	13, // 32: centrifugal.centrifuge.protocol.Push.disconnect:type_name -> centrifugal.centrifuge.protocol.Disconnect
 	14, // 33: centrifugal.centrifuge.protocol.Push.refresh:type_name -> centrifugal.centrifuge.protocol.Refresh
 	5,  // 34: centrifugal.centrifuge.protocol.Publication.info:type_name -> centrifugal.centrifuge.protocol.ClientInfo
-	41, // 35: centrifugal.centrifuge.protocol.Publication.tags:type_name -> centrifugal.centrifuge.protocol.Publication.TagsEntry
+	42, // 35: centrifugal.centrifuge.protocol.Publication.tags:type_name -> centrifugal.centrifuge.protocol.Publication.TagsEntry
 	5,  // 36: centrifugal.centrifuge.protocol.Join.info:type_name -> centrifugal.centrifuge.protocol.ClientInfo
 	5,  // 37: centrifugal.centrifuge.protocol.Leave.info:type_name -> centrifugal.centrifuge.protocol.ClientInfo
-	42, // 38: centrifugal.centrifuge.protocol.Connect.subs:type_name -> centrifugal.centrifuge.protocol.Connect.SubsEntry
-	43, // 39: centrifugal.centrifuge.protocol.ConnectRequest.subs:type_name -> centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry
-	44, // 40: centrifugal.centrifuge.protocol.ConnectRequest.headers:type_name -> centrifugal.centrifuge.protocol.ConnectRequest.HeadersEntry
-	45, // 41: centrifugal.centrifuge.protocol.ConnectResult.subs:type_name -> centrifugal.centrifuge.protocol.ConnectResult.SubsEntry
-	40, // 42: centrifugal.centrifuge.protocol.SubscribeRequest.tf:type_name -> centrifugal.centrifuge.protocol.FilterNode
+	43, // 38: centrifugal.centrifuge.protocol.Connect.subs:type_name -> centrifugal.centrifuge.protocol.Connect.SubsEntry
+	44, // 39: centrifugal.centrifuge.protocol.ConnectRequest.subs:type_name -> centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry
+	45, // 40: centrifugal.centrifuge.protocol.ConnectRequest.headers:type_name -> centrifugal.centrifuge.protocol.ConnectRequest.HeadersEntry
+	46, // 41: centrifugal.centrifuge.protocol.ConnectResult.subs:type_name -> centrifugal.centrifuge.protocol.ConnectResult.SubsEntry
+	41, // 42: centrifugal.centrifuge.protocol.SubscribeRequest.tf:type_name -> centrifugal.centrifuge.protocol.FilterNode
 	6,  // 43: centrifugal.centrifuge.protocol.SubscribeResult.publications:type_name -> centrifugal.centrifuge.protocol.Publication
 	6,  // 44: centrifugal.centrifuge.protocol.SubscribeResult.state:type_name -> centrifugal.centrifuge.protocol.Publication
-	21, // 45: centrifugal.centrifuge.protocol.SubRefreshRequest.items:type_name -> centrifugal.centrifuge.protocol.KeyedItem
-	6,  // 46: centrifugal.centrifuge.protocol.SubRefreshResult.items:type_name -> centrifugal.centrifuge.protocol.Publication
-	46, // 47: centrifugal.centrifuge.protocol.PresenceResult.presence:type_name -> centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
-	32, // 48: centrifugal.centrifuge.protocol.HistoryRequest.since:type_name -> centrifugal.centrifuge.protocol.StreamPosition
-	6,  // 49: centrifugal.centrifuge.protocol.HistoryResult.publications:type_name -> centrifugal.centrifuge.protocol.Publication
-	40, // 50: centrifugal.centrifuge.protocol.FilterNode.nodes:type_name -> centrifugal.centrifuge.protocol.FilterNode
-	20, // 51: centrifugal.centrifuge.protocol.Connect.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
-	19, // 52: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeRequest
-	20, // 53: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
-	5,  // 54: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry.value:type_name -> centrifugal.centrifuge.protocol.ClientInfo
-	55, // [55:55] is the sub-list for method output_type
-	55, // [55:55] is the sub-list for method input_type
-	55, // [55:55] is the sub-list for extension type_name
-	55, // [55:55] is the sub-list for extension extendee
-	0,  // [0:55] is the sub-list for field type_name
+	21, // 45: centrifugal.centrifuge.protocol.TrackBatch.items:type_name -> centrifugal.centrifuge.protocol.KeyedItem
+	22, // 46: centrifugal.centrifuge.protocol.SubRefreshRequest.track:type_name -> centrifugal.centrifuge.protocol.TrackBatch
+	6,  // 47: centrifugal.centrifuge.protocol.SubRefreshResult.items:type_name -> centrifugal.centrifuge.protocol.Publication
+	47, // 48: centrifugal.centrifuge.protocol.PresenceResult.presence:type_name -> centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry
+	33, // 49: centrifugal.centrifuge.protocol.HistoryRequest.since:type_name -> centrifugal.centrifuge.protocol.StreamPosition
+	6,  // 50: centrifugal.centrifuge.protocol.HistoryResult.publications:type_name -> centrifugal.centrifuge.protocol.Publication
+	41, // 51: centrifugal.centrifuge.protocol.FilterNode.nodes:type_name -> centrifugal.centrifuge.protocol.FilterNode
+	20, // 52: centrifugal.centrifuge.protocol.Connect.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
+	19, // 53: centrifugal.centrifuge.protocol.ConnectRequest.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeRequest
+	20, // 54: centrifugal.centrifuge.protocol.ConnectResult.SubsEntry.value:type_name -> centrifugal.centrifuge.protocol.SubscribeResult
+	5,  // 55: centrifugal.centrifuge.protocol.PresenceResult.PresenceEntry.value:type_name -> centrifugal.centrifuge.protocol.ClientInfo
+	56, // [56:56] is the sub-list for method output_type
+	56, // [56:56] is the sub-list for method input_type
+	56, // [56:56] is the sub-list for extension type_name
+	56, // [56:56] is the sub-list for extension extendee
+	0,  // [0:56] is the sub-list for field type_name
 }
 
 func init() { file_client_proto_init() }
@@ -3439,7 +3488,7 @@ func file_client_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_client_proto_rawDesc), len(file_client_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   47,
+			NumMessages:   48,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

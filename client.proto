@@ -254,13 +254,18 @@ message KeyedItem {
   uint64 version = 2;
 }
 
+message TrackBatch {
+  string signature = 1;               // HMAC over (iat, expiry, user, channel, keys)
+  repeated KeyedItem items = 2;       // FULL key set the signature was computed over;
+                                      // versions are CURRENT per-connection versions
+}
+
 message SubRefreshRequest {
   string channel = 1;
   string token = 2;
-  repeated KeyedItem items = 3;       // items to track (with versions)
-  repeated string untrack_keys = 4;   // item keys to stop tracking
-  int32 type = 5;                     // 0=sub_refresh, 1=track, 2=untrack
-  string signature = 6;              // HMAC signature for track auth
+  int32 type = 3;                     // 0=sub_refresh, 1=track, 2=untrack
+  repeated TrackBatch track = 4;      // for type=1
+  repeated string untrack = 5;        // for type=2
 }
 
 message SubRefreshResult {

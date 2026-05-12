@@ -2136,7 +2136,7 @@ func (x *SubRefreshRequest) GetUntrack() []string {
 type SubRefreshResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Expires       bool                   `protobuf:"varint,1,opt,name=expires,proto3" json:"expires,omitempty"`
-	Ttl           uint32                 `protobuf:"varint,2,opt,name=ttl,proto3" json:"ttl,omitempty"`
+	Ttl           uint32                 `protobuf:"varint,2,opt,name=ttl,proto3" json:"ttl,omitempty"` // for type=0: token TTL. for type=1: MIN TTL across all batches.
 	Items         []*Publication         `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

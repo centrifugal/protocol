@@ -270,7 +270,7 @@ message SubRefreshRequest {
 
 message SubRefreshResult {
   bool expires = 1;
-  uint32 ttl = 2;
+  uint32 ttl = 2;                  // for type=0: token TTL. for type=1: MIN TTL across all batches.
   repeated Publication items = 3;
 }
 

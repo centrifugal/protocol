@@ -124,7 +124,7 @@ func (d *ProtobufCommandDecoder) Decode() (*Command, error) {
 		}
 		from := d.offset + n
 		to := d.offset + n + int(l)
-		if to > 0 && to <= len(d.data) {
+		if from <= to && to <= len(d.data) {
 			cmdBytes := d.data[from:to]
 			err := c.UnmarshalVT(cmdBytes) // Check whether UnmarshalVTUnsafe here is OK.
 			if err != nil {

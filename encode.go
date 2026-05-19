@@ -403,8 +403,8 @@ func NewProtobufDataEncoder() *ProtobufDataEncoder {
 // Encode appends an already encoded message to the frame, prefixing it with its
 // length encoded as a varint.
 func (e *ProtobufDataEncoder) Encode(data []byte) error {
-	bs := make([]byte, 8)
-	n := binary.PutUvarint(bs, uint64(len(data)))
+	var bs [binary.MaxVarintLen64]byte
+	n := binary.PutUvarint(bs[:], uint64(len(data)))
 	e.buffer.Write(bs[:n])
 	e.buffer.Write(data)
 	return nil
@@ -634,14 +634,13 @@ func NewProtobufCommandEncoder() *ProtobufCommandEncoder {
 // Encode Command to bytes prefixed with the command length encoded as a varint,
 // so that encoded commands may be sent one after another in a single frame.
 func (e *ProtobufCommandEncoder) Encode(cmd *Command) ([]byte, error) {
-	commandBytes, err := cmd.MarshalVT()
-	if err != nil {
+	size := cmd.SizeVT()
+	var prefix [binary.MaxVarintLen64]byte
+	prefixLen := binary.PutUvarint(prefix[:], uint64(size))
+	out := make([]byte, prefixLen+size)
+	copy(out, prefix[:prefixLen])
+	if _, err := cmd.MarshalToSizedBufferVT(out[prefixLen:]); err != nil {
 		return nil, err
 	}
-	bs := make([]byte, 8)
-	n := binary.PutUvarint(bs, uint64(len(commandBytes)))
-	var buf bytes.Buffer
-	buf.Write(bs[:n])
-	buf.Write(commandBytes)
-	return buf.Bytes(), nil
+	return out, nil
 }

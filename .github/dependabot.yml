@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: monthly
+    ignore:
+      # easyjson generates client.pb_easyjson.go, so the module version must stay
+      # in sync with the generator version pinned in generate.sh - updating manually.
+      - dependency-name: github.com/mailru/easyjson
+    groups:
+      go-packages:
+        patterns:
+          - '*'
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: monthly

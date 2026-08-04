@@ -1,0 +1,35 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gosec
+  settings:
+    staticcheck:
+      checks:
+        - "all"
+        - "-ST1003"  # Excludes bad variable names check: exported names like DefaultJsonPushEncoder are part of the public API.
+        - "-ST1000"  # No need in package comment check.
+    gosec:
+      excludes:
+        - "G115"  # Integer overflow check - sth to fix.
+  exclusions:
+    rules:
+      - path: "_test\\.go"
+        linters:
+          - gosec # Disable in tests, sth to fix.
+      # b.Fatal/t.Fatal end the test, but SA5011 does not model that and reports
+      # a possible nil dereference after a nil check followed by Fatal.
+      - path: "_test\\.go"
+        linters:
+          - staticcheck
+        text: "SA5011"
+
+formatters:
+  enable:
+    - gofmt

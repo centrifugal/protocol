@@ -2,7 +2,9 @@ package protocol
 
 import (
 	"bytes"
+	"encoding/binary"
 	"io"
+	"math"
 	"strconv"
 	"testing"
 
@@ -187,4 +189,62 @@ func TestJSONStreamCommandDecoder_ReuseDifferentLimit(t *testing.T) {
 	require.ErrorIs(t, err, io.EOF)
 	require.NotNil(t, cmd)
 	require.NotNil(t, cmd.Publish)
+}
+
+// A Protobuf stream declares the length of each message before its body, so the
+// length must never be trusted as an allocation size - a few bytes must not be
+// able to make the decoder allocate (or panic) on an arbitrary size. See also
+// FuzzProtobufStreamDecode.
+func TestProtobufStreamCommandDecoder_HostileLength(t *testing.T) {
+	uvarint := func(v uint64) []byte {
+		b := make([]byte, binary.MaxVarintLen64)
+		return b[:binary.PutUvarint(b, v)]
+	}
+
+	tests := []struct {
+		name      string
+		msgLength uint64
+	}{
+		{name: "larger than max int32", msgLength: math.MaxInt32 + 1},
+		{name: "overflows int32", msgLength: 1 << 40},
+		{name: "overflows int64 when converted", msgLength: 1 << 62},
+		{name: "max uint64", msgLength: math.MaxUint64},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// No message size limit configured - the hostile length must still
+			// be rejected rather than allocated or panicked on.
+			decoder := GetStreamCommandDecoder(TypeProtobuf, bytes.NewReader(uvarint(tt.msgLength)))
+			defer PutStreamCommandDecoder(TypeProtobuf, decoder)
+			require.NotPanics(t, func() {
+				cmd, n, err := decoder.Decode()
+				require.Nil(t, cmd)
+				require.Zero(t, n)
+				require.ErrorIs(t, err, ErrMessageTooLarge)
+			})
+		})
+	}
+}
+
+// A length within the ceiling must still be handled normally: it is only
+// rejected once the body turns out to be shorter than declared.
+func TestProtobufStreamCommandDecoder_TruncatedBody(t *testing.T) {
+	b := make([]byte, binary.MaxVarintLen64)
+	prefix := b[:binary.PutUvarint(b, 1024)]
+
+	decoder := GetStreamCommandDecoder(TypeProtobuf, bytes.NewReader(append(prefix, 0x01, 0x02)))
+	defer PutStreamCommandDecoder(TypeProtobuf, decoder)
+	cmd, _, err := decoder.Decode()
+	require.Nil(t, cmd)
+	require.ErrorIs(t, err, io.ErrUnexpectedEOF)
+}
+
+func TestGetByteBuffer_NonPositiveLength(t *testing.T) {
+	for _, length := range []int{0, -1, math.MinInt} {
+		require.NotPanics(t, func() {
+			bb := getByteBuffer(length)
+			require.NotNil(t, bb)
+			require.Empty(t, bb.B)
+		})
+	}
 }

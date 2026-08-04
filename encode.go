@@ -21,7 +21,15 @@ func isValidJSON(b []byte) error {
 	return nil
 }
 
-// PushEncoder ...
+// PushEncoder encodes Push and its parts to bytes.
+//
+// Parts of a Push are encoded separately from the Push envelope, so that a
+// payload encoded once may be reused for all subscribers of a channel.
+//
+// Methods which accept a variadic reuse argument may write the result into the
+// provided buffer if it's large enough, avoiding an allocation. The returned
+// slice may or may not alias the given buffer, so always use the returned value
+// and don't touch the buffer until the result is not needed anymore.
 type PushEncoder interface {
 	Encode(*Push) ([]byte, error)
 	EncodeMessage(*Message, ...[]byte) ([]byte, error)
@@ -38,11 +46,12 @@ type PushEncoder interface {
 var _ PushEncoder = (*JSONPushEncoder)(nil)
 var _ PushEncoder = (*ProtobufPushEncoder)(nil)
 
-// JSONPushEncoder ...
+// JSONPushEncoder is a PushEncoder which encodes to JSON.
 type JSONPushEncoder struct {
 }
 
-// NewJSONPushEncoder ...
+// NewJSONPushEncoder creates a new JSONPushEncoder. It's safe to use the
+// returned encoder concurrently, see also DefaultJsonPushEncoder.
 func NewJSONPushEncoder() *JSONPushEncoder {
 	return &JSONPushEncoder{}
 }
@@ -124,11 +133,12 @@ func (e *JSONPushEncoder) EncodeRefresh(message *Refresh, reuse ...[]byte) ([]by
 	return jw.BuildBytes(reuse...)
 }
 
-// ProtobufPushEncoder ...
+// ProtobufPushEncoder is a PushEncoder which encodes to Protobuf.
 type ProtobufPushEncoder struct {
 }
 
-// NewProtobufPushEncoder ...
+// NewProtobufPushEncoder creates a new ProtobufPushEncoder. It's safe to use the
+// returned encoder concurrently, see also DefaultProtobufPushEncoder.
 func NewProtobufPushEncoder() *ProtobufPushEncoder {
 	return &ProtobufPushEncoder{}
 }
@@ -273,15 +283,17 @@ func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh, reuse ...[]byte) (
 	return message.MarshalVT()
 }
 
-// ReplyEncoder ...
+// ReplyEncoder encodes Reply to bytes. Use GetReplyEncoder to get an
+// implementation for a concrete protocol Type.
 type ReplyEncoder interface {
 	Encode(*Reply) ([]byte, error)
 }
 
-// JSONReplyEncoder ...
+// JSONReplyEncoder is a ReplyEncoder which encodes to JSON.
 type JSONReplyEncoder struct{}
 
-// NewJSONReplyEncoder ...
+// NewJSONReplyEncoder creates a new JSONReplyEncoder. It's safe to use the
+// returned encoder concurrently, see also DefaultJsonReplyEncoder.
 func NewJSONReplyEncoder() *JSONReplyEncoder {
 	return &JSONReplyEncoder{}
 }
@@ -300,10 +312,11 @@ func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
 	return result, nil
 }
 
-// ProtobufReplyEncoder ...
+// ProtobufReplyEncoder is a ReplyEncoder which encodes to Protobuf.
 type ProtobufReplyEncoder struct{}
 
-// NewProtobufReplyEncoder ...
+// NewProtobufReplyEncoder creates a new ProtobufReplyEncoder. It's safe to use
+// the returned encoder concurrently, see also DefaultProtobufReplyEncoder.
 func NewProtobufReplyEncoder() *ProtobufReplyEncoder {
 	return &ProtobufReplyEncoder{}
 }
@@ -313,32 +326,46 @@ func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
 	return r.MarshalVT()
 }
 
-// DataEncoder ...
+// DataEncoder concatenates already encoded messages into a single transport
+// frame, applying the framing of a concrete protocol Type: messages are
+// separated by a `\n` delimiter in JSON and prefixed with their length in
+// Protobuf.
+//
+// A DataEncoder is not safe for concurrent use. Use GetDataEncoder and
+// PutDataEncoder to take one from a pool and return it back when done.
 type DataEncoder interface {
+	// Reset prepares the encoder to build a new frame, dropping everything
+	// encoded so far.
 	Reset()
+	// Encode appends an already encoded message to the frame.
 	Encode([]byte) error
+	// Finish returns a copy of the frame built so far.
 	Finish() []byte
+	// FinishNoCopy returns the frame built so far without copying it. The
+	// returned slice is only valid until the next Reset or Encode call, so use
+	// it only if the data is written to a connection before that happens.
 	FinishNoCopy() []byte
 }
 
-// JSONDataEncoder ...
+// JSONDataEncoder is a DataEncoder which separates messages by a `\n` delimiter.
 type JSONDataEncoder struct {
 	count  int
 	buffer bytes.Buffer
 }
 
-// NewJSONDataEncoder ...
+// NewJSONDataEncoder creates a new JSONDataEncoder.
 func NewJSONDataEncoder() *JSONDataEncoder {
 	return &JSONDataEncoder{}
 }
 
-// Reset ...
+// Reset prepares the encoder to build a new frame.
 func (e *JSONDataEncoder) Reset() {
 	e.count = 0
 	e.buffer.Reset()
 }
 
-// Encode ...
+// Encode appends an already encoded message to the frame, separating it from
+// the previous one with a `\n` delimiter.
 func (e *JSONDataEncoder) Encode(data []byte) error {
 	if e.count > 0 {
 		e.buffer.WriteString("\n")
@@ -348,7 +375,7 @@ func (e *JSONDataEncoder) Encode(data []byte) error {
 	return nil
 }
 
-// Finish ...
+// Finish returns a copy of the frame built so far.
 func (e *JSONDataEncoder) Finish() []byte {
 	data := e.buffer.Bytes()
 	dataCopy := make([]byte, len(data))
@@ -356,21 +383,25 @@ func (e *JSONDataEncoder) Finish() []byte {
 	return dataCopy
 }
 
+// FinishNoCopy returns the frame built so far without copying it, see the
+// DataEncoder interface for the lifetime of the returned slice.
 func (e *JSONDataEncoder) FinishNoCopy() []byte {
 	return e.buffer.Bytes()
 }
 
-// ProtobufDataEncoder ...
+// ProtobufDataEncoder is a DataEncoder which prefixes each message with its
+// length encoded as a varint.
 type ProtobufDataEncoder struct {
 	buffer bytes.Buffer
 }
 
-// NewProtobufDataEncoder ...
+// NewProtobufDataEncoder creates a new ProtobufDataEncoder.
 func NewProtobufDataEncoder() *ProtobufDataEncoder {
 	return &ProtobufDataEncoder{}
 }
 
-// Encode ...
+// Encode appends an already encoded message to the frame, prefixing it with its
+// length encoded as a varint.
 func (e *ProtobufDataEncoder) Encode(data []byte) error {
 	bs := make([]byte, 8)
 	n := binary.PutUvarint(bs, uint64(len(data)))
@@ -379,12 +410,12 @@ func (e *ProtobufDataEncoder) Encode(data []byte) error {
 	return nil
 }
 
-// Reset ...
+// Reset prepares the encoder to build a new frame.
 func (e *ProtobufDataEncoder) Reset() {
 	e.buffer.Reset()
 }
 
-// Finish ...
+// Finish returns a copy of the frame built so far.
 func (e *ProtobufDataEncoder) Finish() []byte {
 	data := e.buffer.Bytes()
 	dataCopy := make([]byte, len(data))
@@ -392,11 +423,16 @@ func (e *ProtobufDataEncoder) Finish() []byte {
 	return dataCopy
 }
 
+// FinishNoCopy returns the frame built so far without copying it, see the
+// DataEncoder interface for the lifetime of the returned slice.
 func (e *ProtobufDataEncoder) FinishNoCopy() []byte {
 	return e.buffer.Bytes()
 }
 
-// ResultEncoder ...
+// ResultEncoder encodes command results to bytes. Results are encoded separately
+// from the Reply envelope, so that a result may be encoded once and then reused
+// for many connections. Use GetResultEncoder to get an implementation for a
+// concrete protocol Type.
 type ResultEncoder interface {
 	EncodeConnectResult(*ConnectResult) ([]byte, error)
 	EncodeRefreshResult(*RefreshResult) ([]byte, error)
@@ -411,185 +447,192 @@ type ResultEncoder interface {
 	EncodeRPCResult(*RPCResult) ([]byte, error)
 }
 
-// JSONResultEncoder ...
+// JSONResultEncoder is a ResultEncoder which encodes to JSON.
 type JSONResultEncoder struct{}
 
-// NewJSONResultEncoder ...
+// NewJSONResultEncoder creates a new JSONResultEncoder. It's safe to use the
+// returned encoder concurrently.
 func NewJSONResultEncoder() *JSONResultEncoder {
 	return &JSONResultEncoder{}
 }
 
-// EncodeConnectResult ...
+// EncodeConnectResult encodes ConnectResult to bytes.
 func (e *JSONResultEncoder) EncodeConnectResult(res *ConnectResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeRefreshResult ...
+// EncodeRefreshResult encodes RefreshResult to bytes.
 func (e *JSONResultEncoder) EncodeRefreshResult(res *RefreshResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeSubscribeResult ...
+// EncodeSubscribeResult encodes SubscribeResult to bytes.
 func (e *JSONResultEncoder) EncodeSubscribeResult(res *SubscribeResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeSubRefreshResult ...
+// EncodeSubRefreshResult encodes SubRefreshResult to bytes.
 func (e *JSONResultEncoder) EncodeSubRefreshResult(res *SubRefreshResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeUnsubscribeResult ...
+// EncodeUnsubscribeResult encodes UnsubscribeResult to bytes.
 func (e *JSONResultEncoder) EncodeUnsubscribeResult(res *UnsubscribeResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodePublishResult ...
+// EncodePublishResult encodes PublishResult to bytes.
 func (e *JSONResultEncoder) EncodePublishResult(res *PublishResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodePresenceResult ...
+// EncodePresenceResult encodes PresenceResult to bytes.
 func (e *JSONResultEncoder) EncodePresenceResult(res *PresenceResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodePresenceStatsResult ...
+// EncodePresenceStatsResult encodes PresenceStatsResult to bytes.
 func (e *JSONResultEncoder) EncodePresenceStatsResult(res *PresenceStatsResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeHistoryResult ...
+// EncodeHistoryResult encodes HistoryResult to bytes.
 func (e *JSONResultEncoder) EncodeHistoryResult(res *HistoryResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodePingResult ...
+// EncodePingResult encodes PingResult to bytes.
 func (e *JSONResultEncoder) EncodePingResult(res *PingResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// EncodeRPCResult ...
+// EncodeRPCResult encodes RPCResult to bytes.
 func (e *JSONResultEncoder) EncodeRPCResult(res *RPCResult) ([]byte, error) {
 	jw := newWriter()
 	res.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// ProtobufResultEncoder ...
+// ProtobufResultEncoder is a ResultEncoder which encodes to Protobuf.
 type ProtobufResultEncoder struct{}
 
-// NewProtobufResultEncoder ...
+// NewProtobufResultEncoder creates a new ProtobufResultEncoder. It's safe to use
+// the returned encoder concurrently.
 func NewProtobufResultEncoder() *ProtobufResultEncoder {
 	return &ProtobufResultEncoder{}
 }
 
-// EncodeConnectResult ...
+// EncodeConnectResult encodes ConnectResult to bytes.
 func (e *ProtobufResultEncoder) EncodeConnectResult(res *ConnectResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodeRefreshResult ...
+// EncodeRefreshResult encodes RefreshResult to bytes.
 func (e *ProtobufResultEncoder) EncodeRefreshResult(res *RefreshResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodeSubscribeResult ...
+// EncodeSubscribeResult encodes SubscribeResult to bytes.
 func (e *ProtobufResultEncoder) EncodeSubscribeResult(res *SubscribeResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodeSubRefreshResult ...
+// EncodeSubRefreshResult encodes SubRefreshResult to bytes.
 func (e *ProtobufResultEncoder) EncodeSubRefreshResult(res *SubRefreshResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodeUnsubscribeResult ...
+// EncodeUnsubscribeResult encodes UnsubscribeResult to bytes.
 func (e *ProtobufResultEncoder) EncodeUnsubscribeResult(res *UnsubscribeResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodePublishResult ...
+// EncodePublishResult encodes PublishResult to bytes.
 func (e *ProtobufResultEncoder) EncodePublishResult(res *PublishResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodePresenceResult ...
+// EncodePresenceResult encodes PresenceResult to bytes.
 func (e *ProtobufResultEncoder) EncodePresenceResult(res *PresenceResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodePresenceStatsResult ...
+// EncodePresenceStatsResult encodes PresenceStatsResult to bytes.
 func (e *ProtobufResultEncoder) EncodePresenceStatsResult(res *PresenceStatsResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodeHistoryResult ...
+// EncodeHistoryResult encodes HistoryResult to bytes.
 func (e *ProtobufResultEncoder) EncodeHistoryResult(res *HistoryResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodePingResult ...
+// EncodePingResult encodes PingResult to bytes.
 func (e *ProtobufResultEncoder) EncodePingResult(res *PingResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// EncodeRPCResult ...
+// EncodeRPCResult encodes RPCResult to bytes.
 func (e *ProtobufResultEncoder) EncodeRPCResult(res *RPCResult) ([]byte, error) {
 	return res.MarshalVT()
 }
 
-// CommandEncoder ...
+// CommandEncoder encodes Command to bytes. It's the client-side counterpart of
+// CommandDecoder.
 type CommandEncoder interface {
 	Encode(cmd *Command) ([]byte, error)
 }
 
-// JSONCommandEncoder ...
+// JSONCommandEncoder is a CommandEncoder which encodes to JSON.
 type JSONCommandEncoder struct {
 }
 
-// NewJSONCommandEncoder ...
+// NewJSONCommandEncoder creates a new JSONCommandEncoder. It's safe to use the
+// returned encoder concurrently.
 func NewJSONCommandEncoder() *JSONCommandEncoder {
 	return &JSONCommandEncoder{}
 }
 
-// Encode ...
+// Encode Command to bytes. The result contains no framing: to send several
+// commands in one frame join them with a `\n` delimiter, see JSONDataEncoder.
 func (e *JSONCommandEncoder) Encode(cmd *Command) ([]byte, error) {
 	jw := newWriter()
 	cmd.MarshalEasyJSON(jw)
 	return jw.BuildBytes()
 }
 
-// ProtobufCommandEncoder ...
+// ProtobufCommandEncoder is a CommandEncoder which encodes to Protobuf.
 type ProtobufCommandEncoder struct {
 }
 
-// NewProtobufCommandEncoder ...
+// NewProtobufCommandEncoder creates a new ProtobufCommandEncoder. It's safe to
+// use the returned encoder concurrently.
 func NewProtobufCommandEncoder() *ProtobufCommandEncoder {
 	return &ProtobufCommandEncoder{}
 }
 
-// Encode ...
+// Encode Command to bytes prefixed with the command length encoded as a varint,
+// so that encoded commands may be sent one after another in a single frame.
 func (e *ProtobufCommandEncoder) Encode(cmd *Command) ([]byte, error) {
 	commandBytes, err := cmd.MarshalVT()
 	if err != nil {

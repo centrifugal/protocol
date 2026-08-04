@@ -12,8 +12,13 @@ const (
 	TypeProtobuf Type = "protobuf"
 )
 
+// FrameType describes the type of a protocol frame. It's not a part of the wire
+// format – it's used for observability, so that a server may count and measure
+// frames it sends and receives per type.
 type FrameType uint8
 
+// Frame types of the protocol: a ping/pong pair, asynchronous server-to-client
+// pushes and client-to-server commands.
 const (
 	FrameTypeServerPing FrameType = iota + 1
 	FrameTypeClientPong
@@ -41,6 +46,8 @@ const (
 	FrameTypeSend
 )
 
+// String returns a snake_case name of the frame type, suitable for using as a
+// metric label. It returns "unknown" for frame types not defined in this package.
 func (f FrameType) String() string {
 	switch f {
 	case FrameTypeServerPing:
@@ -95,12 +102,15 @@ func (f FrameType) String() string {
 	}
 }
 
+// Default push encoders returned by GetPushEncoder. They are stateless, so a
+// single instance per protocol type is shared by all connections.
 var (
 	DefaultJsonPushEncoder     = NewJSONPushEncoder()
 	DefaultProtobufPushEncoder = NewProtobufPushEncoder()
 )
 
-// GetPushEncoder ...
+// GetPushEncoder returns a PushEncoder for the given protocol type. Any type
+// other than TypeJSON is treated as TypeProtobuf.
 func GetPushEncoder(protoType Type) PushEncoder {
 	if protoType == TypeJSON {
 		return DefaultJsonPushEncoder
@@ -108,12 +118,15 @@ func GetPushEncoder(protoType Type) PushEncoder {
 	return DefaultProtobufPushEncoder
 }
 
+// Default reply encoders returned by GetReplyEncoder. They are stateless, so a
+// single instance per protocol type is shared by all connections.
 var (
 	DefaultJsonReplyEncoder     = NewJSONReplyEncoder()
 	DefaultProtobufReplyEncoder = NewProtobufReplyEncoder()
 )
 
-// GetReplyEncoder ...
+// GetReplyEncoder returns a ReplyEncoder for the given protocol type. Any type
+// other than TypeJSON is treated as TypeProtobuf.
 func GetReplyEncoder(protoType Type) ReplyEncoder {
 	if protoType == TypeJSON {
 		return DefaultJsonReplyEncoder
@@ -128,7 +141,9 @@ var (
 	protobufCommandDecoderPool sync.Pool
 )
 
-// GetDataEncoder ...
+// GetDataEncoder returns a DataEncoder for the given protocol type, taking it
+// from a pool and resetting it. Return it with PutDataEncoder once the frame is
+// built. Any type other than TypeJSON is treated as TypeProtobuf.
 func GetDataEncoder(protoType Type) DataEncoder {
 	if protoType == TypeJSON {
 		e := jsonDataEncoderPool.Get()
@@ -148,7 +163,9 @@ func GetDataEncoder(protoType Type) DataEncoder {
 	return protoEncoder
 }
 
-// PutDataEncoder ...
+// PutDataEncoder returns a DataEncoder obtained with GetDataEncoder to the pool.
+// The encoder must not be used after that, and neither must the slice returned
+// by its FinishNoCopy method.
 func PutDataEncoder(protoType Type, e DataEncoder) {
 	if protoType == TypeJSON {
 		jsonDataEncoderPool.Put(e)
@@ -157,7 +174,10 @@ func PutDataEncoder(protoType Type, e DataEncoder) {
 	protobufDataEncoderPool.Put(e)
 }
 
-// GetCommandDecoder ...
+// GetCommandDecoder returns a CommandDecoder for the given protocol type, taking
+// it from a pool and resetting it to the given frame. Return it with
+// PutCommandDecoder once the frame is fully processed. Any type other than
+// TypeJSON is treated as TypeProtobuf.
 func GetCommandDecoder(protoType Type, data []byte) CommandDecoder {
 	if protoType == TypeJSON {
 		e := jsonCommandDecoderPool.Get()
@@ -177,7 +197,8 @@ func GetCommandDecoder(protoType Type, data []byte) CommandDecoder {
 	return commandDecoder
 }
 
-// PutCommandDecoder ...
+// PutCommandDecoder returns a CommandDecoder obtained with GetCommandDecoder to
+// the pool. The decoder must not be used after that.
 func PutCommandDecoder(protoType Type, e CommandDecoder) {
 	if protoType == TypeJSON {
 		jsonCommandDecoderPool.Put(e)
@@ -186,7 +207,8 @@ func PutCommandDecoder(protoType Type, e CommandDecoder) {
 	protobufCommandDecoderPool.Put(e)
 }
 
-// GetResultEncoder ...
+// GetResultEncoder returns a ResultEncoder for the given protocol type. Any type
+// other than TypeJSON is treated as TypeProtobuf.
 func GetResultEncoder(protoType Type) ResultEncoder {
 	if protoType == TypeJSON {
 		return NewJSONResultEncoder()
@@ -194,5 +216,6 @@ func GetResultEncoder(protoType Type) ResultEncoder {
 	return NewProtobufResultEncoder()
 }
 
-// PutResultEncoder ...
+// PutResultEncoder is a no-op kept for symmetry with GetResultEncoder: result
+// encoders are stateless, so there is nothing to return to a pool.
 func PutResultEncoder(_ Type, _ ReplyEncoder) {}

@@ -49,8 +49,12 @@ func prevLogBase2(num uint32) uint32 {
 }
 
 // getByteBuffer returns byte buffer with the given capacity.
+//
+// A non-positive length yields an empty buffer: a negative length must never
+// reach the pool index computation below, where it would be converted to a large
+// uint32 and index pools out of range.
 func getByteBuffer(length int) *ByteBuffer {
-	if length == 0 {
+	if length <= 0 {
 		return &ByteBuffer{
 			B: nil,
 		}

@@ -155,3 +155,68 @@ func TestProtobufCommandDecoder_Decode_ShortData(t *testing.T) {
 		break
 	}
 }
+
+func TestProtobufReplyDecoder_Decode_Many(t *testing.T) {
+	encoder := NewProtobufDataEncoder()
+	replyEncoder := NewProtobufReplyEncoder()
+	for _, id := range []uint32{1, 2} {
+		replyData, err := replyEncoder.Encode(&Reply{Id: id})
+		require.NoError(t, err)
+		require.NoError(t, encoder.Encode(replyData))
+	}
+
+	decoder := NewProtobufReplyDecoder(encoder.Finish())
+	var replies []*Reply
+	for {
+		reply, err := decoder.Decode()
+		if err != nil {
+			require.ErrorIs(t, err, io.EOF)
+			break
+		}
+		replies = append(replies, reply)
+	}
+	require.Len(t, replies, 2)
+	if len(replies) == 2 { // Make Goland happy.
+		require.Equal(t, uint32(1), replies[0].Id)
+		require.Equal(t, uint32(2), replies[1].Id)
+	}
+}
+
+// Malformed framing must result in an error - decoding must never panic and must
+// always terminate, since replies may come from an untrusted server.
+func TestProtobufReplyDecoder_Decode_Malformed(t *testing.T) {
+	tests := []struct {
+		name string
+		data []byte
+		err  error
+	}{
+		{
+			name: "length prefix beyond buffer",
+			data: []byte{0x10, 0x01, 0x02},
+			err:  io.ErrShortBuffer,
+		},
+		{
+			name: "truncated varint",
+			data: []byte{0x80},
+			err:  io.EOF,
+		},
+		{
+			name: "varint overflowing uint64",
+			data: []byte{0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x02},
+			err:  io.EOF,
+		},
+		{
+			name: "length overflowing int arithmetic",
+			data: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x01},
+			err:  io.ErrShortBuffer,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			decoder := NewProtobufReplyDecoder(tt.data)
+			reply, err := decoder.Decode()
+			require.Nil(t, reply)
+			require.ErrorIs(t, err, tt.err)
+		})
+	}
+}

@@ -5,20 +5,41 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"math"
 	"sync"
 
 	"github.com/segmentio/encoding/json"
 )
+
+// maxMessageLength is a hard ceiling on the message length a Protobuf stream may
+// declare. The length prefix comes from the other side before any of the message
+// body is read, so it must never be used as an allocation size unchecked - it
+// also must fit into an int on 32-bit platforms.
+//
+// This is a backstop, not a substitute for a real limit: configure an explicit
+// one with GetStreamCommandDecoderLimited when reading untrusted input.
+const maxMessageLength = math.MaxInt32
 
 var (
 	streamJsonCommandDecoderPool     sync.Pool
 	streamProtobufCommandDecoderPool sync.Pool
 )
 
+// GetStreamCommandDecoder returns a StreamCommandDecoder for the given protocol
+// type which reads commands from reader with no limit on the message size. It's
+// a shortcut for GetStreamCommandDecoderLimited with a zero limit.
 func GetStreamCommandDecoder(protoType Type, reader io.Reader) StreamCommandDecoder {
 	return GetStreamCommandDecoderLimited(protoType, reader, 0)
 }
 
+// GetStreamCommandDecoderLimited returns a StreamCommandDecoder for the given
+// protocol type, taking it from a pool and resetting it to read commands from
+// reader. Return it with PutStreamCommandDecoder once the stream is processed.
+//
+// Commands larger than messageSizeLimit bytes are rejected with
+// ErrMessageTooLarge. A zero or negative limit means no limit, which is only
+// appropriate for trusted input. Any type other than TypeJSON is treated as
+// TypeProtobuf.
 func GetStreamCommandDecoderLimited(protoType Type, reader io.Reader, messageSizeLimit int64) StreamCommandDecoder {
 	if protoType == TypeJSON {
 		e := streamJsonCommandDecoderPool.Get()
@@ -38,6 +59,9 @@ func GetStreamCommandDecoderLimited(protoType Type, reader io.Reader, messageSiz
 	return commandDecoder
 }
 
+// PutStreamCommandDecoder returns a StreamCommandDecoder obtained with
+// GetStreamCommandDecoder or GetStreamCommandDecoderLimited to the pool. The
+// decoder must not be used after that.
 func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
 	e.Reset(nil, 0)
 	if protoType == TypeJSON {
@@ -47,20 +71,39 @@ func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
 	streamProtobufCommandDecoderPool.Put(e)
 }
 
+// StreamCommandDecoder decodes commands from an io.Reader. Unlike CommandDecoder,
+// which works on a frame already read into memory, it's meant for streaming
+// transports where commands arrive one after another and the size of an
+// individual command must be bounded.
+//
+// A StreamCommandDecoder is not safe for concurrent use. Use
+// GetStreamCommandDecoder and PutStreamCommandDecoder to take one from a pool
+// and return it back when done.
 type StreamCommandDecoder interface {
+	// Decode returns the next Command from the stream together with the number
+	// of bytes attributed to it, or an error. It returns io.EOF when the stream
+	// is over and ErrMessageTooLarge if the command exceeds the configured
+	// message size limit.
 	Decode() (*Command, int, error)
+	// Reset makes the decoder read from the given reader, applying the given
+	// message size limit. A zero or negative limit means no limit.
 	Reset(reader io.Reader, messageSizeLimit int64)
 }
 
-// ErrMessageTooLarge for when the message exceeds the limit.
+// ErrMessageTooLarge is returned by a StreamCommandDecoder when a command in the
+// stream exceeds the configured message size limit.
 var ErrMessageTooLarge = errors.New("message size exceeds the limit")
 
+// JSONStreamCommandDecoder is a StreamCommandDecoder which reads commands
+// separated by a `\n` delimiter.
 type JSONStreamCommandDecoder struct {
 	reader           *bufio.Reader
 	limitedReader    *io.LimitedReader
 	messageSizeLimit int64
 }
 
+// NewJSONStreamCommandDecoder creates a new JSONStreamCommandDecoder reading
+// from reader. A zero or negative messageSizeLimit means no limit.
 func NewJSONStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *JSONStreamCommandDecoder {
 	var limitedReader *io.LimitedReader
 	var bufioReader *bufio.Reader
@@ -77,6 +120,8 @@ func NewJSONStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *JSON
 	}
 }
 
+// Decode returns the next Command from the stream, see the StreamCommandDecoder
+// interface.
 func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	if d.messageSizeLimit > 0 {
 		d.limitedReader.N = int64(d.messageSizeLimit) + 1
@@ -105,6 +150,8 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	return &c, len(cmdBytes), nil
 }
 
+// Reset makes the decoder read from the given reader, applying the given message
+// size limit.
 func (d *JSONStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int64) {
 	d.messageSizeLimit = messageSizeLimit
 	if messageSizeLimit > 0 {
@@ -118,15 +165,22 @@ func (d *JSONStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int6
 	}
 }
 
+// ProtobufStreamCommandDecoder is a StreamCommandDecoder which reads commands
+// prefixed with their length encoded as a varint.
 type ProtobufStreamCommandDecoder struct {
 	reader           *bufio.Reader
 	messageSizeLimit int64
 }
 
+// NewProtobufStreamCommandDecoder creates a new ProtobufStreamCommandDecoder
+// reading from reader. A zero or negative messageSizeLimit means no limit.
 func NewProtobufStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *ProtobufStreamCommandDecoder {
 	return &ProtobufStreamCommandDecoder{reader: bufio.NewReader(reader), messageSizeLimit: messageSizeLimit}
 }
 
+// Decode returns the next Command from the stream, see the StreamCommandDecoder
+// interface. The size limit is checked against the length prefix before the
+// command is read, so an oversized command is rejected without buffering it.
 func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	msgLength, err := binary.ReadUvarint(d.reader)
 	if err != nil {
@@ -134,6 +188,11 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	}
 
 	if d.messageSizeLimit > 0 && msgLength > uint64(d.messageSizeLimit) {
+		return nil, 0, ErrMessageTooLarge
+	}
+	// The length is declared by the other side and is used as an allocation size
+	// below, so it must be bounded even when no explicit limit is configured.
+	if msgLength > maxMessageLength {
 		return nil, 0, ErrMessageTooLarge
 	}
 
@@ -155,6 +214,8 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	return &c, int(msgLength) + 8, nil
 }
 
+// Reset makes the decoder read from the given reader, applying the given message
+// size limit.
 func (d *ProtobufStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int64) {
 	d.messageSizeLimit = messageSizeLimit
 	d.reader.Reset(reader)

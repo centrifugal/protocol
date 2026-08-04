@@ -5,13 +5,25 @@ import (
 	"errors"
 )
 
-// Raw type used by Centrifuge protocol as a type for fields in structs which
-// value we want to stay untouched. For example custom application specific JSON
-// payload data in published message. This is very similar to json.RawMessage
-// type but have some extra methods to fit gogo/protobuf custom type interface.
+// Raw is the type used by the Centrifugal protocol for fields whose value we
+// want to stay untouched – for example the application-specific JSON payload of
+// a published message. It's very similar to json.RawMessage, but its encoding
+// also accounts for the `\n` delimiter used to put several messages into a
+// single transport frame.
+//
+// Generated code uses Raw instead of []byte for all bytes fields, see
+// generate.sh.
 type Raw []byte
 
-// MarshalJSON returns *r as the JSON encoding of r.
+// MarshalJSON returns r as the JSON encoding of r.
+//
+// Raw payloads are passed through as is, with one exception: raw newlines are
+// stripped, since a `\n` delimits messages inside a transport frame. Valid JSON
+// only contains raw newlines as formatting whitespace between tokens – newlines
+// within JSON strings are escaped – so removing them doesn't change the payload
+// a subscriber decodes.
+//
+// The returned slice may alias r, so it must not be modified.
 func (r Raw) MarshalJSON() ([]byte, error) {
 	if r == nil {
 		return []byte("null"), nil

@@ -56,13 +56,3 @@ var structureFrameCodec = NewDeflateFrameCodec(StructureDictionaryID, StructureD
 
 // StructureFrameCodec returns the codec for the default structure dictionary.
 func StructureFrameCodec() *DeflateFrameCodec { return structureFrameCodec }
-
-// DictionaryFlagDeflate marks Dictionary content as raw DEFLATE, to be inflated
-// with no preset dictionary before use.
-//
-// It is set on the first dictionary a connection receives, which is the only one
-// whose delivery frame cannot itself be compressed - nothing is installed yet to
-// compress it against. Measured on a 4 KB dictionary this takes the JSON
-// transfer from 5461 B to 926 B, and it is what keeps an operator-supplied
-// structure dictionary affordable at any size.
-const DictionaryFlagDeflate int64 = 1 << 0

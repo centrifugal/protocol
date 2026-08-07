@@ -628,8 +628,8 @@ func (m *ConnectionState) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.Dictionary != nil {
-		size, err := m.Dictionary.MarshalToSizedBufferVT(dAtA[:i])
+	if m.Dict != nil {
+		size, err := m.Dict.MarshalToSizedBufferVT(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -670,11 +670,6 @@ func (m *Dictionary) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
-	}
-	if m.Flags != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Flags))
-		i--
-		dAtA[i] = 0x20
 	}
 	if len(m.DataB64) > 0 {
 		i -= len(m.DataB64)
@@ -1401,13 +1396,17 @@ func (m *ConnectRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.State != nil {
-		size, err := m.State.MarshalToSizedBufferVT(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+	if len(m.Profile) > 0 {
+		i -= len(m.Profile)
+		copy(dAtA[i:], m.Profile)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Profile)))
+		i--
+		dAtA[i] = 0x4a
+	}
+	if len(m.Dict) > 0 {
+		i -= len(m.Dict)
+		copy(dAtA[i:], m.Dict)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.Dict)))
 		i--
 		dAtA[i] = 0x42
 	}
@@ -1488,48 +1487,6 @@ func (m *ConnectRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ClientState) MarshalVT() (dAtA []byte, err error) {
-	if m == nil {
-		return nil, nil
-	}
-	size := m.SizeVT()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBufferVT(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *ClientState) MarshalToVT(dAtA []byte) (int, error) {
-	size := m.SizeVT()
-	return m.MarshalToSizedBufferVT(dAtA[:size])
-}
-
-func (m *ClientState) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
-	if m == nil {
-		return 0, nil
-	}
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.unknownFields != nil {
-		i -= len(m.unknownFields)
-		copy(dAtA[i:], m.unknownFields)
-	}
-	if len(m.DictionaryIds) > 0 {
-		for iNdEx := len(m.DictionaryIds) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.DictionaryIds[iNdEx])
-			copy(dAtA[i:], m.DictionaryIds[iNdEx])
-			i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.DictionaryIds[iNdEx])))
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *ConnectResult) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
@@ -1559,6 +1516,16 @@ func (m *ConnectResult) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
+	}
+	if m.Dict != nil {
+		size, err := m.Dict.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x6a
 	}
 	if m.Flag != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Flag))
@@ -3362,8 +3329,8 @@ func (m *ConnectionState) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Dictionary != nil {
-		l = m.Dictionary.SizeVT()
+	if m.Dict != nil {
+		l = m.Dict.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	n += len(m.unknownFields)
@@ -3387,9 +3354,6 @@ func (m *Dictionary) SizeVT() (n int) {
 	l = len(m.DataB64)
 	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
-	if m.Flags != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Flags))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -3707,25 +3671,13 @@ func (m *ConnectRequest) SizeVT() (n int) {
 	if m.Flag != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Flag))
 	}
-	if m.State != nil {
-		l = m.State.SizeVT()
+	l = len(m.Dict)
+	if l > 0 {
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
-	n += len(m.unknownFields)
-	return n
-}
-
-func (m *ClientState) SizeVT() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.DictionaryIds) > 0 {
-		for _, s := range m.DictionaryIds {
-			l = len(s)
-			n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
-		}
+	l = len(m.Profile)
+	if l > 0 {
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -3787,6 +3739,10 @@ func (m *ConnectResult) SizeVT() (n int) {
 	}
 	if m.Flag != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Flag))
+	}
+	if m.Dict != nil {
+		l = m.Dict.SizeVT()
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -6161,7 +6117,7 @@ func (m *ConnectionState) UnmarshalVT(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Dictionary", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Dict", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -6188,10 +6144,10 @@ func (m *ConnectionState) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Dictionary == nil {
-				m.Dictionary = &Dictionary{}
+			if m.Dict == nil {
+				m.Dict = &Dictionary{}
 			}
-			if err := m.Dictionary.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Dict.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -6344,25 +6300,6 @@ func (m *Dictionary) UnmarshalVT(dAtA []byte) error {
 			}
 			m.DataB64 = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Flags", wireType)
-			}
-			m.Flags = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Flags |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
@@ -8688,94 +8625,7 @@ func (m *ConnectRequest) UnmarshalVT(dAtA []byte) error {
 			}
 		case 8:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.State == nil {
-				m.State = &ClientState{}
-			}
-			if err := m.State.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.unknownFields = append(m.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *ClientState) UnmarshalVT(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return protohelpers.ErrIntOverflow
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: ClientState: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ClientState: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DictionaryIds", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Dict", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -8803,7 +8653,39 @@ func (m *ClientState) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DictionaryIds = append(m.DictionaryIds, string(dAtA[iNdEx:postIndex]))
+			m.Dict = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Profile", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Profile = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -9263,6 +9145,42 @@ func (m *ConnectResult) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Dict", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Dict == nil {
+				m.Dict = &Dictionary{}
+			}
+			if err := m.Dict.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])

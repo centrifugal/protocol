@@ -422,3 +422,240 @@ func unmarshalJSON(b *testing.B, data []byte) *ConnectRequest {
 	}
 	return cmd.Connect
 }
+
+func buildJSONMultiFrame(b *testing.B, n int) []byte {
+	b.Helper()
+	encoder := NewJSONCommandEncoder()
+	var out []byte
+	for i := 0; i < n; i++ {
+		cmd := &Command{
+			Id: uint32(i + 1),
+			Publish: &PublishRequest{
+				Channel: "test",
+				Data:    preparedPayload,
+			},
+		}
+		data, err := encoder.Encode(cmd)
+		if err != nil {
+			b.Fatal(err)
+		}
+		out = append(out, data...)
+		if i < n-1 {
+			out = append(out, '\n')
+		}
+	}
+	return out
+}
+
+func buildProtobufMultiFrame(b *testing.B, n int) []byte {
+	b.Helper()
+	encoder := NewProtobufCommandEncoder()
+	var out []byte
+	for i := 0; i < n; i++ {
+		cmd := &Command{
+			Id: uint32(i + 1),
+			Publish: &PublishRequest{
+				Channel: "test",
+				Data:    preparedPayload,
+			},
+		}
+		data, err := encoder.Encode(cmd)
+		if err != nil {
+			b.Fatal(err)
+		}
+		out = append(out, data...)
+	}
+	return out
+}
+
+func benchDecodeJSONMulti(b *testing.B, n int) {
+	data := buildJSONMultiFrame(b, n)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		decoder := GetCommandDecoder(TypeJSON, data)
+		for {
+			cmd, err := decoder.Decode()
+			if cmd != nil {
+				benchConnectRequest = nil // sink
+				_ = cmd
+			}
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+		PutCommandDecoder(TypeJSON, decoder)
+	}
+}
+
+func benchDecodeProtobufMulti(b *testing.B, n int) {
+	data := buildProtobufMultiFrame(b, n)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		decoder := GetCommandDecoder(TypeProtobuf, data)
+		for {
+			cmd, err := decoder.Decode()
+			if cmd != nil {
+				_ = cmd
+			}
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+		PutCommandDecoder(TypeProtobuf, decoder)
+	}
+}
+
+func benchEncodeProtobufCommand(b *testing.B, n int) {
+	cmd := &Command{
+		Id: 1,
+		Publish: &PublishRequest{
+			Channel: "test",
+			Data:    preparedPayload,
+		},
+	}
+	enc := NewProtobufCommandEncoder()
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < n; j++ {
+			d, err := enc.Encode(cmd)
+			if err != nil {
+				b.Fatal(err)
+			}
+			benchData = d
+		}
+	}
+}
+
+func benchEncodeJSONCommand(b *testing.B, n int) {
+	cmd := &Command{
+		Id: 1,
+		Publish: &PublishRequest{
+			Channel: "test",
+			Data:    preparedPayload,
+		},
+	}
+	enc := NewJSONCommandEncoder()
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < n; j++ {
+			d, err := enc.Encode(cmd)
+			if err != nil {
+				b.Fatal(err)
+			}
+			benchData = d
+		}
+	}
+}
+
+func benchProtobufDataEncoder(b *testing.B, n int) {
+	frame := make([]byte, 280)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		enc := GetDataEncoder(TypeProtobuf)
+		for j := 0; j < n; j++ {
+			_ = enc.Encode(frame)
+		}
+		benchData = enc.Finish()
+		PutDataEncoder(TypeProtobuf, enc)
+	}
+}
+
+func benchJSONDataEncoder(b *testing.B, n int) {
+	frame := make([]byte, 280)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		enc := GetDataEncoder(TypeJSON)
+		for j := 0; j < n; j++ {
+			_ = enc.Encode(frame)
+		}
+		benchData = enc.Finish()
+		PutDataEncoder(TypeJSON, enc)
+	}
+}
+
+func BenchmarkReplyEncodeProtobufOnly(b *testing.B) {
+	r := &Reply{Push: &Push{Channel: "test", Pub: &Publication{Data: preparedPayload}}}
+	enc := NewProtobufReplyEncoder()
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		d, err := enc.Encode(r)
+		if err != nil {
+			b.Fatal(err)
+		}
+		benchData = d
+	}
+}
+
+func BenchmarkReplyEncodeJSONOnly(b *testing.B) {
+	r := &Reply{Push: &Push{Channel: "test", Pub: &Publication{Data: preparedPayload}}}
+	enc := NewJSONReplyEncoder()
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		d, err := enc.Encode(r)
+		if err != nil {
+			b.Fatal(err)
+		}
+		benchData = d
+	}
+}
+
+func BenchmarkPushEncodeProtobufOnly(b *testing.B) {
+	p := &Push{Channel: "test", Pub: &Publication{Data: preparedPayload}}
+	enc := NewProtobufPushEncoder()
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		d, err := enc.Encode(p)
+		if err != nil {
+			b.Fatal(err)
+		}
+		benchData = d
+	}
+}
+
+func BenchmarkPushEncodeJSONOnly(b *testing.B) {
+	p := &Push{Channel: "test", Pub: &Publication{Data: preparedPayload}}
+	enc := NewJSONPushEncoder()
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		d, err := enc.Encode(p)
+		if err != nil {
+			b.Fatal(err)
+		}
+		benchData = d
+	}
+}
+
+func BenchmarkEncodeProtobufCommand1(b *testing.B)  { benchEncodeProtobufCommand(b, 1) }
+func BenchmarkEncodeProtobufCommand64(b *testing.B) { benchEncodeProtobufCommand(b, 64) }
+func BenchmarkEncodeJSONCommand1(b *testing.B)      { benchEncodeJSONCommand(b, 1) }
+func BenchmarkEncodeJSONCommand64(b *testing.B)     { benchEncodeJSONCommand(b, 64) }
+func BenchmarkProtobufDataEncoder8(b *testing.B)    { benchProtobufDataEncoder(b, 8) }
+func BenchmarkProtobufDataEncoder64(b *testing.B)   { benchProtobufDataEncoder(b, 64) }
+func BenchmarkJSONDataEncoder8(b *testing.B)        { benchJSONDataEncoder(b, 8) }
+func BenchmarkJSONDataEncoder64(b *testing.B)       { benchJSONDataEncoder(b, 64) }
+
+func BenchmarkCommandJSONUnmarshalMulti1(b *testing.B)   { benchDecodeJSONMulti(b, 1) }
+func BenchmarkCommandJSONUnmarshalMulti8(b *testing.B)   { benchDecodeJSONMulti(b, 8) }
+func BenchmarkCommandJSONUnmarshalMulti64(b *testing.B)  { benchDecodeJSONMulti(b, 64) }
+func BenchmarkCommandJSONUnmarshalMulti256(b *testing.B) { benchDecodeJSONMulti(b, 256) }
+
+func BenchmarkCommandProtobufUnmarshalMulti1(b *testing.B)   { benchDecodeProtobufMulti(b, 1) }
+func BenchmarkCommandProtobufUnmarshalMulti8(b *testing.B)   { benchDecodeProtobufMulti(b, 8) }
+func BenchmarkCommandProtobufUnmarshalMulti64(b *testing.B)  { benchDecodeProtobufMulti(b, 64) }
+func BenchmarkCommandProtobufUnmarshalMulti256(b *testing.B) { benchDecodeProtobufMulti(b, 256) }

@@ -44,83 +44,45 @@ type CommandDecoder interface {
 // read buffer they came from. Raw payload fields are copied and are not affected.
 // The Protobuf decoders copy everything, so this applies to JSON only.
 type JSONCommandDecoder struct {
-	data            []byte
-	messageCount    int
-	prevNewLine     int
-	numMessagesRead int
+	data   []byte
+	offset int
 }
 
 // NewJSONCommandDecoder creates a new JSONCommandDecoder for the given frame.
 func NewJSONCommandDecoder(data []byte) *JSONCommandDecoder {
-	// Protocol message must be separated by exactly one `\n`.
-	messageCount := bytes.Count(data, []byte("\n")) + 1
-	if len(data) == 0 || data[len(data)-1] == '\n' {
-		// Protocol message must have zero or one `\n` at the end.
-		messageCount--
-	}
-	return &JSONCommandDecoder{
-		data:            data,
-		messageCount:    messageCount,
-		prevNewLine:     0,
-		numMessagesRead: 0,
-	}
+	return &JSONCommandDecoder{data: data}
 }
 
 // Reset makes the decoder ready to decode commands from the given frame.
 func (d *JSONCommandDecoder) Reset(data []byte) error {
-	// We have a strict contract that protocol messages should be separated by at most one `\n`.
-	messageCount := bytes.Count(data, []byte("\n")) + 1
-	if len(data) == 0 || data[len(data)-1] == '\n' {
-		// We have a strict contract that protocol message should use at most one `\n` at the end.
-		messageCount--
-	}
 	d.data = data
-	d.messageCount = messageCount
-	d.prevNewLine = 0
-	d.numMessagesRead = 0
+	d.offset = 0
 	return nil
 }
 
 // Decode returns the next Command in the frame. The last Command is returned
 // together with io.EOF, see the CommandDecoder interface.
 func (d *JSONCommandDecoder) Decode() (*Command, error) {
-	if d.messageCount == 0 {
+	if d.offset >= len(d.data) {
 		return nil, io.ErrUnexpectedEOF
 	}
+	rest := d.data[d.offset:]
+	var msg []byte
+	if idx := bytes.IndexByte(rest, '\n'); idx >= 0 {
+		msg = rest[:idx]
+		d.offset += idx + 1
+	} else {
+		msg = rest
+		d.offset = len(d.data)
+	}
 	var c Command
-	if d.messageCount == 1 {
-		_, err := json.Parse(d.data, &c, json.ZeroCopy)
-		if err != nil {
-			return nil, err
-		}
+	if _, err := json.Parse(msg, &c, json.ZeroCopy); err != nil {
+		return nil, err
+	}
+	if d.offset >= len(d.data) {
 		return &c, io.EOF
 	}
-	var nextNewLine int
-	if d.numMessagesRead == d.messageCount-1 {
-		// Last message, no need to search for a new line.
-		nextNewLine = len(d.data[d.prevNewLine:])
-	} else if len(d.data) > d.prevNewLine {
-		nextNewLine = bytes.Index(d.data[d.prevNewLine:], []byte("\n"))
-		if nextNewLine < 0 {
-			return nil, io.ErrShortBuffer
-		}
-	} else {
-		return nil, io.ErrShortBuffer
-	}
-	if len(d.data) >= d.prevNewLine+nextNewLine {
-		_, err := json.Parse(d.data[d.prevNewLine:d.prevNewLine+nextNewLine], &c, json.ZeroCopy)
-		if err != nil {
-			return nil, err
-		}
-		d.numMessagesRead++
-		d.prevNewLine = d.prevNewLine + nextNewLine + 1
-		if d.numMessagesRead == d.messageCount {
-			return &c, io.EOF
-		}
-		return &c, nil
-	} else {
-		return nil, io.ErrShortBuffer
-	}
+	return &c, nil
 }
 
 // ProtobufCommandDecoder is a CommandDecoder for commands prefixed with their

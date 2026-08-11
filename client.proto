@@ -86,21 +86,12 @@ message Push {
   Connect connect = 10;
   Disconnect disconnect = 11;
   Refresh refresh = 12;
-  ConnectionState state = 13;
-}
-
-// ConnectionState carries connection-scoped state updates from server to client.
-// It is intentionally generic: every field is independent and optional, and the
-// server sets only the ones it wants to update. Future connection-level features
-// should add a field here instead of adding a new Push type, so that a client
-// which does not understand a field can ignore it and keep working.
-message ConnectionState {
-  Dictionary dict = 1;
 }
 
 // Dictionary is a shared compression dictionary the server asks the client to
-// use for subsequent frames on this connection. Frames sent after the frame
-// carrying this update are length-prefixed with a one byte codec marker.
+// use for subsequent frames on this connection. It arrives in the connect
+// reply, and every frame after that reply starts with a one byte codec marker
+// saying whether it was compressed.
 message Dictionary {
   string id = 1;    // Identifier of dictionary content, client may cache by it.
   // The dictionary content, always DEFLATE compressed. Inflate it with no preset

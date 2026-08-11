@@ -38,6 +38,18 @@ const (
 //
 // TestFrameCodecDictionaryActuallyApplies guards this.
 //
+// Why 6 rather than the floor: there is no speed to buy below it. Levels 2 and
+// 4 were measured against 6 on frames drawn from the vocabulary a dictionary is
+// built from, and 6 won on both axes - better than 4 on ratio and time alike,
+// and 16% better than 2 on ratio for about 6% more time. The reason is that a
+// per-frame compression is dominated by loading the dictionary on Reset, not by
+// encoding the frame, so the level only governs the smaller half of the work.
+// Above 6 there is nothing left: 7 and 9 produce byte-identical output.
+//
+// It is a constant and not a setting for the same reason. The interesting range
+// is one value wide, and the values outside it are a cliff rather than a
+// trade - so a knob here could only be set wrong.
+//
 // klauspost/compress was evaluated as a faster encoder and rejected: it ignores
 // the dictionary below level 7, and at level 7 it was only ~1.25x cheaper while
 // producing ~6% more bytes overall on real traffic. Once the shared frame cache
@@ -162,8 +174,9 @@ func (c *DeflateFrameCodec) Decompress(dst, frame []byte, maxSize int) ([]byte, 
 // DeflateDictionary compresses dictionary content with raw DEFLATE and no preset
 // dictionary, for delivery to a client that has nothing installed yet.
 //
-// It carries no codec marker: this is content inside a Dictionary message, not a
-// frame, and the Dictionary carries DictionaryFlagDeflate to say how to read it.
+// It carries no codec marker: this is content inside a Dictionary message rather
+// than a frame, and dictionary content is always deflated, so there is nothing
+// to signal.
 // A dictionary is a concatenation of real message samples, so it is ordinary
 // text and compresses several fold - which is the difference between a first
 // dictionary a connection can afford and one it cannot.

@@ -48,11 +48,3 @@ var StructureDictionary = []byte(
 		`"epoch":"","recovered":,"positioned":,"was_recovering":,"expires":,"delta":true,` +
 		`"info":{"user":"","client":"","tags":{"time":,"id":,"offset":,` +
 		`{"push":{"channel":"","pub":{"data":{`)
-
-// structureFrameCodec is shared process-wide: the structure dictionary is the
-// same bytes for every connection, so one codec means one compressor pool and a
-// frame cache that hits across every connection using it.
-var structureFrameCodec = NewDeflateFrameCodec(StructureDictionaryID, StructureDictionary)
-
-// StructureFrameCodec returns the codec for the default structure dictionary.
-func StructureFrameCodec() *DeflateFrameCodec { return structureFrameCodec }

@@ -124,17 +124,6 @@ func (c *DeflateFrameCodec) Compress(dst, src []byte) []byte {
 	return append(dst, buf.Bytes()...)
 }
 
-// Passthrough frames src without attempting to compress it, appending to dst.
-//
-// It exists so a sender that has learned compression is not paying off for a
-// connection can stop spending CPU on it entirely, rather than compressing and
-// discarding the result. The output is an ordinary raw frame, so a receiver
-// needs no knowledge that the sender backed off.
-func (c *DeflateFrameCodec) Passthrough(dst, src []byte) []byte {
-	dst = append(dst, FrameCodecRaw)
-	return append(dst, src...)
-}
-
 // Decompress decodes a framed payload produced by Compress, appending the result
 // to dst. maxSize bounds the decompressed output, pass 0 to leave it unbounded.
 func (c *DeflateFrameCodec) Decompress(dst, frame []byte, maxSize int) ([]byte, error) {

@@ -576,7 +576,13 @@ func (x *Push) GetRefresh() *Refresh {
 // saying whether it was compressed.
 type Dictionary struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"` // Identifier of dictionary content, client may cache by it.
+	// Identifier of dictionary content, client may cache by it.
+	//
+	// It is SHA-256 of the content, first 12 bytes, base64url without padding.
+	// A client that persists a dictionary should verify bytes it loaded against
+	// this before using them, since decoding against the wrong content misreads
+	// every frame rather than failing outright.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// The dictionary content, always DEFLATE compressed. Inflate it with no preset
 	// dictionary before use.
 	//

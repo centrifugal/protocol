@@ -10,10 +10,14 @@ import (
 //
 // This exact derivation is required rather than conventional. Clients verify it
 // and discard a dictionary whose bytes do not hash to the id they were given, so
-// a server that identifies dictionaries any other way - a version counter, a
-// random token - has its dictionaries silently rejected. Implementations in
-// other languages exist and must agree byte for byte, which is why this lives
-// here rather than with whatever serves dictionaries.
+// anything identifying dictionaries another way - a version counter, a random
+// token - has them silently rejected while the serving side sees nothing wrong.
+//
+// Only the serving side computes an id, so this is here rather than with a
+// particular server: centrifuge exposes an interface for supplying dictionaries,
+// which makes the set of callers open. An implementation that had to re-derive
+// this from an SDK's source would be one transcription error away from a failure
+// that reports itself nowhere.
 //
 // Deriving the id from the bytes is what makes caching one safe at both ends. A
 // client advertising an id and a server holding that id necessarily have byte

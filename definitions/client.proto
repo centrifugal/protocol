@@ -93,7 +93,13 @@ message Push {
 // reply, and every frame after that reply starts with a one byte codec marker
 // saying whether it was compressed.
 message Dictionary {
-  string id = 1;    // Identifier of dictionary content, client may cache by it.
+  // Identifier of dictionary content, client may cache by it.
+  //
+  // It is SHA-256 of the content, first 12 bytes, base64url without padding.
+  // A client that persists a dictionary should verify bytes it loaded against
+  // this before using them, since decoding against the wrong content misreads
+  // every frame rather than failing outright.
+  string id = 1;
   // The dictionary content, always DEFLATE compressed. Inflate it with no preset
   // dictionary before use.
   //

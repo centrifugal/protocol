@@ -96,9 +96,19 @@ message Dictionary {
   // Identifier of dictionary content, client may cache by it.
   //
   // It is SHA-256 of the content, first 12 bytes, base64url without padding.
-  // A client that persists a dictionary should verify bytes it loaded against
-  // this before using them, since decoding against the wrong content misreads
-  // every frame rather than failing outright.
+  //
+  // Deriving it from the content is required rather than conventional, and the
+  // reason is not decoding - a client treats an id as opaque and only hands it
+  // back. It is that a client stores this value and advertises it on every
+  // later connect, indefinitely, which makes it cookie-shaped. An id a server
+  // chose freely could be unique per client, and would then be a tracking
+  // identifier the client itself keeps alive. A hash of content cannot be: it
+  // is the same for everyone holding those bytes, and a client can verify that
+  // by hashing what it holds.
+  //
+  // It also means one id can never name two different dictionaries, so a client
+  // reconnecting to a node that built its own gets an exact match or a miss,
+  // never the wrong bytes.
   string id = 1;
   // The dictionary content, always DEFLATE compressed. Inflate it with no preset
   // dictionary before use.

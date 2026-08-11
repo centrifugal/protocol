@@ -8,16 +8,21 @@ import (
 // DictionaryID is the identity of a dictionary: SHA-256 of its content, first
 // 12 bytes, base64url without padding.
 //
-// This exact derivation is required rather than conventional. Clients verify it
-// and discard a dictionary whose bytes do not hash to the id they were given, so
-// anything identifying dictionaries another way - a version counter, a random
-// token - has them silently rejected while the serving side sees nothing wrong.
+// Only the serving side computes one - a client treats an id as opaque and hands
+// it back - but the derivation is still required rather than conventional, for a
+// reason that has nothing to do with decoding.
 //
-// Only the serving side computes an id, so this is here rather than with a
-// particular server: centrifuge exposes an interface for supplying dictionaries,
-// which makes the set of callers open. An implementation that had to re-derive
-// this from an SDK's source would be one transcription error away from a failure
-// that reports itself nowhere.
+// A client stores this value and advertises it on every later connect,
+// indefinitely, which makes it cookie-shaped. An id chosen freely could be
+// unique per client, and would then be a tracking identifier the client keeps
+// alive on the server's behalf. A hash of content cannot be: it is identical for
+// everyone holding those bytes, and a client can check that by hashing what it
+// holds - which centrifuge-js does before reusing a dictionary it persisted.
+//
+// It lives here rather than with a particular server because centrifuge exposes
+// an interface for supplying dictionaries, so the set of callers is open. An
+// implementation re-deriving this from an SDK is one transcription error away
+// from a client that quietly stops caching.
 //
 // Deriving the id from the bytes is what makes caching one safe at both ends. A
 // client advertising an id and a server holding that id necessarily have byte

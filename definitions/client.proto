@@ -88,6 +88,47 @@ message Push {
   Refresh refresh = 12;
 }
 
+// Dictionary is a shared compression dictionary the server asks the client to
+// use for subsequent frames on this connection. It arrives in the connect
+// reply, and every frame after that reply starts with a one byte codec marker
+// saying whether it was compressed.
+message Dictionary {
+  // Identifier of dictionary content, client may cache by it.
+  //
+  // It is SHA-256 of the content, first 12 bytes, base64url without padding.
+  //
+  // The derivation is fixed rather than conventional, because a client that
+  // keeps a dictionary between connections hashes the bytes it stored against
+  // this id before reusing them. Storage shared with anything else on the
+  // client's origin can be rewritten, and DEFLATE back references resolve into
+  // the dictionary - so substituted content does not corrupt a frame, it makes
+  // a genuine server frame decode into whatever the substituter chose. Only an
+  // id the server issued detects that: a checksum the client stored alongside
+  // would simply be rewritten with the bytes.
+  //
+  // A server identifying dictionaries some other way is not rejected. It has
+  // every caching client quietly stop caching instead, which is worse.
+  //
+  // It also means one id can never name two different dictionaries, so a client
+  // reconnecting to a node that built its own gets an exact match or a miss,
+  // never the wrong bytes.
+  string id = 1;
+  // The dictionary content, always DEFLATE compressed. Inflate it with no preset
+  // dictionary before use.
+  //
+  // It is compressed because it arrives in the connect reply, which cannot be
+  // compressed at the frame level - nothing is installed yet to compress it
+  // against. Compressing the content instead is worth about 8x on JSON, and a
+  // dictionary is sampled message text so it always compresses.
+  //
+  // data is set on Protobuf connections, where bytes travel directly. data_b64
+  // is set on JSON connections, where a bytes field carries raw JSON and cannot
+  // hold binary. Exactly one of them is set, and neither when the server is
+  // naming a dictionary the client already holds.
+  bytes data = 2;
+  string data_b64 = 3;
+}
+
 // ClientInfo contains information about client connection.
 message ClientInfo {
   string user = 1;
@@ -178,7 +219,32 @@ message ConnectRequest {
   string name = 4;
   string version = 5;
   map<string, string> headers = 6;
-  int64 flag = 7; // Enable connection level features.
+  // Connection level features this client supports, as a bitmask. The server
+  // replies with the subset it enabled in ConnectResult.flag.
+  int64 flag = 7;
+  // Application context this connection belongs to - which view, screen or
+  // client kind it is. Connections sharing a profile see traffic of a similar
+  // shape.
+  //
+  // Untrusted: the server may override it, and features built on it must treat
+  // it as a hint rather than an assertion.
+  string profile = 9;
+  // Id of the compression dictionary this client already holds, so the server
+  // can name it instead of sending it again.
+  //
+  // The server answers with a Dictionary carrying only an id when it recognises
+  // this one, and with the full content otherwise - so an unknown id is a cache
+  // miss rather than an error.
+  //
+  // An id is a hash of the dictionary content, so this id and the server's copy
+  // are byte identical by construction: a dictionary that changes gets a new id
+  // automatically.
+  //
+  // Deliberately one, not a list. A client caches the last dictionary it was
+  // given, which is the one it needs when reconnecting to the same profile. The
+  // cost is one extra transfer per hop during a rolling deploy where nodes
+  // disagree, which is bounded and small.
+  string dict = 8;
 }
 
 message ConnectResult {
@@ -193,6 +259,19 @@ message ConnectResult {
   string session = 9;
   string node = 10;
   int64 time = 11; // Server time as Unix timestamp in milliseconds (not sent by default).
+  // Connection level features the server actually enabled, using the same bits
+  // as ConnectRequest.flag. A client can not assume a feature it advertised was
+  // accepted - the server may have it disabled, or may decline per connection -
+  // so this is how it finds out.
+  int64 flag = 12;
+  // Compression dictionary for this connection, when the server enabled
+  // dictionary compression.
+  //
+  // It travels in the connect reply rather than a push so there is no ordering
+  // rule to get wrong: this frame is raw, and every frame after it is
+  // compressed. It carries only an id when the client advertised that same id in
+  // ConnectRequest.dict, since the client already holds the bytes.
+  Dictionary dict = 13;
 }
 
 message RefreshRequest {

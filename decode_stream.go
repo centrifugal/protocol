@@ -25,22 +25,27 @@ var (
 	streamProtobufCommandDecoderPool sync.Pool
 )
 
-// GetStreamCommandDecoder returns a StreamCommandDecoder for the given protocol
-// type which reads commands from reader with no limit on the message size. It's
-// a shortcut for GetStreamCommandDecoderLimited with a zero limit.
-func GetStreamCommandDecoder(protoType Type, reader io.Reader) StreamCommandDecoder {
-	return GetStreamCommandDecoderLimited(protoType, reader, 0)
-}
+// errNonPositiveMessageSizeLimit is the panic value used when a stream decoder
+// is constructed without a positive message size limit. The limit prefix of a
+// Protobuf stream frame is attacker-controlled and used as an allocation size, so
+// an unbounded decoder reading untrusted input is a memory-exhaustion hazard.
+// Requiring a positive limit at construction turns that misconfiguration into a
+// loud, immediate failure instead of a silent one. See GHSA-4r3x-2rwr-6w65.
+const errNonPositiveMessageSizeLimit = "protocol: stream command decoder requires a positive messageSizeLimit"
 
 // GetStreamCommandDecoderLimited returns a StreamCommandDecoder for the given
 // protocol type, taking it from a pool and resetting it to read commands from
 // reader. Return it with PutStreamCommandDecoder once the stream is processed.
 //
 // Commands larger than messageSizeLimit bytes are rejected with
-// ErrMessageTooLarge. A zero or negative limit means no limit, which is only
-// appropriate for trusted input. Any type other than TypeJSON is treated as
-// TypeProtobuf.
+// ErrMessageTooLarge. messageSizeLimit must be positive - a zero or negative
+// limit panics, since an unbounded decoder over untrusted input can be driven to
+// allocate arbitrary memory by a single frame. Any type other than TypeJSON is
+// treated as TypeProtobuf.
 func GetStreamCommandDecoderLimited(protoType Type, reader io.Reader, messageSizeLimit int64) StreamCommandDecoder {
+	if messageSizeLimit <= 0 {
+		panic(errNonPositiveMessageSizeLimit)
+	}
 	if protoType == TypeJSON {
 		e := streamJsonCommandDecoderPool.Get()
 		if e == nil {
@@ -60,8 +65,8 @@ func GetStreamCommandDecoderLimited(protoType Type, reader io.Reader, messageSiz
 }
 
 // PutStreamCommandDecoder returns a StreamCommandDecoder obtained with
-// GetStreamCommandDecoder or GetStreamCommandDecoderLimited to the pool. The
-// decoder must not be used after that.
+// GetStreamCommandDecoderLimited to the pool. The decoder must not be used after
+// that.
 func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
 	e.Reset(nil, 0)
 	if protoType == TypeJSON {
@@ -77,8 +82,8 @@ func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
 // individual command must be bounded.
 //
 // A StreamCommandDecoder is not safe for concurrent use. Use
-// GetStreamCommandDecoder and PutStreamCommandDecoder to take one from a pool
-// and return it back when done.
+// GetStreamCommandDecoderLimited and PutStreamCommandDecoder to take one from a
+// pool and return it back when done.
 type StreamCommandDecoder interface {
 	// Decode returns the next Command from the stream together with the number
 	// of bytes attributed to it, or an error. It returns io.EOF when the stream
@@ -86,7 +91,9 @@ type StreamCommandDecoder interface {
 	// message size limit.
 	Decode() (*Command, int, error)
 	// Reset makes the decoder read from the given reader, applying the given
-	// message size limit. A zero or negative limit means no limit.
+	// message size limit. It is used internally to reuse a pooled decoder;
+	// obtain a decoder via GetStreamCommandDecoderLimited, which enforces a
+	// positive limit, rather than resetting one with a non-positive limit.
 	Reset(reader io.Reader, messageSizeLimit int64)
 }
 
@@ -102,19 +109,15 @@ type JSONStreamCommandDecoder struct {
 	messageSizeLimit int64
 }
 
-// NewJSONStreamCommandDecoder creates a new JSONStreamCommandDecoder reading
-// from reader. A zero or negative messageSizeLimit means no limit.
+// NewJSONStreamCommandDecoder creates a new JSONStreamCommandDecoder reading from
+// reader. messageSizeLimit must be positive; a zero or negative value panics.
 func NewJSONStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *JSONStreamCommandDecoder {
-	var limitedReader *io.LimitedReader
-	var bufioReader *bufio.Reader
-	if messageSizeLimit > 0 {
-		limitedReader = &io.LimitedReader{R: reader, N: messageSizeLimit + 1}
-		bufioReader = bufio.NewReader(limitedReader)
-	} else {
-		bufioReader = bufio.NewReader(reader)
+	if messageSizeLimit <= 0 {
+		panic(errNonPositiveMessageSizeLimit)
 	}
+	limitedReader := &io.LimitedReader{R: reader, N: messageSizeLimit + 1}
 	return &JSONStreamCommandDecoder{
-		reader:           bufioReader,
+		reader:           bufio.NewReader(limitedReader),
 		limitedReader:    limitedReader,
 		messageSizeLimit: messageSizeLimit,
 	}
@@ -173,8 +176,14 @@ type ProtobufStreamCommandDecoder struct {
 }
 
 // NewProtobufStreamCommandDecoder creates a new ProtobufStreamCommandDecoder
-// reading from reader. A zero or negative messageSizeLimit means no limit.
+// reading from reader. messageSizeLimit must be positive; a zero or negative
+// value panics, since the varint length prefix is attacker-controlled and used as
+// an allocation size, so an unbounded decoder over untrusted input is a
+// memory-exhaustion hazard.
 func NewProtobufStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *ProtobufStreamCommandDecoder {
+	if messageSizeLimit <= 0 {
+		panic(errNonPositiveMessageSizeLimit)
+	}
 	return &ProtobufStreamCommandDecoder{reader: bufio.NewReader(reader), messageSizeLimit: messageSizeLimit}
 }
 

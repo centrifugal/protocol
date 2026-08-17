@@ -39,7 +39,7 @@
 //
 // Implementations are chosen by protocol [Type], usually through the pooled
 // helpers – [GetCommandDecoder]/[PutCommandDecoder], [GetDataEncoder]/[PutDataEncoder],
-// [GetStreamCommandDecoder]/[PutStreamCommandDecoder] and [ReplyPool]. These
+// [GetStreamCommandDecoderLimited]/[PutStreamCommandDecoder] and [ReplyPool]. These
 // helpers reuse objects between messages and let a server avoid allocations on
 // hot paths.
 //

@@ -65,14 +65,15 @@ func FuzzProtobufReplyDecode(f *testing.F) {
 }
 
 // The stream decoders read a length prefix from an untrusted peer before the
-// message body, so they are the ones that must not allocate or panic on it.
-// Fuzzed with no size limit configured, which is the weakest configuration.
+// message body, so they are the ones that must not allocate or panic on it. A
+// positive size limit is always configured (the decoders require one); a declared
+// length above it must be rejected rather than allocated.
 func FuzzProtobufStreamDecode(f *testing.F) {
 	f.Add([]byte{0x00})
 	f.Add([]byte{0x02, 0x08, 0x01})
 	f.Add([]byte{0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x40}) // Huge declared length.
 	f.Fuzz(func(t *testing.T, b []byte) {
-		decoder := GetStreamCommandDecoder(TypeProtobuf, bytes.NewReader(b))
+		decoder := GetStreamCommandDecoderLimited(TypeProtobuf, bytes.NewReader(b), 1<<20)
 		defer PutStreamCommandDecoder(TypeProtobuf, decoder)
 		// Each successful Decode consumes at least the length prefix byte.
 		for i := 0; i <= len(b); i++ {
@@ -88,7 +89,7 @@ func FuzzJSONStreamDecode(f *testing.F) {
 	f.Add([]byte(`{"id":1}` + "\n"))
 	f.Add([]byte(`{"id":1}` + "\n" + `{"id":2}` + "\n"))
 	f.Fuzz(func(t *testing.T, b []byte) {
-		decoder := GetStreamCommandDecoder(TypeJSON, bytes.NewReader(b))
+		decoder := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(b), 1<<20)
 		defer PutStreamCommandDecoder(TypeJSON, decoder)
 		for i := 0; i <= len(b); i++ {
 			if _, _, err := decoder.Decode(); err != nil {

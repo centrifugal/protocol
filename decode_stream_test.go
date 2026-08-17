@@ -97,7 +97,7 @@ func BenchmarkStreamingDecode_JSON(b *testing.B) {
 }
 
 func testDecodingFrame(tb testing.TB, frame []byte, protoType Type) {
-	dec := GetStreamCommandDecoder(protoType, bytes.NewReader(frame))
+	dec := GetStreamCommandDecoderLimited(protoType, bytes.NewReader(frame), 1<<20)
 	_, size, err := dec.Decode()
 	require.NoError(tb, err)
 	if protoType == TypeProtobuf {
@@ -134,8 +134,8 @@ func TestJSONStreamCommandDecoder(t *testing.T) {
 		messageSizeLimit int64
 	}{
 		{
-			name:             "no limit",
-			messageSizeLimit: 0,
+			name:             "generous limit",
+			messageSizeLimit: 1 << 20,
 		},
 		{
 			name:             "with limit",
@@ -180,7 +180,7 @@ func TestJSONStreamCommandDecoder_ReuseDifferentLimit(t *testing.T) {
 	_, _, err := decoder.Decode()
 	require.ErrorIs(t, err, ErrMessageTooLarge)
 	PutStreamCommandDecoder(TypeJSON, decoder)
-	decoder = GetStreamCommandDecoderLimited(TypeJSON, bytes.NewBufferString(data), 0)
+	decoder = GetStreamCommandDecoderLimited(TypeJSON, bytes.NewBufferString(data), 1<<20)
 	cmd, _, err := decoder.Decode()
 	require.NoError(t, err)
 	require.NotNil(t, cmd)
@@ -212,9 +212,9 @@ func TestProtobufStreamCommandDecoder_HostileLength(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// No message size limit configured - the hostile length must still
-			// be rejected rather than allocated or panicked on.
-			decoder := GetStreamCommandDecoder(TypeProtobuf, bytes.NewReader(uvarint(tt.msgLength)))
+			// The hostile length far exceeds the configured limit and must be
+			// rejected rather than allocated or panicked on.
+			decoder := GetStreamCommandDecoderLimited(TypeProtobuf, bytes.NewReader(uvarint(tt.msgLength)), 1<<20)
 			defer PutStreamCommandDecoder(TypeProtobuf, decoder)
 			require.NotPanics(t, func() {
 				cmd, n, err := decoder.Decode()
@@ -232,11 +232,32 @@ func TestProtobufStreamCommandDecoder_TruncatedBody(t *testing.T) {
 	b := make([]byte, binary.MaxVarintLen64)
 	prefix := b[:binary.PutUvarint(b, 1024)]
 
-	decoder := GetStreamCommandDecoder(TypeProtobuf, bytes.NewReader(append(prefix, 0x01, 0x02)))
+	decoder := GetStreamCommandDecoderLimited(TypeProtobuf, bytes.NewReader(append(prefix, 0x01, 0x02)), 1<<20)
 	defer PutStreamCommandDecoder(TypeProtobuf, decoder)
 	cmd, _, err := decoder.Decode()
 	require.Nil(t, cmd)
 	require.ErrorIs(t, err, io.ErrUnexpectedEOF)
+}
+
+// The stream decoders must refuse to be constructed without a positive message
+// size limit: an unbounded decoder over untrusted input can be driven to allocate
+// arbitrary memory by a single frame, so the misconfiguration fails loudly rather
+// than silently. See GHSA-4r3x-2rwr-6w65.
+func TestStreamCommandDecoder_PanicsOnNonPositiveLimit(t *testing.T) {
+	for _, limit := range []int64{0, -1} {
+		require.Panics(t, func() {
+			GetStreamCommandDecoderLimited(TypeProtobuf, bytes.NewReader(nil), limit)
+		})
+		require.Panics(t, func() {
+			GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(nil), limit)
+		})
+		require.Panics(t, func() {
+			NewProtobufStreamCommandDecoder(bytes.NewReader(nil), limit)
+		})
+		require.Panics(t, func() {
+			NewJSONStreamCommandDecoder(bytes.NewReader(nil), limit)
+		})
+	}
 }
 
 func TestGetByteBuffer_NonPositiveLength(t *testing.T) {

@@ -102,6 +102,41 @@ type StreamCommandDecoder interface {
 	Reset(reader io.Reader, messageSizeLimit int64)
 }
 
+// StreamCommandDecoderTo is implemented by StreamCommandDecoder implementations
+// which can decode into a Command owned by the caller, avoiding an allocation
+// per command. Both decoders returned by GetStreamCommandDecoderLimited
+// implement it, so a caller may type assert to it:
+//
+//	var cmd protocol.Command
+//	if d, ok := decoder.(protocol.StreamCommandDecoderTo); ok {
+//		size, err := d.DecodeTo(&cmd)
+//		// ...
+//	}
+//
+// It is deliberately a separate interface rather than a method on
+// StreamCommandDecoder, so that existing implementations keep compiling.
+type StreamCommandDecoderTo interface {
+	StreamCommandDecoder
+	// DecodeTo decodes the next Command from the stream into cmd, resetting it
+	// first, and returns the number of bytes attributed to the command. Errors
+	// are reported exactly as by Decode, including io.EOF together with the
+	// last command in the stream.
+	//
+	// The returned size says whether cmd was written to: a non-zero size means
+	// cmd holds a command which must be handled even when an error is returned
+	// alongside it, while a zero size means cmd was left untouched and still
+	// holds the previous command, so it must not be looked at. This mirrors the
+	// nil Command which Decode returns in that case.
+	//
+	// cmd is only owned by the decoder for the duration of the call, so it may
+	// be reused across calls. Reuse is only safe if nothing keeps the *Command
+	// past the next DecodeTo call. Fields reachable from it are freshly
+	// allocated on every call and may be retained: cmd is reset before
+	// decoding, so nothing is unmarshaled into a struct kept from a previous
+	// command.
+	DecodeTo(cmd *Command) (int, error)
+}
+
 // ErrMessageTooLarge is returned by a StreamCommandDecoder when a command in the
 // stream exceeds the configured message size limit.
 var ErrMessageTooLarge = errors.New("message size exceeds the limit")
@@ -134,31 +169,54 @@ func NewJSONStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *JSON
 // Decode returns the next Command from the stream, see the StreamCommandDecoder
 // interface.
 func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
+	cmdBytes, err := d.nextCommandBytes()
+	if len(cmdBytes) == 0 {
+		return nil, 0, err
+	}
+	// Allocated only once there is a command to decode, so that reaching the
+	// end of the stream costs nothing.
+	var c Command
+	if _, parseErr := json.Parse(cmdBytes, &c, 0); parseErr != nil {
+		return nil, 0, parseErr
+	}
+	return &c, len(cmdBytes), err
+}
+
+// DecodeTo decodes the next Command from the stream into cmd, see the
+// StreamCommandDecoderTo interface.
+func (d *JSONStreamCommandDecoder) DecodeTo(cmd *Command) (int, error) {
+	cmdBytes, err := d.nextCommandBytes()
+	if len(cmdBytes) == 0 {
+		return 0, err
+	}
+	cmd.Reset()
+	if _, parseErr := json.Parse(cmdBytes, cmd, 0); parseErr != nil {
+		return 0, parseErr
+	}
+	return len(cmdBytes), err
+}
+
+// nextCommandBytes returns the bytes of the next command in the stream. A nil
+// result means no command was read, in which case the error explains why. A
+// non-nil result may still come with io.EOF, which is how the last command in
+// the stream is reported.
+//
+// The returned slice is only valid until the next call, see readLine.
+func (d *JSONStreamCommandDecoder) nextCommandBytes() ([]byte, error) {
 	if d.messageSizeLimit > 0 {
 		d.limitedReader.N = int64(d.messageSizeLimit) + 1
 	}
 	cmdBytes, err := d.readLine()
 	if err != nil {
 		if d.messageSizeLimit > 0 && int64(len(cmdBytes)) > d.messageSizeLimit {
-			return nil, 0, ErrMessageTooLarge
+			return nil, ErrMessageTooLarge
 		}
 		if err == io.EOF && len(cmdBytes) > 0 {
-			var c Command
-			_, parseErr := json.Parse(cmdBytes, &c, 0)
-			if parseErr != nil {
-				return nil, 0, parseErr
-			}
-			return &c, len(cmdBytes), err
+			return cmdBytes, io.EOF
 		}
-		return nil, 0, err
+		return nil, err
 	}
-
-	var c Command
-	_, err = json.Parse(cmdBytes, &c, 0)
-	if err != nil {
-		return nil, 0, err
-	}
-	return &c, len(cmdBytes), nil
+	return cmdBytes, nil
 }
 
 // readLine returns the next `\n` terminated command, including the delimiter.
@@ -235,33 +293,63 @@ func NewProtobufStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *
 // interface. The size limit is checked against the length prefix before the
 // command is read, so an oversized command is rejected without buffering it.
 func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
-	msgLength, err := binary.ReadUvarint(d.reader)
+	msgLength, err := d.nextMessageLength()
 	if err != nil {
 		return nil, 0, err
 	}
+	// Allocated only once there is a command to decode, so that reaching the
+	// end of the stream costs nothing.
+	var c Command
+	if err = d.unmarshalMessage(&c, msgLength); err != nil {
+		return nil, 0, err
+	}
+	return &c, int(msgLength) + 8, nil
+}
 
+// DecodeTo decodes the next Command from the stream into cmd, see the
+// StreamCommandDecoderTo interface.
+func (d *ProtobufStreamCommandDecoder) DecodeTo(cmd *Command) (int, error) {
+	msgLength, err := d.nextMessageLength()
+	if err != nil {
+		return 0, err
+	}
+	cmd.Reset()
+	if err = d.unmarshalMessage(cmd, msgLength); err != nil {
+		return 0, err
+	}
+	return int(msgLength) + 8, nil
+}
+
+// nextMessageLength reads the length prefix of the next message and checks it
+// against the configured limit, before any of the message body is read.
+func (d *ProtobufStreamCommandDecoder) nextMessageLength() (uint64, error) {
+	msgLength, err := binary.ReadUvarint(d.reader)
+	if err != nil {
+		return 0, err
+	}
 	if d.messageSizeLimit > 0 && msgLength > uint64(d.messageSizeLimit) {
-		return nil, 0, ErrMessageTooLarge
+		return 0, ErrMessageTooLarge
 	}
 	// The length is declared by the other side and is used as an allocation size
 	// below, so it must be bounded even when no explicit limit is configured.
 	if msgLength > maxMessageLength {
-		return nil, 0, ErrMessageTooLarge
+		return 0, ErrMessageTooLarge
 	}
+	return msgLength, nil
+}
 
+// unmarshalMessage reads msgLength bytes and unmarshals them into cmd.
+func (d *ProtobufStreamCommandDecoder) unmarshalMessage(cmd *Command, msgLength uint64) error {
 	// Fast path: the whole message is already buffered, so it can be unmarshaled
 	// straight out of the bufio.Reader without copying it into a scratch buffer
 	// first. UnmarshalVT copies what it keeps, so the peeked slice may be
 	// invalidated by the Discard below.
 	if msgBytes, peekErr := d.reader.Peek(int(msgLength)); peekErr == nil {
-		var c Command
-		if err = c.UnmarshalVT(msgBytes); err != nil { // Note, UnmarshalVTUnsafe here will result into issues.
-			return nil, 0, err
+		if err := cmd.UnmarshalVT(msgBytes); err != nil { // Note, UnmarshalVTUnsafe here will result into issues.
+			return err
 		}
-		if _, err = d.reader.Discard(int(msgLength)); err != nil {
-			return nil, 0, err
-		}
-		return &c, int(msgLength) + 8, nil
+		_, err := d.reader.Discard(int(msgLength))
+		return err
 	}
 
 	bb := getByteBuffer(int(msgLength))
@@ -269,17 +357,12 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 
 	n, err := io.ReadFull(d.reader, bb.B[:int(msgLength)])
 	if err != nil {
-		return nil, 0, err
+		return err
 	}
 	if uint64(n) != msgLength {
-		return nil, 0, io.ErrShortBuffer
+		return io.ErrShortBuffer
 	}
-	var c Command
-	err = c.UnmarshalVT(bb.B[:int(msgLength)]) // Note, UnmarshalVTUnsafe here will result into issues.
-	if err != nil {
-		return nil, 0, err
-	}
-	return &c, int(msgLength) + 8, nil
+	return cmd.UnmarshalVT(bb.B[:int(msgLength)]) // Note, UnmarshalVTUnsafe here will result into issues.
 }
 
 // Reset makes the decoder read from the given reader, applying the given message
@@ -288,3 +371,8 @@ func (d *ProtobufStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit 
 	d.messageSizeLimit = messageSizeLimit
 	d.reader.Reset(reader)
 }
+
+var (
+	_ StreamCommandDecoderTo = (*JSONStreamCommandDecoder)(nil)
+	_ StreamCommandDecoderTo = (*ProtobufStreamCommandDecoder)(nil)
+)

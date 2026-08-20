@@ -3,6 +3,8 @@ package protocol
 import (
 	"bytes"
 	"testing"
+
+	"google.golang.org/protobuf/proto"
 )
 
 func FuzzJSONDecodeSingle(f *testing.F) {
@@ -93,6 +95,52 @@ func FuzzJSONStreamDecode(f *testing.F) {
 		defer PutStreamCommandDecoder(TypeJSON, decoder)
 		for i := 0; i <= len(b); i++ {
 			if _, _, err := decoder.Decode(); err != nil {
+				return
+			}
+		}
+		t.Fatal("decoder did not terminate")
+	})
+}
+
+// FuzzStreamDecodeTo checks that DecodeTo behaves exactly as Decode on the same
+// input: the same commands, the same sizes and the same errors.
+func FuzzStreamDecodeTo(f *testing.F) {
+	f.Add([]byte(`{"id":1}`+"\n"+`{"id":2,"publish":{"channel":"x"}}`+"\n"), true)
+	f.Add([]byte(`{"id":1,"subscribe":{"channel":"a"}}`+"\n"+`{"id":2,"ping":{}}`+"\n"), true)
+	f.Add([]byte{0x02, 0x08, 0x01}, false)
+	f.Add([]byte{0x00}, false)
+	f.Fuzz(func(t *testing.T, b []byte, useJSON bool) {
+		protoType := TypeProtobuf
+		if useJSON {
+			protoType = TypeJSON
+		}
+
+		decoder := GetStreamCommandDecoderLimited(protoType, bytes.NewReader(b), 1<<20)
+		defer PutStreamCommandDecoder(protoType, decoder)
+		decoderTo := GetStreamCommandDecoderLimited(protoType, bytes.NewReader(b), 1<<20)
+		defer PutStreamCommandDecoder(protoType, decoderTo)
+
+		var cmd Command
+		for i := 0; i <= len(b); i++ {
+			want, wantSize, wantErr := decoder.Decode()
+			gotSize, gotErr := decoderTo.(StreamCommandDecoderTo).DecodeTo(&cmd)
+
+			if (wantErr == nil) != (gotErr == nil) || (wantErr != nil && wantErr.Error() != gotErr.Error()) {
+				t.Fatalf("error mismatch: Decode=%v DecodeTo=%v", wantErr, gotErr)
+			}
+			if want == nil {
+				if gotSize != 0 {
+					t.Fatalf("Decode returned no command but DecodeTo reported size %d", gotSize)
+				}
+			} else {
+				if wantSize != gotSize {
+					t.Fatalf("size mismatch: Decode=%d DecodeTo=%d", wantSize, gotSize)
+				}
+				if !proto.Equal(want, &cmd) {
+					t.Fatalf("command mismatch: Decode=%v DecodeTo=%v", want, &cmd)
+				}
+			}
+			if wantErr != nil {
 				return
 			}
 		}

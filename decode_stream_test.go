@@ -373,3 +373,206 @@ func TestStreamingDecode_JSON_PoolReuse(t *testing.T) {
 		PutStreamCommandDecoder(TypeJSON, dec)
 	}
 }
+
+// decodeAllTo decodes a frame through DecodeTo, reusing a single Command, and
+// returns a description of every command it saw. Descriptions are built during
+// the loop, since cmd is overwritten by the next call.
+func decodeAllTo(tb testing.TB, protoType Type, frame []byte) []string {
+	tb.Helper()
+	dec := GetStreamCommandDecoderLimited(protoType, bytes.NewReader(frame), 1<<20)
+	defer PutStreamCommandDecoder(protoType, dec)
+	decTo, ok := dec.(StreamCommandDecoderTo)
+	require.True(tb, ok, "decoder must implement StreamCommandDecoderTo")
+
+	var cmd Command
+	var out []string
+	for {
+		size, err := decTo.DecodeTo(&cmd)
+		if size > 0 {
+			out = append(out, describeCommand(&cmd, size))
+		}
+		if err != nil {
+			require.ErrorIs(tb, err, io.EOF)
+			break
+		}
+	}
+	return out
+}
+
+// describeCommand renders the fields a reused Command could leak between calls.
+func describeCommand(cmd *Command, size int) string {
+	s := "id=" + strconv.Itoa(int(cmd.Id)) + " size=" + strconv.Itoa(size)
+	if cmd.Publish != nil {
+		s += " publish=" + cmd.Publish.Channel + ":" + string(cmd.Publish.Data)
+	}
+	if cmd.Subscribe != nil {
+		s += " subscribe=" + cmd.Subscribe.Channel
+	}
+	if cmd.Unsubscribe != nil {
+		s += " unsubscribe=" + cmd.Unsubscribe.Channel
+	}
+	if cmd.Ping != nil {
+		s += " ping"
+	}
+	return s
+}
+
+// decodeAll decodes a frame through Decode, for comparison with DecodeTo.
+func decodeAll(tb testing.TB, protoType Type, frame []byte) []string {
+	tb.Helper()
+	dec := GetStreamCommandDecoderLimited(protoType, bytes.NewReader(frame), 1<<20)
+	defer PutStreamCommandDecoder(protoType, dec)
+	var out []string
+	for {
+		cmd, size, err := dec.Decode()
+		if cmd != nil {
+			out = append(out, describeCommand(cmd, size))
+		}
+		if err != nil {
+			require.ErrorIs(tb, err, io.EOF)
+			break
+		}
+	}
+	return out
+}
+
+// mixedCommandFrame builds a frame whose commands set different fields, so a
+// Command reused without a reset would carry stale ones over.
+func mixedCommandFrame(tb testing.TB, protoType Type) []byte {
+	tb.Helper()
+	cmds := []*Command{
+		{Id: 1, Publish: &PublishRequest{Channel: "ch1", Data: Raw(`{"a":1}`)}},
+		{Id: 2, Subscribe: &SubscribeRequest{Channel: "ch2"}},
+		{Id: 3, Ping: &PingRequest{}},
+		{Id: 4, Unsubscribe: &UnsubscribeRequest{Channel: "ch4"}},
+		{Id: 5, Publish: &PublishRequest{Channel: "ch5", Data: Raw(`{"b":2}`)}},
+		// Long enough to spill past the bufio.Reader buffer.
+		{Id: 6, Publish: &PublishRequest{Channel: strings.Repeat("z", 9000), Data: Raw(`{}`)}},
+		{Id: 7, Ping: &PingRequest{}},
+	}
+	encoder := GetDataEncoder(protoType)
+	for _, cmd := range cmds {
+		var data []byte
+		var err error
+		if protoType == TypeProtobuf {
+			data, err = cmd.MarshalVT()
+		} else {
+			data, err = NewJSONCommandEncoder().Encode(cmd)
+		}
+		require.NoError(tb, err)
+		require.NoError(tb, encoder.Encode(data))
+	}
+	frame := encoder.Finish()
+	PutDataEncoder(protoType, encoder)
+	return frame
+}
+
+// DecodeTo must produce exactly what Decode produces, with no field of a
+// previous command surviving into the next one.
+func TestStreamingDecodeTo_MatchesDecode(t *testing.T) {
+	for _, protoType := range []Type{TypeJSON, TypeProtobuf} {
+		frame := mixedCommandFrame(t, protoType)
+		require.Equal(t, decodeAll(t, protoType, frame), decodeAllTo(t, protoType, frame))
+	}
+}
+
+// A Command reused across DecodeTo calls must not keep fields from a command
+// decoded earlier.
+func TestStreamingDecodeTo_NoStaleFields(t *testing.T) {
+	for _, protoType := range []Type{TypeJSON, TypeProtobuf} {
+		got := decodeAllTo(t, protoType, mixedCommandFrame(t, protoType))
+		require.Len(t, got, 7)
+		require.Equal(t, "id=2 subscribe=ch2", trimSize(got[1]), "Publish must not survive into the next command")
+		require.Equal(t, "id=3 ping", trimSize(got[2]))
+		require.Equal(t, "id=4 unsubscribe=ch4", trimSize(got[3]))
+		require.Equal(t, "id=7 ping", trimSize(got[6]))
+	}
+}
+
+// trimSize drops the size field, which differs between the two protocols.
+func trimSize(s string) string {
+	start := strings.Index(s, " size=")
+	end := strings.Index(s[start+1:], " ")
+	if end < 0 {
+		return s[:start]
+	}
+	return s[:start] + s[start+1+end:]
+}
+
+// DecodeTo must enforce the message size limit exactly as Decode does.
+func TestStreamingDecodeTo_MessageLimit(t *testing.T) {
+	for _, protoType := range []Type{TypeJSON, TypeProtobuf} {
+		frame := getTestFrame(t, protoType, 10000)
+		dec := GetStreamCommandDecoderLimited(protoType, bytes.NewReader(frame), 100)
+		var cmd Command
+		_, err := dec.(StreamCommandDecoderTo).DecodeTo(&cmd)
+		require.ErrorIs(t, err, ErrMessageTooLarge)
+		PutStreamCommandDecoder(protoType, dec)
+	}
+}
+
+// Data reachable from a Command decoded with DecodeTo must stay valid after
+// later DecodeTo calls, since a broker may keep a Publication built from it in
+// history for as long as it likes.
+func TestStreamingDecodeTo_RetainedPayloadsStayValid(t *testing.T) {
+	for _, protoType := range []Type{TypeJSON, TypeProtobuf} {
+		const numCommands = 12
+		encoder := GetDataEncoder(protoType)
+		for i := 0; i < numCommands; i++ {
+			// Sizes straddle the bufio.Reader buffer so both decode paths are used.
+			payload := `{"n":` + strconv.Itoa(i) + `,"pad":"` + strings.Repeat(string(rune('a'+i)), 400*i+1) + `"}`
+			cmd := &Command{
+				Id:      uint32(i + 1),
+				Publish: &PublishRequest{Channel: "ch" + strconv.Itoa(i), Data: Raw(payload)},
+			}
+			var data []byte
+			var err error
+			if protoType == TypeProtobuf {
+				data, err = cmd.MarshalVT()
+			} else {
+				data, err = NewJSONCommandEncoder().Encode(cmd)
+			}
+			require.NoError(t, err)
+			require.NoError(t, encoder.Encode(data))
+		}
+		frame := encoder.Finish()
+		PutDataEncoder(protoType, encoder)
+
+		dec := GetStreamCommandDecoderLimited(protoType, bytes.NewReader(frame), 1<<20).(StreamCommandDecoderTo)
+		// Retained the way a memory broker retains Publication data.
+		type retained struct {
+			channel string
+			data    Raw
+			req     *PublishRequest
+		}
+		var kept []retained
+		var cmd Command
+		for {
+			size, err := dec.DecodeTo(&cmd)
+			// A zero size means cmd was not written to and still holds the
+			// previous command, so it must not be looked at.
+			if size > 0 && cmd.Publish != nil {
+				kept = append(kept, retained{
+					channel: cmd.Publish.Channel,
+					data:    cmd.Publish.Data,
+					req:     cmd.Publish,
+				})
+			}
+			if err != nil {
+				require.ErrorIs(t, err, io.EOF)
+				break
+			}
+		}
+		PutStreamCommandDecoder(protoType, dec.(StreamCommandDecoder))
+
+		require.Len(t, kept, numCommands)
+		for i, k := range kept {
+			want := `{"n":` + strconv.Itoa(i) + `,"pad":"` + strings.Repeat(string(rune('a'+i)), 400*i+1) + `"}`
+			require.Equal(t, "ch"+strconv.Itoa(i), k.channel, "retained channel %d", i)
+			require.Equal(t, want, string(k.data), "retained data %d", i)
+			// The request struct itself must be a fresh one per command, not the
+			// one the next command was decoded into.
+			require.Equal(t, want, string(k.req.Data), "retained request %d", i)
+		}
+	}
+}

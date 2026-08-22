@@ -271,8 +271,10 @@ func TestGetByteBuffer_NonPositiveLength(t *testing.T) {
 	}
 }
 
-// makeJSONCommandFrame builds a single `\n` terminated JSON command whose
-// channel is chanSize bytes long.
+// makeJSONCommandFrame builds a frame holding one JSON command whose channel is
+// chanSize bytes long. JSONDataEncoder only writes the `\n` delimiter between
+// messages, so a one command frame carries no trailing delimiter and Decode
+// reads it to EOF.
 func makeJSONCommandFrame(tb testing.TB, chanSize int) []byte {
 	tb.Helper()
 	data, err := NewJSONCommandEncoder().Encode(&Command{

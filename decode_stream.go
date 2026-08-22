@@ -20,6 +20,11 @@ import (
 // one with GetStreamCommandDecoderLimited when reading untrusted input.
 const maxMessageLength = math.MaxInt32
 
+// maxRetainedLineBuffer bounds the read buffer a pooled JSONStreamCommandDecoder
+// keeps between uses. Commands larger than this are still decoded, their buffer
+// is just dropped instead of being retained by the pool.
+const maxRetainedLineBuffer = 65536
+
 var (
 	streamJsonCommandDecoderPool     sync.Pool
 	streamProtobufCommandDecoderPool sync.Pool
@@ -107,6 +112,10 @@ type JSONStreamCommandDecoder struct {
 	reader           *bufio.Reader
 	limitedReader    *io.LimitedReader
 	messageSizeLimit int64
+	// buf accumulates a command which does not fit into the bufio.Reader
+	// buffer, reused across Decode calls. It's held behind a pointer so that
+	// the struct stays comparable, as it was before the field was added.
+	buf *ByteBuffer
 }
 
 // NewJSONStreamCommandDecoder creates a new JSONStreamCommandDecoder reading from
@@ -129,7 +138,7 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	if d.messageSizeLimit > 0 {
 		d.limitedReader.N = int64(d.messageSizeLimit) + 1
 	}
-	cmdBytes, err := d.reader.ReadBytes('\n')
+	cmdBytes, err := d.readLine()
 	if err != nil {
 		if d.messageSizeLimit > 0 && int64(len(cmdBytes)) > d.messageSizeLimit {
 			return nil, 0, ErrMessageTooLarge
@@ -153,18 +162,59 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	return &c, len(cmdBytes), nil
 }
 
+// readLine returns the next `\n` terminated command, including the delimiter.
+//
+// The returned slice is only valid until the next Decode call - it may point
+// into the bufio.Reader buffer or into a buffer reused across calls. Callers
+// must copy anything they keep, which json.Parse does since it's used here
+// without the ZeroCopy flag.
+func (d *JSONStreamCommandDecoder) readLine() ([]byte, error) {
+	chunk, err := d.reader.ReadSlice('\n')
+	if err != bufio.ErrBufferFull {
+		// Fast path: the whole command was in the bufio.Reader buffer, so
+		// there is nothing to accumulate and nothing to allocate.
+		return chunk, err
+	}
+	if d.buf == nil {
+		d.buf = &ByteBuffer{}
+	}
+	d.buf.B = append(d.buf.B[:0], chunk...)
+	for {
+		chunk, err = d.reader.ReadSlice('\n')
+		d.buf.B = append(d.buf.B, chunk...)
+		if err != bufio.ErrBufferFull {
+			return d.buf.B, err
+		}
+	}
+}
+
 // Reset makes the decoder read from the given reader, applying the given message
 // size limit.
 func (d *JSONStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int64) {
 	d.messageSizeLimit = messageSizeLimit
 	if messageSizeLimit > 0 {
-		limitedReader := &io.LimitedReader{R: reader, N: messageSizeLimit + 1}
-		bufioReader := bufio.NewReader(limitedReader)
-		d.limitedReader = limitedReader
-		d.reader.Reset(bufioReader)
+		if d.limitedReader == nil {
+			d.limitedReader = &io.LimitedReader{}
+		}
+		d.limitedReader.R = reader
+		d.limitedReader.N = messageSizeLimit + 1
+		d.reader.Reset(d.limitedReader)
 	} else {
-		d.limitedReader = nil
+		if d.limitedReader != nil {
+			// Drop the reference so a pooled decoder does not pin it.
+			d.limitedReader.R = nil
+			d.limitedReader.N = 0
+		}
 		d.reader.Reset(reader)
+	}
+	if d.buf != nil {
+		if cap(d.buf.B) > maxRetainedLineBuffer {
+			// A single large command must not make a pooled decoder hold on to
+			// a large buffer for the rest of the process lifetime.
+			d.buf = nil
+		} else {
+			d.buf.B = d.buf.B[:0]
+		}
 	}
 }
 
@@ -203,6 +253,26 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	// below, so it must be bounded even when no explicit limit is configured.
 	if msgLength > maxMessageLength {
 		return nil, 0, ErrMessageTooLarge
+	}
+
+	// Fast path: the whole message is already buffered, so it can be unmarshaled
+	// straight out of the bufio.Reader without copying it into a scratch buffer
+	// first. UnmarshalVT copies what it keeps, so the peeked slice may be
+	// invalidated by the Discard below.
+	if msgBytes, peekErr := d.reader.Peek(int(msgLength)); peekErr == nil {
+		var c Command
+		err = c.UnmarshalVT(msgBytes) // Note, UnmarshalVTUnsafe here will result into issues.
+		// The message is consumed even when it failed to unmarshal, matching
+		// the scratch buffer path below, which reads it off the stream before
+		// unmarshaling it. A caller which keeps decoding after an error must
+		// see the next message rather than this body again.
+		if _, discardErr := d.reader.Discard(int(msgLength)); discardErr != nil && err == nil {
+			err = discardErr
+		}
+		if err != nil {
+			return nil, 0, err
+		}
+		return &c, int(msgLength) + 8, nil
 	}
 
 	bb := getByteBuffer(int(msgLength))

@@ -401,3 +401,40 @@ func TestStreamingDecode_Protobuf_AdvancesPastBadMessage(t *testing.T) {
 	require.NotNil(t, cmd, "decoder must have advanced past the bad message")
 	require.Equal(t, uint32(42), cmd.Id)
 }
+
+// The message size limit must apply to every command in a frame, not just to
+// one which happened to be cut short by the reader. A command whose delimiter
+// was already buffered comes back with a nil error and used to skip the check.
+func TestStreamingDecode_JSON_MessageLimitAppliesToEveryCommand(t *testing.T) {
+	const limit = 100
+	command := func(length int) string {
+		prefix := `{"id":1,"publish":{"channel":"`
+		suffix := `"}}`
+		return prefix + strings.Repeat("x", length-len(prefix)-len(suffix)) + suffix
+	}
+
+	for _, commandLength := range []int{limit - 1, limit, limit + 1, limit + 50, limit + 90} {
+		// Once as the only command in a frame, once after a small one, since
+		// only the second case can read a delimiter out of already buffered
+		// bytes.
+		frames := map[string][]byte{
+			"alone": []byte(command(commandLength) + "\n"),
+			"after": []byte(`{"id":9}` + "\n" + command(commandLength) + "\n"),
+		}
+		for position, frame := range frames {
+			dec := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), limit)
+			if position == "after" {
+				_, _, _ = dec.Decode()
+			}
+			cmd, _, err := dec.Decode()
+			PutStreamCommandDecoder(TypeJSON, dec)
+
+			if commandLength > limit {
+				require.Nil(t, cmd, "%s: %d byte command must be rejected with limit %d", position, commandLength, limit)
+				require.ErrorIs(t, err, ErrMessageTooLarge, "%s: %d byte command", position, commandLength)
+			} else {
+				require.NotNil(t, cmd, "%s: %d byte command must be accepted with limit %d", position, commandLength, limit)
+			}
+		}
+	}
+}

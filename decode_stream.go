@@ -139,10 +139,14 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 		d.limitedReader.N = int64(d.messageSizeLimit) + 1
 	}
 	cmdBytes, err := d.readLine()
+	// The limit is checked on both paths out of readLine. Checking it only
+	// when reading failed is not enough: a command whose delimiter was already
+	// buffered under an earlier Decode's budget comes back with a nil error,
+	// and would otherwise skip the check entirely.
+	if d.messageSizeLimit > 0 && int64(commandLen(cmdBytes)) > d.messageSizeLimit {
+		return nil, 0, ErrMessageTooLarge
+	}
 	if err != nil {
-		if d.messageSizeLimit > 0 && int64(len(cmdBytes)) > d.messageSizeLimit {
-			return nil, 0, ErrMessageTooLarge
-		}
 		if err == io.EOF && len(cmdBytes) > 0 {
 			var c Command
 			_, parseErr := json.Parse(cmdBytes, &c, 0)
@@ -160,6 +164,17 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 		return nil, 0, err
 	}
 	return &c, len(cmdBytes), nil
+}
+
+// commandLen returns the length of a command read by readLine, without the `\n`
+// delimiter. The delimiter separates commands rather than belonging to one, and
+// the last command in a frame carries none, so counting it would make the size
+// limit depend on where in the frame a command sits.
+func commandLen(cmdBytes []byte) int {
+	if n := len(cmdBytes); n > 0 && cmdBytes[n-1] == '\n' {
+		return n - 1
+	}
+	return len(cmdBytes)
 }
 
 // readLine returns the next `\n` terminated command, including the delimiter.

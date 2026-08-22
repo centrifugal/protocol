@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/segmentio/encoding/json"
@@ -268,4 +269,226 @@ func TestGetByteBuffer_NonPositiveLength(t *testing.T) {
 			require.Empty(t, bb.B)
 		})
 	}
+}
+
+// makeJSONCommandFrame builds a frame holding one JSON command whose channel is
+// chanSize bytes long. JSONDataEncoder only writes the `\n` delimiter between
+// messages, so a one command frame carries no trailing delimiter and Decode
+// reads it to EOF.
+func makeJSONCommandFrame(tb testing.TB, chanSize int) []byte {
+	tb.Helper()
+	data, err := NewJSONCommandEncoder().Encode(&Command{
+		Id:      1,
+		Publish: &PublishRequest{Channel: strings.Repeat("a", chanSize), Data: Raw(`{}`)},
+	})
+	require.NoError(tb, err)
+	encoder := GetDataEncoder(TypeJSON)
+	require.NoError(tb, encoder.Encode(data))
+	frame := encoder.Finish()
+	PutDataEncoder(TypeJSON, encoder)
+	return frame
+}
+
+// JSONStreamCommandDecoder reads into a buffer reused across Decode calls, so
+// commands decoded earlier must not be affected by later ones.
+func TestStreamingDecode_JSON_NoAliasing(t *testing.T) {
+	// Sizes straddling the bufio.Reader buffer, to cover both the fast path and
+	// the accumulating path of readLine.
+	for _, size := range []int{16, 4000, 4090, 4096, 5000, 10000} {
+		channels := make([]string, 3)
+		encoder := GetDataEncoder(TypeJSON)
+		for i := 0; i < len(channels); i++ {
+			channels[i] = strings.Repeat(string(rune('a'+i)), size)
+			data, err := NewJSONCommandEncoder().Encode(&Command{
+				Id:      uint32(i + 1),
+				Publish: &PublishRequest{Channel: channels[i], Data: Raw(`{"k":1}`)},
+			})
+			require.NoError(t, err)
+			require.NoError(t, encoder.Encode(data))
+		}
+		frame := encoder.Finish()
+		PutDataEncoder(TypeJSON, encoder)
+
+		dec := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), 1<<20)
+		var decoded []*Command
+		for {
+			cmd, _, err := dec.Decode()
+			if cmd != nil {
+				decoded = append(decoded, cmd)
+			}
+			if err != nil {
+				break
+			}
+		}
+		PutStreamCommandDecoder(TypeJSON, dec)
+
+		// Checked after every Decode call, so aliasing would show up here.
+		require.Len(t, decoded, len(channels))
+		for i, cmd := range decoded {
+			require.Equal(t, uint32(i+1), cmd.Id)
+			require.Equal(t, channels[i], cmd.Publish.Channel)
+			require.Equal(t, `{"k":1}`, string(cmd.Publish.Data))
+		}
+	}
+}
+
+func TestStreamingDecode_JSON_MessageLimitBoundary(t *testing.T) {
+	for _, chanSize := range []int{10, 4000, 4090, 4096, 4100, 9000} {
+		frame := makeJSONCommandFrame(t, chanSize)
+		size := int64(len(frame))
+
+		// A limit equal to the command size must still decode it.
+		dec := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), size)
+		cmd, _, err := dec.Decode()
+		if err != nil {
+			require.ErrorIs(t, err, io.EOF)
+		}
+		require.NotNil(t, cmd)
+		require.Equal(t, strings.Repeat("a", chanSize), cmd.Publish.Channel)
+		PutStreamCommandDecoder(TypeJSON, dec)
+
+		// One byte less must be rejected.
+		dec = GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), size-1)
+		_, _, err = dec.Decode()
+		require.ErrorIs(t, err, ErrMessageTooLarge)
+		PutStreamCommandDecoder(TypeJSON, dec)
+	}
+}
+
+// A decoder taken from the pool must not carry over the read buffer state of a
+// previously decoded, much larger command.
+func TestStreamingDecode_JSON_PoolReuse(t *testing.T) {
+	large := makeJSONCommandFrame(t, 9000)
+	small := makeJSONCommandFrame(t, 10)
+	for i := 0; i < 50; i++ {
+		frame, chanSize := large, 9000
+		if i%2 == 1 {
+			frame, chanSize = small, 10
+		}
+		dec := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), 1<<20)
+		cmd, _, err := dec.Decode()
+		if err != nil {
+			require.ErrorIs(t, err, io.EOF)
+		}
+		require.NotNil(t, cmd)
+		require.Equal(t, strings.Repeat("a", chanSize), cmd.Publish.Channel)
+		PutStreamCommandDecoder(TypeJSON, dec)
+	}
+}
+
+// A message whose body fails to unmarshal must still be consumed, so that a
+// caller which keeps decoding sees the next message instead of this body again.
+func TestStreamingDecode_Protobuf_AdvancesPastBadMessage(t *testing.T) {
+	badBody := []byte{0x0F} // Field 1 with wire type 7, which is not valid.
+	goodBody, err := (&Command{Id: 42}).MarshalVT()
+	require.NoError(t, err)
+
+	var frame []byte
+	lengthPrefix := make([]byte, binary.MaxVarintLen64)
+	for _, body := range [][]byte{badBody, goodBody} {
+		n := binary.PutUvarint(lengthPrefix, uint64(len(body)))
+		frame = append(frame, lengthPrefix[:n]...)
+		frame = append(frame, body...)
+	}
+
+	dec := GetStreamCommandDecoderLimited(TypeProtobuf, bytes.NewReader(frame), 1<<20)
+	defer PutStreamCommandDecoder(TypeProtobuf, dec)
+
+	_, _, err = dec.Decode()
+	require.Error(t, err, "the bad body must fail to unmarshal")
+
+	cmd, _, _ := dec.Decode()
+	require.NotNil(t, cmd, "decoder must have advanced past the bad message")
+	require.Equal(t, uint32(42), cmd.Id)
+}
+
+// The message size limit must apply to every command in a frame, not just to
+// one which happened to be cut short by the reader. A command whose delimiter
+// was already buffered comes back with a nil error and used to skip the check.
+func TestStreamingDecode_JSON_MessageLimitAppliesToEveryCommand(t *testing.T) {
+	const limit = 100
+	command := func(length int) string {
+		prefix := `{"id":1,"publish":{"channel":"`
+		suffix := `"}}`
+		return prefix + strings.Repeat("x", length-len(prefix)-len(suffix)) + suffix
+	}
+
+	for _, commandLength := range []int{limit - 1, limit, limit + 1, limit + 50, limit + 90} {
+		// Once as the only command in a frame, once after a small one, since
+		// only the second case can read a delimiter out of already buffered
+		// bytes.
+		frames := map[string][]byte{
+			"alone": []byte(command(commandLength) + "\n"),
+			"after": []byte(`{"id":9}` + "\n" + command(commandLength) + "\n"),
+		}
+		for position, frame := range frames {
+			dec := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), limit)
+			if position == "after" {
+				_, _, _ = dec.Decode()
+			}
+			cmd, _, err := dec.Decode()
+			PutStreamCommandDecoder(TypeJSON, dec)
+
+			if commandLength > limit {
+				require.Nil(t, cmd, "%s: %d byte command must be rejected with limit %d", position, commandLength, limit)
+				require.ErrorIs(t, err, ErrMessageTooLarge, "%s: %d byte command", position, commandLength)
+			} else {
+				require.NotNil(t, cmd, "%s: %d byte command must be accepted with limit %d", position, commandLength, limit)
+			}
+		}
+	}
+}
+
+// A limit of math.MaxInt64 must not overflow the reader budget, which would
+// stop the io.LimitedReader before it delivers anything and silently drop every
+// command in the stream.
+func TestStreamingDecode_JSON_MaxInt64Limit(t *testing.T) {
+	frame := makeJSONCommandFrame(t, 10)
+	for _, limit := range []int64{1 << 20, math.MaxInt64 - 1, math.MaxInt64} {
+		dec := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), limit)
+		cmd, _, err := dec.Decode()
+		if err != nil {
+			require.ErrorIs(t, err, io.EOF)
+		}
+		require.NotNil(t, cmd, "limit=%d dropped a valid command", limit)
+		require.Equal(t, strings.Repeat("a", 10), cmd.Publish.Channel)
+		PutStreamCommandDecoder(TypeJSON, dec)
+	}
+}
+
+// A command larger than maxRetainedLineBuffer must not be kept by the decoder,
+// neither by a pooled one nor by one which is only ever decoded from.
+func TestStreamingDecode_JSON_DropsOversizedBuffer(t *testing.T) {
+	const oversized = maxRetainedLineBuffer + 1024
+	encoder := GetDataEncoder(TypeJSON)
+	for _, size := range []int{oversized, 10} {
+		data, err := NewJSONCommandEncoder().Encode(&Command{
+			Id:      1,
+			Publish: &PublishRequest{Channel: strings.Repeat("a", size), Data: Raw(`{}`)},
+		})
+		require.NoError(t, err)
+		require.NoError(t, encoder.Encode(data))
+	}
+	frame := encoder.Finish()
+	PutDataEncoder(TypeJSON, encoder)
+
+	decoder := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), 1<<20)
+	jsonDecoder, ok := decoder.(*JSONStreamCommandDecoder)
+	require.True(t, ok)
+
+	cmd, _, err := jsonDecoder.Decode()
+	require.NoError(t, err)
+	require.Len(t, cmd.Publish.Channel, oversized)
+	require.NotNil(t, jsonDecoder.buf, "the large command must have gone through the accumulating path")
+	require.Greater(t, cap(jsonDecoder.buf.B), maxRetainedLineBuffer)
+
+	// Decoding the next, small command must drop the oversized buffer.
+	cmd, _, _ = jsonDecoder.Decode()
+	require.NotNil(t, cmd)
+	require.Len(t, cmd.Publish.Channel, 10)
+	require.Nil(t, jsonDecoder.buf, "oversized buffer must not be retained")
+
+	// Returning it to the pool must not retain one either.
+	PutStreamCommandDecoder(TypeJSON, decoder)
+	require.Nil(t, jsonDecoder.buf)
 }

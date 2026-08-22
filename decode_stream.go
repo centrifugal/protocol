@@ -113,8 +113,10 @@ type JSONStreamCommandDecoder struct {
 	limitedReader    *io.LimitedReader
 	messageSizeLimit int64
 	// buf accumulates a command which does not fit into the bufio.Reader
-	// buffer, reused across Decode calls. It's held behind a pointer so that
-	// the struct stays comparable, as it was before the field was added.
+	// buffer, reused across Decode calls. It's held behind a pointer rather
+	// than being a []byte so that JSONStreamCommandDecoder stays comparable:
+	// a slice field would make it non comparable, which is an incompatible
+	// API change even though nothing here compares decoders.
 	buf *ByteBuffer
 }
 
@@ -124,7 +126,7 @@ func NewJSONStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *JSON
 	if messageSizeLimit <= 0 {
 		panic(errNonPositiveMessageSizeLimit)
 	}
-	limitedReader := &io.LimitedReader{R: reader, N: messageSizeLimit + 1}
+	limitedReader := &io.LimitedReader{R: reader, N: readBudget(messageSizeLimit)}
 	return &JSONStreamCommandDecoder{
 		reader:           bufio.NewReader(limitedReader),
 		limitedReader:    limitedReader,
@@ -136,8 +138,12 @@ func NewJSONStreamCommandDecoder(reader io.Reader, messageSizeLimit int64) *JSON
 // interface.
 func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	if d.messageSizeLimit > 0 {
-		d.limitedReader.N = int64(d.messageSizeLimit) + 1
+		d.limitedReader.N = readBudget(d.messageSizeLimit)
 	}
+	// Drop an oversized buffer left behind by an earlier command before it is
+	// reused, so a decoder which is never Reset does not keep one for the life
+	// of the stream.
+	d.trimBuf()
 	cmdBytes, err := d.readLine()
 	// The limit is checked on both paths out of readLine. Checking it only
 	// when reading failed is not enough: a command whose delimiter was already
@@ -164,6 +170,26 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 		return nil, 0, err
 	}
 	return &c, len(cmdBytes), nil
+}
+
+// trimBuf drops the accumulation buffer once it has grown past
+// maxRetainedLineBuffer, so that a single large command does not make a decoder
+// hold on to a large allocation indefinitely.
+func (d *JSONStreamCommandDecoder) trimBuf() {
+	if d.buf != nil && cap(d.buf.B) > maxRetainedLineBuffer {
+		d.buf = nil
+	}
+}
+
+// readBudget is how many bytes may be read while decoding one command: one more
+// than the limit, so that a command which is over it can be recognised as such.
+// A limit of math.MaxInt64 would overflow, leaving a negative budget which stops
+// the io.LimitedReader before it delivers anything, so it is clamped.
+func readBudget(messageSizeLimit int64) int64 {
+	if messageSizeLimit == math.MaxInt64 {
+		return math.MaxInt64
+	}
+	return messageSizeLimit + 1
 }
 
 // commandLen returns the length of a command read by readLine, without the `\n`
@@ -212,7 +238,7 @@ func (d *JSONStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int6
 			d.limitedReader = &io.LimitedReader{}
 		}
 		d.limitedReader.R = reader
-		d.limitedReader.N = messageSizeLimit + 1
+		d.limitedReader.N = readBudget(messageSizeLimit)
 		d.reader.Reset(d.limitedReader)
 	} else {
 		if d.limitedReader != nil {
@@ -222,14 +248,11 @@ func (d *JSONStreamCommandDecoder) Reset(reader io.Reader, messageSizeLimit int6
 		}
 		d.reader.Reset(reader)
 	}
+	// A single large command must not make a pooled decoder hold on to a large
+	// buffer for the rest of the process lifetime.
+	d.trimBuf()
 	if d.buf != nil {
-		if cap(d.buf.B) > maxRetainedLineBuffer {
-			// A single large command must not make a pooled decoder hold on to
-			// a large buffer for the rest of the process lifetime.
-			d.buf = nil
-		} else {
-			d.buf.B = d.buf.B[:0]
-		}
+		d.buf.B = d.buf.B[:0]
 	}
 }
 
@@ -274,20 +297,26 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	// straight out of the bufio.Reader without copying it into a scratch buffer
 	// first. UnmarshalVT copies what it keeps, so the peeked slice may be
 	// invalidated by the Discard below.
-	if msgBytes, peekErr := d.reader.Peek(int(msgLength)); peekErr == nil {
-		var c Command
-		err = c.UnmarshalVT(msgBytes) // Note, UnmarshalVTUnsafe here will result into issues.
-		// The message is consumed even when it failed to unmarshal, matching
-		// the scratch buffer path below, which reads it off the stream before
-		// unmarshaling it. A caller which keeps decoding after an error must
-		// see the next message rather than this body again.
-		if _, discardErr := d.reader.Discard(int(msgLength)); discardErr != nil && err == nil {
-			err = discardErr
+	// Only worth trying when the message can fit in the bufio.Reader buffer:
+	// Peek fills the whole buffer before reporting that it cannot hold the
+	// message, which would leave the scratch buffer path below copying those
+	// bytes out instead of reading the body straight into it.
+	if int64(msgLength) <= int64(d.reader.Size()) {
+		if msgBytes, peekErr := d.reader.Peek(int(msgLength)); peekErr == nil {
+			var c Command
+			err = c.UnmarshalVT(msgBytes) // Note, UnmarshalVTUnsafe here will result into issues.
+			// The message is consumed even when it failed to unmarshal, matching
+			// the scratch buffer path below, which reads it off the stream before
+			// unmarshaling it. A caller which keeps decoding after an error must
+			// see the next message rather than this body again.
+			if _, discardErr := d.reader.Discard(int(msgLength)); discardErr != nil && err == nil {
+				err = discardErr
+			}
+			if err != nil {
+				return nil, 0, err
+			}
+			return &c, int(msgLength) + 8, nil
 		}
-		if err != nil {
-			return nil, 0, err
-		}
-		return &c, int(msgLength) + 8, nil
 	}
 
 	bb := getByteBuffer(int(msgLength))

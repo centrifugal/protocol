@@ -438,3 +438,57 @@ func TestStreamingDecode_JSON_MessageLimitAppliesToEveryCommand(t *testing.T) {
 		}
 	}
 }
+
+// A limit of math.MaxInt64 must not overflow the reader budget, which would
+// stop the io.LimitedReader before it delivers anything and silently drop every
+// command in the stream.
+func TestStreamingDecode_JSON_MaxInt64Limit(t *testing.T) {
+	frame := makeJSONCommandFrame(t, 10)
+	for _, limit := range []int64{1 << 20, math.MaxInt64 - 1, math.MaxInt64} {
+		dec := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), limit)
+		cmd, _, err := dec.Decode()
+		if err != nil {
+			require.ErrorIs(t, err, io.EOF)
+		}
+		require.NotNil(t, cmd, "limit=%d dropped a valid command", limit)
+		require.Equal(t, strings.Repeat("a", 10), cmd.Publish.Channel)
+		PutStreamCommandDecoder(TypeJSON, dec)
+	}
+}
+
+// A command larger than maxRetainedLineBuffer must not be kept by the decoder,
+// neither by a pooled one nor by one which is only ever decoded from.
+func TestStreamingDecode_JSON_DropsOversizedBuffer(t *testing.T) {
+	const oversized = maxRetainedLineBuffer + 1024
+	encoder := GetDataEncoder(TypeJSON)
+	for _, size := range []int{oversized, 10} {
+		data, err := NewJSONCommandEncoder().Encode(&Command{
+			Id:      1,
+			Publish: &PublishRequest{Channel: strings.Repeat("a", size), Data: Raw(`{}`)},
+		})
+		require.NoError(t, err)
+		require.NoError(t, encoder.Encode(data))
+	}
+	frame := encoder.Finish()
+	PutDataEncoder(TypeJSON, encoder)
+
+	decoder := GetStreamCommandDecoderLimited(TypeJSON, bytes.NewReader(frame), 1<<20)
+	jsonDecoder, ok := decoder.(*JSONStreamCommandDecoder)
+	require.True(t, ok)
+
+	cmd, _, err := jsonDecoder.Decode()
+	require.NoError(t, err)
+	require.Len(t, cmd.Publish.Channel, oversized)
+	require.NotNil(t, jsonDecoder.buf, "the large command must have gone through the accumulating path")
+	require.Greater(t, cap(jsonDecoder.buf.B), maxRetainedLineBuffer)
+
+	// Decoding the next, small command must drop the oversized buffer.
+	cmd, _, _ = jsonDecoder.Decode()
+	require.NotNil(t, cmd)
+	require.Len(t, cmd.Publish.Channel, 10)
+	require.Nil(t, jsonDecoder.buf, "oversized buffer must not be retained")
+
+	// Returning it to the pool must not retain one either.
+	PutStreamCommandDecoder(TypeJSON, decoder)
+	require.Nil(t, jsonDecoder.buf)
+}

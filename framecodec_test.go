@@ -60,6 +60,54 @@ func TestFrameCodecConcurrent(t *testing.T) {
 	}
 }
 
+func TestFrameCodecDecompressErrors(t *testing.T) {
+	c := NewDeflateFrameCodec("v1", []byte("dict"))
+
+	if _, err := c.Decompress(nil, nil, 0); err != ErrEmptyFrame {
+		t.Fatalf("expected ErrEmptyFrame for empty frame, got %v", err)
+	}
+	if _, err := c.Decompress(nil, []byte{0xff, 0x01, 0x02}, 0); err != ErrUnknownFrameCodec {
+		t.Fatalf("expected ErrUnknownFrameCodec for unknown marker, got %v", err)
+	}
+}
+
+func TestFrameCodecAccessors(t *testing.T) {
+	dict := []byte("some dictionary content")
+	c := NewDeflateFrameCodec("v42", dict)
+	if c.ID() != "v42" {
+		t.Fatalf("unexpected ID: %s", c.ID())
+	}
+	if !bytes.Equal(c.Dict(), dict) {
+		t.Fatalf("unexpected Dict: %s", c.Dict())
+	}
+}
+
+func TestDeflateDictionaryRoundTrip(t *testing.T) {
+	dict := bytes.Repeat([]byte(`{"push":{"id":3,"pub":{"data":{}}}}`), 50)
+	compressed := DeflateDictionary(dict)
+	if len(compressed) == 0 {
+		t.Fatal("DeflateDictionary returned empty output")
+	}
+	if len(compressed) >= len(dict) {
+		t.Fatalf("expected compression to shrink dictionary: %d B compressed vs %d B raw", len(compressed), len(dict))
+	}
+	out, err := InflateDictionary(compressed, len(dict))
+	if err != nil {
+		t.Fatalf("InflateDictionary failed: %v", err)
+	}
+	if !bytes.Equal(out, dict) {
+		t.Fatal("InflateDictionary did not reproduce the original dictionary")
+	}
+}
+
+func TestInflateDictionaryTooLarge(t *testing.T) {
+	dict := bytes.Repeat([]byte("x"), 1000)
+	compressed := DeflateDictionary(dict)
+	if _, err := InflateDictionary(compressed, len(dict)-1); err == nil {
+		t.Fatal("expected an error when inflated dictionary exceeds maxSize")
+	}
+}
+
 // TestFrameCodecDictionaryActuallyApplies fails if the configured compression
 // level silently stops honouring the preset dictionary.
 //

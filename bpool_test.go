@@ -45,3 +45,27 @@ func TestGetCapacity(t *testing.T) {
 		putByteBuffer(b)
 	}
 }
+
+func TestByteBufferWrite(t *testing.T) {
+	var bb ByteBuffer
+	n, err := bb.Write([]byte("hello"))
+	require.NoError(t, err)
+	require.Equal(t, 5, n)
+	n, err = bb.Write([]byte(" world"))
+	require.NoError(t, err)
+	require.Equal(t, 6, n)
+	require.Equal(t, "hello world", string(bb.B))
+	bb.Reset()
+	require.Equal(t, "", string(bb.B))
+}
+
+func TestPrevLogBase2(t *testing.T) {
+	// Exact powers of two: prevLogBase2 must equal the exponent itself.
+	require.Equal(t, uint32(0), prevLogBase2(1))
+	require.Equal(t, uint32(3), prevLogBase2(8))
+	require.Equal(t, uint32(4), prevLogBase2(16))
+	// Non-powers of two: prevLogBase2 must round down to the exponent below.
+	require.Equal(t, uint32(3), prevLogBase2(9))
+	require.Equal(t, uint32(3), prevLogBase2(15))
+	require.Equal(t, uint32(4), prevLogBase2(17))
+}

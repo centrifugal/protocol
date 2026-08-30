@@ -5,6 +5,7 @@ import (
 	"compress/flate"
 	"errors"
 	"io"
+	"math"
 	"sync"
 )
 
@@ -158,7 +159,7 @@ func (c *DeflateFrameCodec) Decompress(dst, frame []byte, maxSize int) ([]byte, 
 	if maxSize > 0 {
 		// Read one byte past the limit so an oversized frame is detected rather
 		// than silently truncated.
-		rd = io.LimitReader(r, int64(maxSize)+1)
+		rd = io.LimitReader(r, decompressBudget(maxSize))
 	}
 	out := bytes.NewBuffer(dst)
 	n, err := out.ReadFrom(rd)
@@ -169,6 +170,19 @@ func (c *DeflateFrameCodec) Decompress(dst, frame []byte, maxSize int) ([]byte, 
 		return nil, ErrFrameTooLarge
 	}
 	return out.Bytes(), nil
+}
+
+// decompressBudget is how many bytes Decompress may read while decoding one
+// frame: one more than maxSize, so that a frame which is over it is detected
+// rather than silently truncated. maxSize equal to math.MaxInt would overflow
+// int64(maxSize)+1, leaving a negative budget that stops the reader before it
+// delivers anything - the same hazard readBudget guards against for stream
+// decoders - so it is clamped.
+func decompressBudget(maxSize int) int64 {
+	if maxSize == math.MaxInt {
+		return math.MaxInt64
+	}
+	return int64(maxSize) + 1
 }
 
 // DeflateDictionary compresses dictionary content with raw DEFLATE and no preset

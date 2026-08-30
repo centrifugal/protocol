@@ -3,6 +3,7 @@ package protocol
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"testing"
 )
 
@@ -68,6 +69,21 @@ func TestFrameCodecDecompressErrors(t *testing.T) {
 	}
 	if _, err := c.Decompress(nil, []byte{0xff, 0x01, 0x02}, 0); err != ErrUnknownFrameCodec {
 		t.Fatalf("expected ErrUnknownFrameCodec for unknown marker, got %v", err)
+	}
+}
+
+// TestFrameCodecDecompressMaxSizeOverflow guards against int64(maxSize)+1
+// overflowing when maxSize is math.MaxInt: that used to turn into a negative
+// io.LimitReader budget, which made Decompress return an empty result with no
+// error instead of the decompressed frame.
+func TestFrameCodecDecompressMaxSizeOverflow(t *testing.T) {
+	dict := []byte("some dictionary content used for compression testing 1234567890")
+	c := NewDeflateFrameCodec("v1", dict)
+	msg := []byte("hello world hello world hello world hello world")
+	fr := c.Compress(nil, msg)
+	out, err := c.Decompress(nil, fr, math.MaxInt)
+	if err != nil || !bytes.Equal(out, msg) {
+		t.Fatalf("round trip with maxSize=math.MaxInt failed: err=%v out=%q", err, out)
 	}
 }
 

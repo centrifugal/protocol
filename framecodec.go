@@ -28,7 +28,8 @@ const (
 	FrameCodecCompressed byte = 0x01
 )
 
-// MinCompressionLevel is the lowest level NewDeflateFrameCodec accepts.
+// MinDictionaryCompressionLevel is the lowest level NewDeflateFrameCodec
+// accepts.
 //
 // DEFLATE implementations switch to specialised fast encoders below this which
 // ignore the preset dictionary completely while still accepting it. The
@@ -40,38 +41,7 @@ const (
 // one.
 //
 // TestFrameCodecDictionaryActuallyApplies guards this.
-const MinCompressionLevel = 2
-
-// DefaultCompressionLevel is what NewDeflateFrameCodec's callers should pass
-// absent a specific reason to deviate - centrifuge's own tests and examples,
-// and anything else with no independent basis for choosing differently.
-//
-// Measured on go1.26.5 and go1.27.0, frames drawn from the vocabulary a
-// dictionary is built from, against a few KB dictionary:
-//
-//   - go1.26: levels 2-9 are byte-identical in output and cost, because a
-//     per-frame compression there is dominated by loading the dictionary on
-//     Reset, not by encoding the frame - the level only governs the smaller
-//     half of the work.
-//   - go1.27 rewrote compress/flate's levels 2-6 into new encoders optimised
-//     for large-payload throughput (golang/go#75532), at the cost of ratio for
-//     a small payload against a large preset dictionary - exactly this
-//     codec's shape. A 40 byte frame against a 2.4KB dictionary compresses to
-//     47 bytes at level 6 on go1.27 (worse than sending it raw) versus 34
-//     bytes on go1.26. Levels 7-9 kept the old algorithm, so they are
-//     unaffected: 31 bytes on either Go version, at a CPU cost within a few
-//     percent of what level 6 cost on go1.26 - i.e. level 7 on go1.27 tracks
-//     the historical level-6 cost/ratio, where level 6 on go1.27 does not.
-//   - Levels 7, 8 and 9 produce byte-identical output for this shape, so 9
-//     buys nothing over 7 and only costs more CPU. There is no ratio reason to
-//     go above 7 here.
-//
-// A caller whose traffic or dictionaries look nothing like the above -
-// larger payloads, a much larger or smaller dictionary - may find a different
-// level wins for its own shape, which is why this is a parameter and not a
-// package constant: the answer depends on traffic only the caller sees, and
-// it has already moved once as compress/flate itself changed.
-const DefaultCompressionLevel = 7
+const MinDictionaryCompressionLevel = 2
 
 var (
 	// ErrFrameTooLarge is returned when a compressed frame expands beyond the
@@ -114,19 +84,42 @@ type DeflateFrameCodec struct {
 // the dictionary content so both sides can tell which one a frame was built
 // with.
 //
-// level is a DEFLATE compression level from MinCompressionLevel to 9, and
-// affects only how hard this side's encoder works to shrink a frame - see
-// DefaultCompressionLevel for why this package does not pick one for every
-// caller. It never needs to match what the other side of a connection uses:
-// DEFLATE's format is self-describing per block, so a decoder never depends on
-// which level produced its input, only on sharing the same dictionary.
-// NewDeflateFrameCodec panics if level is below MinCompressionLevel, since
-// that silently disables the dictionary rather than trading ratio for speed.
+// level is a DEFLATE compression level from MinDictionaryCompressionLevel to
+// 9. It affects only how hard this side's encoder works to shrink a frame,
+// and never needs to match what the other side of a connection uses: DEFLATE's
+// format is self-describing per block, so a decoder never depends on which
+// level produced its input, only on sharing the same dictionary.
+// NewDeflateFrameCodec panics if level is below MinDictionaryCompressionLevel,
+// since that silently disables the dictionary rather than trading ratio for
+// speed.
+//
+// This package does not recommend one level for every caller, because the
+// right choice depends on traffic and dictionary shapes only the caller sees,
+// and it has already moved once as compress/flate itself changed. Measured on
+// go1.26.5 and go1.27.0, frames drawn from the vocabulary a dictionary is
+// built from, against a few KB dictionary:
+//
+//   - go1.26: levels 2-9 are byte-identical in output and cost, because a
+//     per-frame compression there is dominated by loading the dictionary on
+//     Reset, not by encoding the frame - the level only governs the smaller
+//     half of the work.
+//   - go1.27 rewrote compress/flate's levels 2-6 into new encoders optimised
+//     for large-payload throughput (golang/go#75532), at the cost of ratio for
+//     a small payload against a large preset dictionary - exactly this
+//     codec's shape. A 40 byte frame against a 2.4KB dictionary compresses to
+//     47 bytes at level 6 on go1.27 (worse than sending it raw) versus 34
+//     bytes on go1.26. Levels 7-9 kept the old algorithm, so they are
+//     unaffected: 31 bytes on either Go version, at a CPU cost within a few
+//     percent of what level 6 cost on go1.26 - i.e. level 7 on go1.27 tracks
+//     the historical level-6 cost/ratio, where level 6 on go1.27 does not.
+//   - Levels 7, 8 and 9 produce byte-identical output for this shape, so 9
+//     buys nothing over 7 and only costs more CPU for a caller with this shape
+//     of traffic.
 func NewDeflateFrameCodec(id string, dict []byte, level int) *DeflateFrameCodec {
-	if level < MinCompressionLevel {
-		panic(fmt.Sprintf("centrifugal/protocol: dictionary compression level %d is below MinCompressionLevel (%d): "+
+	if level < MinDictionaryCompressionLevel {
+		panic(fmt.Sprintf("centrifugal/protocol: dictionary compression level %d is below MinDictionaryCompressionLevel (%d): "+
 			"levels below this silently ignore the preset dictionary instead of trading ratio for speed",
-			level, MinCompressionLevel))
+			level, MinDictionaryCompressionLevel))
 	}
 	c := &DeflateFrameCodec{id: id, dict: dict, level: level}
 	c.wPool.New = func() any {
@@ -227,7 +220,7 @@ func decompressBudget(maxSize int) int64 {
 //
 // level is a plain flate.NewWriter level: unlike NewDeflateFrameCodec's level,
 // there is no preset dictionary here for a low level to silently ignore, so
-// any valid flate level is fine - MinCompressionLevel does not apply.
+// any valid flate level is fine - MinDictionaryCompressionLevel does not apply.
 func DeflateDictionary(dict []byte, level int) []byte {
 	var buf bytes.Buffer
 	w, err := flate.NewWriter(&buf, level)

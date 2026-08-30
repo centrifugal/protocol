@@ -9,7 +9,7 @@ import (
 
 func TestFrameCodecRoundTrip(t *testing.T) {
 	dict := []byte(`{"push":{"id":,"pub":{"data":{"offset":`)
-	c := NewDeflateFrameCodec("v1", dict)
+	c := NewDeflateFrameCodec("v1", dict, DefaultCompressionLevel)
 	msg := []byte(`{"push":{"id":7,"pub":{"data":{"price":123.45},"offset":42}}}`)
 	fr := c.Compress(nil, msg)
 	out, err := c.Decompress(nil, fr, 1<<20)
@@ -41,7 +41,7 @@ func TestFrameCodecRoundTrip(t *testing.T) {
 
 func TestFrameCodecConcurrent(t *testing.T) {
 	dict := []byte(`{"push":{"id":,"pub":{"data":`)
-	c := NewDeflateFrameCodec("v1", dict)
+	c := NewDeflateFrameCodec("v1", dict, DefaultCompressionLevel)
 	done := make(chan bool, 8)
 	for g := 0; g < 8; g++ {
 		go func(g int) {
@@ -62,7 +62,7 @@ func TestFrameCodecConcurrent(t *testing.T) {
 }
 
 func TestFrameCodecDecompressErrors(t *testing.T) {
-	c := NewDeflateFrameCodec("v1", []byte("dict"))
+	c := NewDeflateFrameCodec("v1", []byte("dict"), DefaultCompressionLevel)
 
 	if _, err := c.Decompress(nil, nil, 0); err != ErrEmptyFrame {
 		t.Fatalf("expected ErrEmptyFrame for empty frame, got %v", err)
@@ -78,7 +78,7 @@ func TestFrameCodecDecompressErrors(t *testing.T) {
 // error instead of the decompressed frame.
 func TestFrameCodecDecompressMaxSizeOverflow(t *testing.T) {
 	dict := []byte("some dictionary content used for compression testing 1234567890")
-	c := NewDeflateFrameCodec("v1", dict)
+	c := NewDeflateFrameCodec("v1", dict, DefaultCompressionLevel)
 	msg := []byte("hello world hello world hello world hello world")
 	fr := c.Compress(nil, msg)
 	out, err := c.Decompress(nil, fr, math.MaxInt)
@@ -89,7 +89,7 @@ func TestFrameCodecDecompressMaxSizeOverflow(t *testing.T) {
 
 func TestFrameCodecAccessors(t *testing.T) {
 	dict := []byte("some dictionary content")
-	c := NewDeflateFrameCodec("v42", dict)
+	c := NewDeflateFrameCodec("v42", dict, DefaultCompressionLevel)
 	if c.ID() != "v42" {
 		t.Fatalf("unexpected ID: %s", c.ID())
 	}
@@ -100,7 +100,7 @@ func TestFrameCodecAccessors(t *testing.T) {
 
 func TestDeflateDictionaryRoundTrip(t *testing.T) {
 	dict := bytes.Repeat([]byte(`{"push":{"id":3,"pub":{"data":{}}}}`), 50)
-	compressed := DeflateDictionary(dict)
+	compressed := DeflateDictionary(dict, DefaultCompressionLevel)
 	if len(compressed) == 0 {
 		t.Fatal("DeflateDictionary returned empty output")
 	}
@@ -118,10 +118,23 @@ func TestDeflateDictionaryRoundTrip(t *testing.T) {
 
 func TestInflateDictionaryTooLarge(t *testing.T) {
 	dict := bytes.Repeat([]byte("x"), 1000)
-	compressed := DeflateDictionary(dict)
+	compressed := DeflateDictionary(dict, DefaultCompressionLevel)
 	if _, err := InflateDictionary(compressed, len(dict)-1); err == nil {
 		t.Fatal("expected an error when inflated dictionary exceeds maxSize")
 	}
+}
+
+// TestNewDeflateFrameCodecRejectsLowLevel guards MinCompressionLevel: a level
+// below it silently drops the dictionary instead of trading ratio for speed,
+// so NewDeflateFrameCodec must refuse it rather than build a codec that looks
+// fine but never compresses against its dictionary.
+func TestNewDeflateFrameCodecRejectsLowLevel(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("expected NewDeflateFrameCodec to panic for a level below MinCompressionLevel")
+		}
+	}()
+	NewDeflateFrameCodec("v1", []byte("dict"), MinCompressionLevel-1)
 }
 
 // TestFrameCodecDictionaryActuallyApplies fails if the configured compression
@@ -139,8 +152,8 @@ func TestFrameCodecDictionaryActuallyApplies(t *testing.T) {
 	}
 	msg := []byte(`{"push":{"id":7,"pub":{"data":{"price":123.45},"offset":42}}}`)
 
-	withDict := NewDeflateFrameCodec("v", d.Bytes()[:4096])
-	noDict := NewDeflateFrameCodec("v", nil)
+	withDict := NewDeflateFrameCodec("v", d.Bytes()[:4096], DefaultCompressionLevel)
+	noDict := NewDeflateFrameCodec("v", nil, DefaultCompressionLevel)
 
 	got := len(withDict.Compress(nil, msg))
 	baseline := len(noDict.Compress(nil, msg))

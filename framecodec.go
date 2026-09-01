@@ -242,7 +242,10 @@ func DeflateDictionary(dict []byte, level int) []byte {
 func InflateDictionary(data []byte, maxSize int) ([]byte, error) {
 	r := flate.NewReader(bytes.NewReader(data))
 	defer func() { _ = r.Close() }()
-	out, err := io.ReadAll(io.LimitReader(r, int64(maxSize)+1))
+	// decompressBudget avoids the int64(maxSize)+1 overflow when maxSize is
+	// math.MaxInt, which would otherwise silently truncate the output to
+	// nothing instead of decompressing it.
+	out, err := io.ReadAll(io.LimitReader(r, decompressBudget(maxSize)))
 	if err != nil {
 		return nil, err
 	}

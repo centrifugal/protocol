@@ -92,6 +92,18 @@ func TestFrameCodecDecompressMaxSizeOverflow(t *testing.T) {
 	}
 }
 
+// TestInflateDictionaryMaxSizeOverflow is InflateDictionary's counterpart to
+// TestFrameCodecDecompressMaxSizeOverflow: it has the same int64(maxSize)+1
+// overflow hazard when maxSize is math.MaxInt.
+func TestInflateDictionaryMaxSizeOverflow(t *testing.T) {
+	dict := []byte("some dictionary content used for compression testing 1234567890")
+	compressed := DeflateDictionary(dict, testCompressionLevel)
+	out, err := InflateDictionary(compressed, math.MaxInt)
+	if err != nil || !bytes.Equal(out, dict) {
+		t.Fatalf("round trip with maxSize=math.MaxInt failed: err=%v out=%q", err, out)
+	}
+}
+
 func TestFrameCodecAccessors(t *testing.T) {
 	dict := []byte("some dictionary content")
 	c := NewDeflateFrameCodec("v42", dict, testCompressionLevel)

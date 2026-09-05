@@ -156,6 +156,23 @@ func TestProtobufCommandDecoder_Decode_ShortData(t *testing.T) {
 	}
 }
 
+func readReplies(t testing.TB, decoder ReplyDecoder) []*Reply {
+	t.Helper()
+	var replies []*Reply
+	for {
+		reply, err := decoder.Decode()
+		if err != nil {
+			// Unlike CommandDecoder, a ReplyDecoder signals the end of a frame
+			// with io.EOF on its own, without a Reply attached to it.
+			require.ErrorIs(t, err, io.EOF)
+			require.Nil(t, reply)
+			break
+		}
+		replies = append(replies, reply)
+	}
+	return replies
+}
+
 func TestProtobufReplyDecoder_Decode_Many(t *testing.T) {
 	encoder := NewProtobufDataEncoder()
 	replyEncoder := NewProtobufReplyEncoder()
@@ -165,16 +182,7 @@ func TestProtobufReplyDecoder_Decode_Many(t *testing.T) {
 		require.NoError(t, encoder.Encode(replyData))
 	}
 
-	decoder := NewProtobufReplyDecoder(encoder.Finish())
-	var replies []*Reply
-	for {
-		reply, err := decoder.Decode()
-		if err != nil {
-			require.ErrorIs(t, err, io.EOF)
-			break
-		}
-		replies = append(replies, reply)
-	}
+	replies := readReplies(t, NewProtobufReplyDecoder(encoder.Finish()))
 	require.Len(t, replies, 2)
 	if len(replies) == 2 { // Make Goland happy.
 		require.Equal(t, uint32(1), replies[0].Id)
@@ -219,4 +227,108 @@ func TestProtobufReplyDecoder_Decode_Malformed(t *testing.T) {
 			require.ErrorIs(t, err, tt.err)
 		})
 	}
+}
+
+func TestJSONReplyDecoder_Decode_Many(t *testing.T) {
+	dataEncoder := NewJSONDataEncoder()
+	replyEncoder := NewJSONReplyEncoder()
+	for _, id := range []uint32{1, 2} {
+		replyData, err := replyEncoder.Encode(&Reply{Id: id, Connect: &ConnectResult{Client: "client"}})
+		require.NoError(t, err)
+		require.NoError(t, dataEncoder.Encode(replyData))
+	}
+
+	replies := readReplies(t, NewJSONReplyDecoder(dataEncoder.Finish()))
+	require.Len(t, replies, 2)
+	if len(replies) == 2 { // Make Goland happy.
+		require.Equal(t, uint32(1), replies[0].Id)
+		require.Equal(t, uint32(2), replies[1].Id)
+		require.Equal(t, "client", replies[0].Connect.Client)
+	}
+}
+
+func TestJSONReplyDecoder_Decode_Empty(t *testing.T) {
+	require.Empty(t, readReplies(t, NewJSONReplyDecoder(nil)))
+}
+
+// A Raw payload may contain a raw newline, which is exactly what delimits
+// replies inside a JSON frame. Raw.MarshalJSON strips those on encode so that a
+// payload cannot inject a delimiter into the frame - this asserts the whole
+// round trip, since a client which splits a frame on `\n` (as SDKs in other
+// languages do) would otherwise see the publication torn in two.
+func TestJSONReplyDecoder_Decode_PayloadWithNewline(t *testing.T) {
+	dataEncoder := NewJSONDataEncoder()
+	replyEncoder := NewJSONReplyEncoder()
+
+	pubReply, err := replyEncoder.Encode(&Reply{
+		Push: &Push{Channel: "chat:1", Pub: &Publication{Data: Raw("{\"num\":\n1}")}},
+	})
+	require.NoError(t, err)
+	require.NoError(t, dataEncoder.Encode(pubReply))
+	nextReply, err := replyEncoder.Encode(&Reply{Id: 7})
+	require.NoError(t, err)
+	require.NoError(t, dataEncoder.Encode(nextReply))
+
+	replies := readReplies(t, NewJSONReplyDecoder(dataEncoder.Finish()))
+	require.Len(t, replies, 2)
+	if len(replies) == 2 { // Make Goland happy.
+		require.Equal(t, "chat:1", replies[0].Push.Channel)
+		require.Equal(t, Raw(`{"num":1}`), replies[0].Push.Pub.Data)
+		require.Equal(t, uint32(7), replies[1].Id)
+	}
+}
+
+// Replies come from a server, so malformed input must produce an error instead
+// of a panic.
+func TestJSONReplyDecoder_Decode_Malformed(t *testing.T) {
+	decoder := NewJSONReplyDecoder([]byte(`{"id": 1}` + "\n" + `{"id": `))
+	reply, err := decoder.Decode()
+	require.NoError(t, err)
+	require.Equal(t, uint32(1), reply.Id)
+	_, err = decoder.Decode()
+	require.Error(t, err)
+	require.NotErrorIs(t, err, io.EOF)
+}
+
+func TestJSONReplyDecoder_Reset(t *testing.T) {
+	replyEncoder := NewJSONReplyEncoder()
+	first, err := replyEncoder.Encode(&Reply{Id: 1})
+	require.NoError(t, err)
+	second, err := replyEncoder.Encode(&Reply{Id: 2})
+	require.NoError(t, err)
+
+	decoder := NewJSONReplyDecoder(first)
+	replies := readReplies(t, decoder)
+	require.Len(t, replies, 1)
+
+	require.NoError(t, decoder.Reset(second))
+	replies = readReplies(t, decoder)
+	require.Len(t, replies, 1)
+	require.Equal(t, uint32(2), replies[0].Id)
+}
+
+func TestProtobufReplyDecoder_Reset(t *testing.T) {
+	replyEncoder := NewProtobufReplyEncoder()
+	dataEncoder := NewProtobufDataEncoder()
+	replyData, err := replyEncoder.Encode(&Reply{Id: 1})
+	require.NoError(t, err)
+	require.NoError(t, dataEncoder.Encode(replyData))
+	first := dataEncoder.Finish()
+
+	dataEncoder.Reset()
+	replyData, err = replyEncoder.Encode(&Reply{Id: 2})
+	require.NoError(t, err)
+	require.NoError(t, dataEncoder.Encode(replyData))
+	second := dataEncoder.Finish()
+
+	decoder := NewProtobufReplyDecoder(first)
+	replies := readReplies(t, decoder)
+	require.Len(t, replies, 1)
+
+	// Reset must rewind the offset, not just swap the frame - otherwise the
+	// second frame would be reported as fully consumed already.
+	require.NoError(t, decoder.Reset(second))
+	replies = readReplies(t, decoder)
+	require.Len(t, replies, 1)
+	require.Equal(t, uint32(2), replies[0].Id)
 }

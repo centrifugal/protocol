@@ -50,7 +50,9 @@ func (w *writer) BuildBytes(reuse ...[]byte) ([]byte, error) {
 	return ret, nil
 }
 
-// BuildBytesNoCopy returns writer data as a single byte slice and returns function to call when data is no longer needed.
+// BuildBytesNoCopy returns writer data as a single byte slice without copying it
+// out of the underlying buffer. The returned slice points into that buffer, so –
+// unlike in BuildBytes – the buffer is not returned to the pool.
 func (w *writer) BuildBytesNoCopy() ([]byte, error) {
 	if w.Error != nil {
 		return nil, w.Error

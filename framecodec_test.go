@@ -77,6 +77,81 @@ func TestFrameCodecDecompressErrors(t *testing.T) {
 	}
 }
 
+// TestFrameCodecDecompressCorruptFrame feeds Decompress compressed frames which
+// are not valid DEFLATE. Those come straight off the network, so they must be
+// reported as an error rather than silently yielding partial output - and since
+// the failed reader goes back to the pool, the codec must keep decoding valid
+// frames afterwards.
+func TestFrameCodecDecompressCorruptFrame(t *testing.T) {
+	dict := []byte(`{"push":{"id":,"pub":{"data":{"offset":`)
+	c := NewDeflateFrameCodec("v1", dict, testCompressionLevel)
+	msg := []byte(`{"push":{"id":7,"pub":{"data":{"price":123.45},"offset":42}}}`)
+	valid := c.Compress(nil, msg)
+	if valid[0] != FrameCodecCompressed {
+		t.Fatalf("expected a compressed frame, got marker %#x", valid[0])
+	}
+
+	corrupt := map[string][]byte{
+		"truncated body": valid[:len(valid)/2],
+		"no body":        {FrameCodecCompressed},
+		// 0xff starts a block of the reserved DEFLATE block type.
+		"reserved block type": {FrameCodecCompressed, 0xff, 0xff, 0xff},
+	}
+	for name, frame := range corrupt {
+		t.Run(name, func(t *testing.T) {
+			out, err := c.Decompress(nil, frame, 1<<20)
+			if err == nil {
+				t.Fatalf("expected an error, got output %q", out)
+			}
+			if out != nil {
+				t.Fatalf("expected no output together with error %v, got %q", err, out)
+			}
+			out, err = c.Decompress(nil, valid, 1<<20)
+			if err != nil || !bytes.Equal(out, msg) {
+				t.Fatalf("codec did not recover after a corrupt frame: err=%v out=%q", err, out)
+			}
+		})
+	}
+}
+
+// TestFrameCodecAppendsToDst checks that Compress and Decompress append to dst
+// rather than overwrite it, for both frame markers, and that maxSize bounds only
+// the decompressed output and not what dst already held.
+func TestFrameCodecAppendsToDst(t *testing.T) {
+	dict := []byte(`{"push":{"id":,"pub":{"data":{"offset":`)
+	c := NewDeflateFrameCodec("v1", dict, testCompressionLevel)
+	prefix := []byte("prefix")
+
+	payloads := map[string][]byte{
+		"compressed": []byte(`{"push":{"id":7,"pub":{"data":{"price":123.45},"offset":42}}}`),
+		"raw":        {0x01, 0x80, 0x7f, 0x13},
+	}
+	for name, msg := range payloads {
+		t.Run(name, func(t *testing.T) {
+			frame := c.Compress(append([]byte(nil), prefix...), msg)
+			if !bytes.HasPrefix(frame, prefix) {
+				t.Fatalf("Compress dropped dst: %q", frame)
+			}
+			frame = frame[len(prefix):]
+			wantMarker := FrameCodecCompressed
+			if name == "raw" {
+				wantMarker = FrameCodecRaw
+			}
+			if frame[0] != wantMarker {
+				t.Fatalf("expected marker %#x, got %#x", wantMarker, frame[0])
+			}
+
+			out, err := c.Decompress(append([]byte(nil), prefix...), frame, len(msg))
+			if err != nil {
+				t.Fatalf("Decompress failed: %v", err)
+			}
+			if want := append(append([]byte(nil), prefix...), msg...); !bytes.Equal(out, want) {
+				t.Fatalf("expected %q, got %q", want, out)
+			}
+		})
+	}
+}
+
 // TestFrameCodecDecompressMaxSizeOverflow guards against int64(maxSize)+1
 // overflowing when maxSize is math.MaxInt: that used to turn into a negative
 // io.LimitReader budget, which made Decompress return an empty result with no
@@ -138,6 +213,26 @@ func TestInflateDictionaryTooLarge(t *testing.T) {
 	compressed := DeflateDictionary(dict, testCompressionLevel)
 	if _, err := InflateDictionary(compressed, len(dict)-1); err == nil {
 		t.Fatal("expected an error when inflated dictionary exceeds maxSize")
+	}
+}
+
+// TestInflateDictionaryCorrupt checks that dictionary content which is not
+// valid DEFLATE is rejected rather than installed truncated or empty.
+func TestInflateDictionaryCorrupt(t *testing.T) {
+	dict := bytes.Repeat([]byte(`{"push":{"id":3,"pub":{"data":{}}}}`), 50)
+	compressed := DeflateDictionary(dict, testCompressionLevel)
+
+	corrupt := map[string][]byte{
+		"truncated":           compressed[:len(compressed)/2],
+		"empty":               {},
+		"reserved block type": {0xff, 0xff, 0xff},
+	}
+	for name, data := range corrupt {
+		t.Run(name, func(t *testing.T) {
+			if out, err := InflateDictionary(data, len(dict)); err == nil {
+				t.Fatalf("expected an error, got %d B of output", len(out))
+			}
+		})
 	}
 }
 

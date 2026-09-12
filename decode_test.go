@@ -156,6 +156,63 @@ func TestProtobufCommandDecoder_Decode_ShortData(t *testing.T) {
 	}
 }
 
+// Commands come from an untrusted client, so malformed input must produce an
+// error without a Command - decoding must never panic and must always terminate.
+func TestProtobufCommandDecoder_Decode_Malformed(t *testing.T) {
+	tests := []struct {
+		name string
+		data []byte
+		err  error
+	}{
+		{
+			name: "empty frame",
+			data: []byte{},
+			err:  io.EOF,
+		},
+		{
+			name: "length prefix beyond buffer",
+			data: []byte{0x10, 0x01, 0x02},
+			err:  io.ErrShortBuffer,
+		},
+		{
+			name: "truncated varint",
+			data: []byte{0x80},
+			err:  io.EOF,
+		},
+		{
+			name: "varint overflowing uint64",
+			data: []byte{0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x02},
+			err:  io.EOF,
+		},
+		{
+			name: "length overflowing int arithmetic",
+			data: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x01},
+			err:  io.ErrShortBuffer,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			decoder := NewProtobufCommandDecoder(tt.data)
+			cmd, err := decoder.Decode()
+			require.Nil(t, cmd)
+			require.ErrorIs(t, err, tt.err)
+		})
+	}
+}
+
+// A body which fails to unmarshal must be reported as an error of its own - not
+// as io.EOF, which callers treat as a fully processed frame.
+func TestProtobufCommandDecoder_Decode_InvalidBody(t *testing.T) {
+	badBody := []byte{0x0F} // Field 1 with wire type 7, which is not valid.
+	data := append([]byte{byte(len(badBody))}, badBody...)
+
+	decoder := NewProtobufCommandDecoder(data)
+	cmd, err := decoder.Decode()
+	require.Nil(t, cmd)
+	require.Error(t, err)
+	require.NotErrorIs(t, err, io.EOF)
+}
+
 func readReplies(t testing.TB, decoder ReplyDecoder) []*Reply {
 	t.Helper()
 	var replies []*Reply

@@ -40,7 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         # Oldest supported version (see go.mod) and the most recent one.
-        go-version: ["1.25", "1.26"]
+        go-version: ["1.26", "1.27"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -52,3 +52,84 @@ jobs:
 
       - name: Test
         run: go test -race -count=1 ./...
+
+      # Modules of their own, see their READMEs.
+      - name: Test JSON compatibility with easyjson and segmentio
+        run: make json-compat
+
+      - name: Test Protobuf compatibility with vtprotobuf
+        run: make protobuf-compat
+
+  cross:
+    name: Test on ${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    strategy:
+      fail-fast: false
+      matrix:
+        # The JSON code reads the input a machine word at a time, so it is
+        # tested where int is 32 bits (386) and where the byte order is
+        # big-endian (s390x), besides the 64-bit little-endian default.
+        goarch: ["386", "s390x"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: stable
+
+      # Lets the kernel run s390x binaries through QEMU.
+      - name: Set up QEMU
+        if: matrix.goarch == 's390x'
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: s390x
+
+      - name: Test
+        run: GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 go test -count=1 -timeout 30m ./...
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: stable
+
+      # gosec runs as a part of golangci-lint, see .golangci.yml.
+      - name: govulncheck
+        run: make sec
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: stable
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: go
+          queries: security-extended
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: codeql-go

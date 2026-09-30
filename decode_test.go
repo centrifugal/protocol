@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"errors"
 	"io"
 	"testing"
 
@@ -13,7 +14,7 @@ func readCommands(t testing.TB, decoder CommandDecoder) []*Command {
 	for {
 		cmd, err := decoder.Decode()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				if cmd != nil {
 					commands = append(commands, cmd)
 				}

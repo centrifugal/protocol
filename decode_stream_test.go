@@ -3,13 +3,14 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
+	"errors"
 	"io"
 	"math"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/segmentio/encoding/json"
 
 	"github.com/stretchr/testify/require"
 )
@@ -155,7 +156,7 @@ func TestJSONStreamCommandDecoder(t *testing.T) {
 				i++
 				cmd, _, err := decoder.Decode()
 				if err != nil {
-					if err == io.EOF {
+					if errors.Is(err, io.EOF) {
 						require.NotNil(t, cmd)
 						require.Equal(t, cmd.Publish.Channel, strconv.Itoa(i))
 						numMessagesRead += 1
@@ -491,4 +492,45 @@ func TestStreamingDecode_JSON_DropsOversizedBuffer(t *testing.T) {
 	// Returning it to the pool must not retain one either.
 	PutStreamCommandDecoder(TypeJSON, decoder)
 	require.Nil(t, jsonDecoder.buf)
+}
+
+// A message too large for a pooled buffer is read in steps.
+func TestProtobufStreamCommandDecoder_LargeMessage(t *testing.T) {
+	for _, size := range []int{maxBufferLength - 1, maxBufferLength, maxBufferLength + 1, 3*maxBufferLength + 17, 5 << 20} {
+		cmd := &Command{Id: 7, Publish: &PublishRequest{Channel: "news", Data: bytes.Repeat([]byte("x"), size)}}
+		body, err := cmd.MarshalVT()
+		require.NoError(t, err)
+		frame := binary.AppendUvarint(nil, uint64(len(body)))
+		frame = append(frame, body...)
+		// Two of them, to see that the first one took exactly its bytes.
+		frame = append(frame, frame...)
+
+		decoder := NewProtobufStreamCommandDecoder(bytes.NewReader(frame), 16<<20)
+		for range 2 {
+			got, n, decodeErr := decoder.Decode()
+			require.NoError(t, decodeErr)
+			require.Equal(t, len(body)+8, n)
+			require.Equal(t, uint32(7), got.Id)
+			require.Equal(t, size, len(got.Publish.Data))
+		}
+		_, _, err = decoder.Decode()
+		require.ErrorIs(t, err, io.EOF)
+	}
+}
+
+// The length of a message takes a few bytes to declare. What is allocated for
+// a large one must follow the bytes which were actually sent, not the length.
+func TestProtobufStreamCommandDecoder_LargeLengthAllocatesAsDataArrives(t *testing.T) {
+	const limit = 1 << 30
+	frame := binary.AppendUvarint(nil, limit)
+	frame = append(frame, make([]byte, 1000)...)
+
+	decoder := NewProtobufStreamCommandDecoder(bytes.NewReader(frame), limit)
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	cmd, _, err := decoder.Decode()
+	runtime.ReadMemStats(&after)
+	require.Nil(t, cmd)
+	require.ErrorIs(t, err, io.ErrUnexpectedEOF)
+	require.Less(t, after.TotalAlloc-before.TotalAlloc, uint64(4*maxBufferLength))
 }

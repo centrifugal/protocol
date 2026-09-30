@@ -1,34 +1,93 @@
 version: "2"
 
+# The package parses bytes which come from the network, so the set below
+# leans towards correctness and security checks and away from style opinions.
 linters:
   default: none
   enable:
+    - bidichk        # bidirectional unicode in source, a supply-chain trick
+    - copyloopvar
     - errcheck
+    - errorlint      # error comparison and wrapping done correctly
+    - gocritic
+    - gosec          # the security checks; see the nolint notes in the source
     - govet
     - ineffassign
+    - makezero
+    - misspell
+    - nilerr
+    - predeclared    # shadowing new, len, cap and friends
+    - revive
     - staticcheck
+    - unconvert
     - unused
-    - gosec
+    - usestdlibvars
+    - wastedassign
+
   settings:
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment # generated structs are laid out by protoc
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+      disabled-checks:
+        - unnamedResult
+        - hugeParam    # gen.Config is a plain options struct passed by value
     staticcheck:
       checks:
         - "all"
-        - "-ST1003"  # Excludes bad variable names check: exported names like DefaultJsonPushEncoder are part of the public API.
+        - "-ST1003"  # Exported names like DefaultJsonPushEncoder are part of the public API.
         - "-ST1000"  # No need in package comment check.
-    gosec:
-      excludes:
-        - "G115"  # Integer overflow check - sth to fix.
+        - "-QF1008"  # Generated code names embedded structs in full: a field may be hidden by another.
+    revive:
+      rules:
+        - name: exported
+        - name: var-naming
+        - name: indent-error-flow
+        - name: errorf
+        - name: range-val-in-closure
+
   exclusions:
+    # Generated files are linted like code written by hand: the decoders in
+    # client.pb_cfjson.go and client.pb_cfprotobuf.go are what actually reads
+    # untrusted input.
+    generated: disable
+    # Except for what protoc-gen-go generates, which is not ours to change.
+    paths:
+      - client\.pb\.go$
+      # Snapshots of the JSON and Protobuf code this package had before
+      # cfjson and cfprotobuf, kept for comparison. They are modules of their
+      # own, this only matters when the linter is run from inside of one.
+      - internal/cfjsoncmp/
+      - internal/cfprotobufcmp/
     rules:
-      - path: "_test\\.go"
+      # Test data has to be deterministic, so it is generated with math/rand
+      # (G404) and narrowed to small integers (G115). Neither is a security
+      # boundary. Every other gosec check still applies to the tests.
+      - path: _test\.go
+        text: "G404|G115"
         linters:
-          - gosec # Disable in tests, sth to fix.
+          - gosec
+      # Renaming these would break the public API.
+      - path: type\.go
+        text: "var-naming: var DefaultJson"
+        linters:
+          - revive
       # b.Fatal/t.Fatal end the test, but SA5011 does not model that and reports
       # a possible nil dereference after a nil check followed by Fatal.
-      - path: "_test\\.go"
+      - path: _test\.go
+        text: "SA5011"
         linters:
           - staticcheck
-        text: "SA5011"
+
+issues:
+  # Report everything: a finding hidden behind a limit is still a finding.
+  max-issues-per-linter: 0
+  max-same-issues: 0
 
 formatters:
   enable:

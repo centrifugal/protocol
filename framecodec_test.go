@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"math"
 	"testing"
@@ -38,7 +39,7 @@ func TestFrameCodecRoundTrip(t *testing.T) {
 	// bomb guard
 	big := bytes.Repeat([]byte("A"), 100000)
 	fr3 := c.Compress(nil, big)
-	if _, err := c.Decompress(nil, fr3, 1000); err != ErrFrameTooLarge {
+	if _, err := c.Decompress(nil, fr3, 1000); !errors.Is(err, ErrFrameTooLarge) {
 		t.Fatalf("expected ErrFrameTooLarge, got %v", err)
 	}
 	fmt.Printf("bomb guard OK (%d B compressed -> refused at 1000 B limit)\n", len(fr3))
@@ -69,10 +70,10 @@ func TestFrameCodecConcurrent(t *testing.T) {
 func TestFrameCodecDecompressErrors(t *testing.T) {
 	c := NewDeflateFrameCodec("v1", []byte("dict"), testCompressionLevel)
 
-	if _, err := c.Decompress(nil, nil, 0); err != ErrEmptyFrame {
+	if _, err := c.Decompress(nil, nil, 0); !errors.Is(err, ErrEmptyFrame) {
 		t.Fatalf("expected ErrEmptyFrame for empty frame, got %v", err)
 	}
-	if _, err := c.Decompress(nil, []byte{0xff, 0x01, 0x02}, 0); err != ErrUnknownFrameCodec {
+	if _, err := c.Decompress(nil, []byte{0xff, 0x01, 0x02}, 0); !errors.Is(err, ErrUnknownFrameCodec) {
 		t.Fatalf("expected ErrUnknownFrameCodec for unknown marker, got %v", err)
 	}
 }

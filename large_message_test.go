@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -58,7 +59,6 @@ func largeMessageSizes() []int {
 
 func TestLargeMessage_WholeFrame_JSON_RoundTrip(t *testing.T) {
 	for _, n := range largeMessageSizes() {
-		n := n
 		t.Run(fmt.Sprintf("n=%d", n), func(t *testing.T) {
 			payload := randomJSONPayload(t, n, int64(n))
 			cmd := &Command{Id: 42, Publish: &PublishRequest{Channel: "chan", Data: payload}}
@@ -69,7 +69,7 @@ func TestLargeMessage_WholeFrame_JSON_RoundTrip(t *testing.T) {
 			}
 			dec := NewJSONCommandDecoder(data)
 			got, err := dec.Decode()
-			if err != nil && err != io.EOF {
+			if err != nil && !errors.Is(err, io.EOF) {
 				t.Fatalf("decode: %v", err)
 			}
 			if got.Id != 42 {
@@ -84,7 +84,6 @@ func TestLargeMessage_WholeFrame_JSON_RoundTrip(t *testing.T) {
 
 func TestLargeMessage_WholeFrame_Protobuf_RoundTrip(t *testing.T) {
 	for _, n := range largeMessageSizes() {
-		n := n
 		t.Run(fmt.Sprintf("n=%d", n), func(t *testing.T) {
 			payload := randomPayload(t, n, int64(n)+1)
 			cmd := &Command{Id: 42, Publish: &PublishRequest{Channel: "chan", Data: payload}}
@@ -95,7 +94,7 @@ func TestLargeMessage_WholeFrame_Protobuf_RoundTrip(t *testing.T) {
 			}
 			dec := NewProtobufCommandDecoder(data)
 			got, err := dec.Decode()
-			if err != nil && err != io.EOF {
+			if err != nil && !errors.Is(err, io.EOF) {
 				t.Fatalf("decode: %v", err)
 			}
 			if got.Id != 42 {
@@ -135,7 +134,7 @@ func TestLargeMessage_MixedBatch_JSON(t *testing.T) {
 	dec := NewJSONCommandDecoder(frame)
 	for i := range szs {
 		cmd, err := dec.Decode()
-		if err != nil && err != io.EOF {
+		if err != nil && !errors.Is(err, io.EOF) {
 			t.Fatalf("whole-frame decode %d: %v", i, err)
 		}
 		if cmd.Id != uint32(i+1) {
@@ -151,7 +150,7 @@ func TestLargeMessage_MixedBatch_JSON(t *testing.T) {
 	sdec := NewJSONStreamCommandDecoder(r, 50_000_000)
 	for i := range szs {
 		cmd, n, err := sdec.Decode()
-		if err != nil && err != io.EOF {
+		if err != nil && !errors.Is(err, io.EOF) {
 			t.Fatalf("stream decode %d: %v", i, err)
 		}
 		if cmd.Id != uint32(i+1) {
@@ -184,7 +183,7 @@ func TestLargeMessage_MixedBatch_Protobuf(t *testing.T) {
 	dec := NewProtobufCommandDecoder(frame)
 	for i := range szs {
 		cmd, err := dec.Decode()
-		if err != nil && err != io.EOF {
+		if err != nil && !errors.Is(err, io.EOF) {
 			t.Fatalf("whole-frame decode %d: %v", i, err)
 		}
 		if cmd.Id != uint32(i+1) {
@@ -199,7 +198,7 @@ func TestLargeMessage_MixedBatch_Protobuf(t *testing.T) {
 	sdec := NewProtobufStreamCommandDecoder(r, 50_000_000)
 	for i := range szs {
 		cmd, n, err := sdec.Decode()
-		if err != nil && err != io.EOF {
+		if err != nil && !errors.Is(err, io.EOF) {
 			t.Fatalf("stream decode %d: %v", i, err)
 		}
 		if cmd.Id != uint32(i+1) {
@@ -235,7 +234,7 @@ func TestLargeMessage_PooledDecoderReuse_Protobuf(t *testing.T) {
 		dec := GetStreamCommandDecoderLimited(TypeProtobuf, r, 10_000_000)
 		for i := range szs {
 			cmd, _, err := dec.Decode()
-			if err != nil && err != io.EOF {
+			if err != nil && !errors.Is(err, io.EOF) {
 				t.Fatalf("round %d decode %d: %v", round, i, err)
 			}
 			if cmd.Id != uint32(i+1) {
@@ -273,7 +272,7 @@ func TestLargeMessage_PooledDecoderReuse_JSON(t *testing.T) {
 		dec := GetStreamCommandDecoderLimited(TypeJSON, r, 10_000_000)
 		for i := range szs {
 			cmd, _, err := dec.Decode()
-			if err != nil && err != io.EOF {
+			if err != nil && !errors.Is(err, io.EOF) {
 				t.Fatalf("round %d decode %d: %v", round, i, err)
 			}
 			if cmd.Id != uint32(i+1) {
@@ -292,7 +291,6 @@ func TestLargeMessage_PooledDecoderReuse_JSON(t *testing.T) {
 // WriteMany in centrifuge), for large already-encoded reply/push payloads.
 func TestLargeMessage_DataEncoder_RoundTrip(t *testing.T) {
 	for _, n := range largeMessageSizes() {
-		n := n
 		t.Run(fmt.Sprintf("protobuf/n=%d", n), func(t *testing.T) {
 			payload := randomPayload(t, n, int64(n)+555)
 			pub := &Publication{Data: payload}
@@ -303,7 +301,7 @@ func TestLargeMessage_DataEncoder_RoundTrip(t *testing.T) {
 			}
 			dataEnc := GetDataEncoder(TypeProtobuf)
 			defer PutDataEncoder(TypeProtobuf, dataEnc)
-			if err := dataEnc.Encode(msg); err != nil {
+			if err = dataEnc.Encode(msg); err != nil {
 				t.Fatalf("data encode: %v", err)
 			}
 			framed := dataEnc.Finish()

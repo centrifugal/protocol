@@ -4,22 +4,20 @@
 #
 # The result is three generated files, all of them committed to the repo:
 #
-#   client.pb.go           - protoc-gen-go structs, with []byte fields replaced by Raw.
-#   client_vtproto.pb.go   - allocation-friendly Protobuf marshal/unmarshal/size methods.
-#   client.pb_easyjson.go  - easyjson marshalers, rewired to the writer from encode_writer.go.
+#   client.pb.go             - protoc-gen-go structs, with []byte fields replaced by Raw.
+#   client.pb_cfprotobuf.go  - Protobuf marshal/unmarshal/size methods, see cfprotobuf.
+#   client.pb_cfjson.go      - JSON encoders and decoders, see cfjson.
 #
 # Required tools:
 #
 #   brew install protobuf
 #   go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-#   go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@latest
 #   go install github.com/fatih/gomodifytags@v1.13.0
 #   go install github.com/FZambia/gomodifytype@latest
-#   go install github.com/mailru/easyjson/easyjson@v0.7.7
-#   go install golang.org/x/tools/cmd/goimports@latest
 #
-# The easyjson binary version must match the github.com/mailru/easyjson version
-# in go.mod - keep both pinned when upgrading.
+# The generators of the JSON and of the Protobuf code live in this repo
+# (cfjson/cmd/cfjson and cfprotobuf/cmd/cfprotobuf) and are run with `go run`,
+# so they need no installation and cannot go out of sync.
 
 set -euo pipefail
 
@@ -35,21 +33,14 @@ require() {
 
 require protoc
 require protoc-gen-go
-require protoc-gen-go-vtproto
 require gomodifytype
 require gomodifytags
-require easyjson
-require goimports
 
-echo "generating Protobuf code..."
-protoc --go_out=. --plugin protoc-gen-go="$(command -v protoc-gen-go)" --go-vtproto_out=. \
-  --plugin protoc-gen-go-vtproto="$(command -v protoc-gen-go-vtproto)" \
-  --go-vtproto_opt=features=marshal+unmarshal+size \
-  client.proto
+echo "generating Protobuf structs..."
+protoc --go_out=. --plugin protoc-gen-go="$(command -v protoc-gen-go)" client.proto
 
 # protoc writes into a directory tree matching go_package, move results to the repo root.
 cp github.com/centrifugal/protocol/client.pb.go client.pb.go
-cp github.com/centrifugal/protocol/client_vtproto.pb.go client_vtproto.pb.go
 rm -rf github.com
 
 echo "replacing []byte fields with Raw type..."
@@ -65,24 +56,15 @@ gomodifytags -file client.pb.go -field Offset -struct HistoryResult -all -w -rem
 gomodifytags -file client.pb.go -field Epoch -struct HistoryResult -all -w -remove-options json=omitempty >/dev/null
 gomodifytags -file client.pb.go -field Publications -struct HistoryResult -all -w -remove-options json=omitempty >/dev/null
 
-echo "generating easyjson code..."
-# Compile easyjson in a separate dir since we are using a custom writer here.
-rm -rf build
-mkdir build
-cp client.pb.go build/client.pb.go
-cp raw.go build/raw.go
-(cd build && easyjson -all -no_std_marshalers client.pb.go)
-# Move compiled file to the current dir.
-cp build/client.pb_easyjson.go ./client.pb_easyjson.go
-rm -rf build
+echo "generating Protobuf code..."
+# raw.go is there for the declaration of Raw, which the structs refer to.
+# Fields a message does not have are not kept: nothing here passes on what it
+# decoded without knowing what it is.
+go run ./cfprotobuf/cmd/cfprotobuf -drop-unknown -out client.pb_cfprotobuf.go client.pb.go raw.go
 
-# Replace usage of jwriter.Writer with the custom writer from encode_writer.go and
-# usage of jwriter package constants with local writer constants. Note: not using
-# `sed -i` here since its syntax differs between GNU and BSD sed.
-sed -e 's/jwriter\.W/w/g' -e 's/jwriter\.N/n/g' client.pb_easyjson.go > client.pb_easyjson.go.tmp
-mv client.pb_easyjson.go.tmp client.pb_easyjson.go
-# Cleanup formatting.
-goimports -w client.pb_easyjson.go
+echo "generating JSON code..."
+# Raw holds an already encoded JSON value.
+go run ./cfjson/cmd/cfjson -raw Raw -out client.pb_cfjson.go client.pb.go
 
 # Copy to definitions folder for docs link backwards compatibility.
 cp client.proto definitions/client.proto

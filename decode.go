@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"io"
 
-	"github.com/segmentio/encoding/json"
+	"github.com/centrifugal/protocol/cfjson"
 )
 
 // CommandDecoder decodes commands from a transport frame which may contain
@@ -76,7 +76,7 @@ func (d *JSONCommandDecoder) Decode() (*Command, error) {
 		d.offset = len(d.data)
 	}
 	var c Command
-	if _, err := json.Parse(msg, &c, json.ZeroCopy); err != nil {
+	if err := cfjson.Unmarshal(msg, &c, cfjson.ZeroCopy); err != nil {
 		return nil, err
 	}
 	if d.offset >= len(d.data) {
@@ -116,22 +116,23 @@ func (d *ProtobufCommandDecoder) Decode() (*Command, error) {
 		if n <= 0 {
 			return nil, io.EOF
 		}
+		// The length is declared by the other side: it must fit what is left
+		// of the frame, which also makes the conversion below safe.
 		from := d.offset + n
-		to := d.offset + n + int(l)
-		if from <= to && to <= len(d.data) {
-			cmdBytes := d.data[from:to]
-			err := c.UnmarshalVT(cmdBytes) // Check whether UnmarshalVTUnsafe here is OK.
-			if err != nil {
-				return nil, err
-			}
-			d.offset = to
-			if d.offset == len(d.data) {
-				err = io.EOF
-			}
-			return &c, err
-		} else {
+		if l > uint64(len(d.data)-from) { //nolint:gosec // G115: from <= len(d.data).
 			return nil, io.ErrShortBuffer
 		}
+		to := from + int(l) //nolint:gosec // G115: l fits what is left, checked above.
+		cmdBytes := d.data[from:to]
+		err := c.UnmarshalVT(cmdBytes) // Check whether UnmarshalVTUnsafe here is OK.
+		if err != nil {
+			return nil, err
+		}
+		d.offset = to
+		if d.offset == len(d.data) {
+			err = io.EOF
+		}
+		return &c, err
 	}
 	return nil, io.EOF
 }
@@ -156,30 +157,43 @@ var _ ReplyDecoder = NewJSONReplyDecoder(nil)
 // JSONReplyDecoder is a ReplyDecoder which reads a stream of JSON replies, such
 // as the `\n` separated frame produced by JSONDataEncoder.
 type JSONReplyDecoder struct {
-	decoder *json.Decoder
+	data   []byte
+	offset int
+	err    error
 }
 
 // NewJSONReplyDecoder creates a new JSONReplyDecoder for the given frame.
 func NewJSONReplyDecoder(data []byte) *JSONReplyDecoder {
-	return &JSONReplyDecoder{
-		decoder: json.NewDecoder(bytes.NewReader(data)),
-	}
+	return &JSONReplyDecoder{data: data}
 }
 
 // Reset makes the decoder ready to decode replies from the given frame.
 func (d *JSONReplyDecoder) Reset(data []byte) error {
-	d.decoder = json.NewDecoder(bytes.NewReader(data))
+	d.data = data
+	d.offset = 0
+	d.err = nil
 	return nil
 }
 
 // Decode returns the next Reply in the frame, or io.EOF if there are no replies
-// left.
+// left. Once Decode fails, it keeps returning the same error until Reset.
 func (d *JSONReplyDecoder) Decode() (*Reply, error) {
-	var c Reply
-	err := d.decoder.Decode(&c)
-	if err != nil {
-		return nil, err
+	if d.err != nil {
+		return nil, d.err
 	}
+	i := cfjson.SkipSpace(d.data, d.offset)
+	if i >= len(d.data) {
+		d.offset = len(d.data)
+		d.err = io.EOF
+		return nil, d.err
+	}
+	var c Reply
+	n := c.DecodeJSON(d.data, i, 0)
+	if n < 0 {
+		d.err = cfjson.Error(d.data, n)
+		return nil, d.err
+	}
+	d.offset = n
 	return &c, nil
 }
 
@@ -218,12 +232,13 @@ func (d *ProtobufReplyDecoder) Decode() (*Reply, error) {
 			// as fully processed.
 			return nil, io.EOF
 		}
+		// The length is declared by the other side: it must fit what is left
+		// of the frame, which also makes the conversion below safe.
 		from := d.offset + n
-		to := d.offset + n + int(l)
-		// The from <= to part also catches an int overflow of the addition above.
-		if from > to || to > len(d.data) {
+		if l > uint64(len(d.data)-from) { //nolint:gosec // G115: from <= len(d.data).
 			return nil, io.ErrShortBuffer
 		}
+		to := from + int(l) //nolint:gosec // G115: l fits what is left, checked above.
 		replyBytes := d.data[from:to]
 		err := c.UnmarshalVT(replyBytes)
 		if err != nil {

@@ -10,6 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        dir: ["."]
         target:
           - FuzzJSONDecodeSingle
           - FuzzJSONDecodeMultiple
@@ -17,6 +18,31 @@ jobs:
           - FuzzProtobufReplyDecode
           - FuzzProtobufStreamDecode
           - FuzzJSONStreamDecode
+          - FuzzJSONCommandRoundTrip
+          - FuzzJSONReplyRoundTrip
+          # Generated Protobuf code against google.golang.org/protobuf.
+          - FuzzProtobufMatchesOfficial
+        include:
+          # The runtime of the JSON code generator.
+          - dir: cfjson
+            target: FuzzValid
+          - dir: cfjson
+            target: FuzzString
+          - dir: cfjson
+            target: FuzzInt
+          # Generated JSON code against the easyjson and segmentio based code
+          # it replaced, a module of its own.
+          - dir: internal/cfjsoncmp
+            target: FuzzDecodeMatchesSegmentio
+          - dir: internal/cfjsoncmp
+            target: FuzzValidMatchesSegmentio
+          # The Protobuf code generator, on types covering all it supports.
+          - dir: cfprotobuf/internal/testtypes
+            target: FuzzUnmarshal
+          # Generated Protobuf code against the vtprotobuf code it replaced, a
+          # module of its own.
+          - dir: internal/cfprotobufcmp
+            target: FuzzUnmarshalMatchesVTProtobuf
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -26,11 +52,30 @@ jobs:
         with:
           go-version: stable
 
+      # What the fuzzer found interesting on the nights before. Without it
+      # every run starts from the seeds in the repository and gets no further
+      # than the first run did. A cache is never updated, so each run saves
+      # one of its own and restores the latest.
+      - name: Fuzz cache path
+        id: fuzzcache
+        run: echo "dir=$(go env GOCACHE)/fuzz" >> "$GITHUB_OUTPUT"
+
+      - name: Restore fuzz corpus
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.fuzzcache.outputs.dir }}
+          key: fuzz-corpus-${{ matrix.target }}-${{ github.run_id }}
+          restore-keys: |
+            fuzz-corpus-${{ matrix.target }}-
+
       - name: Fuzz
-        run: go test -run=^$ -fuzz=^${{ matrix.target }}$ -fuzztime=5m
+        working-directory: ${{ matrix.dir }}
+        # -vet=off: the old generated code kept in internal/cfjsoncmp copies
+        # structs with locks.
+        run: go test -vet=off -run=^$ -fuzz=^${{ matrix.target }}$ -fuzztime=5m .
       - name: Upload failing corpus
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: fuzz-corpus-${{ matrix.target }}
-          path: testdata/fuzz
+          path: ${{ matrix.dir }}/testdata/fuzz

@@ -6,4 +6,6 @@ build/
 *.orig
 *.test
 coverage.out
+internal/cfjsoncmp/bench.txt
+internal/cfprotobufcmp/bench.txt
 .DS_Store

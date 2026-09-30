@@ -139,7 +139,7 @@ func fuzzJSONRoundTrip(t *testing.T, data []byte, newMessage func() jsonMessage)
 		data[i] = 'X'
 	}
 	encoded := encodeJSON(msg)
-	if err := isValidJSON(encoded); err != nil {
+	if !cfjson.Valid(encoded) {
 		t.Fatalf("input %q encoded to invalid JSON %q", input, encoded)
 	}
 	first := newMessage()

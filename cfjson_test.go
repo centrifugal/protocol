@@ -21,8 +21,9 @@ import (
 // fails here rather than ships stale JSON code.
 func TestGeneratedJSONCodeIsUpToDate(t *testing.T) {
 	want, err := gen.Generate(gen.Config{
-		Files:    []string{"client.pb.go"},
-		RawTypes: []string{"Raw"},
+		Files:          []string{"client.pb.go"},
+		RawTypes:       []string{"Raw"},
+		ValidRawMethod: "validRaw",
 	})
 	require.NoError(t, err)
 	got, err := os.ReadFile("client.pb_cfjson.go")
@@ -280,4 +281,81 @@ func nilElement(v reflect.Value) string {
 		}
 	}
 	return ""
+}
+
+// A payload is an application's bytes put into a message as they are. The
+// encoders of replies and pushes refuse one which is not a JSON value, and
+// what counts is the payload itself: bytes which leave the message valid
+// JSON while adding to it, or taking its fields away, are refused as well.
+func TestJSONEncodersCheckPayloads(t *testing.T) {
+	good := []string{`{}`, `{"a":[1,2,{"b":null}]}`, `"text"`, `1.5e3`, `true`, `null`, ` {"a":1} `, "{\n\"a\": 1\n}", "", "\n"}
+	bad := []string{
+		`nope`, `{`, `{"a":1`, `{"a":1}}`, `1 2`, `{"a":"\x01"}`, "\xff", " ", "\r\n",
+		// Valid as a part of the message, not as a value.
+		`1,"offset":999`,
+		`{}},"x":{"a":1`,
+		`{},"info":{"user":"admin"}},"x":{"a":1`,
+		`1}},"id":7,"push":{"pub":{"data":2`,
+	}
+	// Every place a payload may be in: the encoders must look at all of them.
+	messages := map[string]func(raw Raw) (*Reply, *Push){
+		"publication data": func(raw Raw) (*Reply, *Push) {
+			pub := &Publication{Data: raw, Offset: 5, Info: &ClientInfo{User: "u", Client: "c"}}
+			return &Reply{Push: &Push{Channel: "c", Pub: pub}}, &Push{Channel: "c", Pub: pub}
+		},
+		"publication conn_info": func(raw Raw) (*Reply, *Push) {
+			pub := &Publication{Data: Raw(`{}`), Info: &ClientInfo{User: "u", Client: "c", ConnInfo: raw}}
+			return &Reply{Push: &Push{Channel: "c", Pub: pub}}, &Push{Channel: "c", Pub: pub}
+		},
+		"join chan_info": func(raw Raw) (*Reply, *Push) {
+			join := &Join{Info: &ClientInfo{User: "u", Client: "c", ChanInfo: raw}}
+			return &Reply{Push: &Push{Channel: "c", Join: join}}, &Push{Channel: "c", Join: join}
+		},
+		"history": func(raw Raw) (*Reply, *Push) {
+			return &Reply{Id: 1, History: &HistoryResult{Publications: []*Publication{{Data: Raw(`1`)}, {Data: raw}}}}, nil
+		},
+		"presence": func(raw Raw) (*Reply, *Push) {
+			return &Reply{Id: 1, Presence: &PresenceResult{Presence: map[string]*ClientInfo{"a": {User: "u"}, "b": {User: "v", ConnInfo: raw}}}}, nil
+		},
+		"connect data": func(raw Raw) (*Reply, *Push) {
+			return &Reply{Id: 1, Connect: &ConnectResult{Client: "c", Data: raw}}, &Push{Connect: &Connect{Client: "c", Data: raw}}
+		},
+		"recovered publications": func(raw Raw) (*Reply, *Push) {
+			res := &SubscribeResult{Publications: []*Publication{{Data: raw}}}
+			return &Reply{Id: 1, Connect: &ConnectResult{Subs: map[string]*SubscribeResult{"ch": res}}}, nil
+		},
+		"rpc result": func(raw Raw) (*Reply, *Push) {
+			return &Reply{Id: 1, Rpc: &RPCResult{Data: raw}}, &Push{Message: &Message{Data: raw}}
+		},
+	}
+	encode := func(name string, raw string) (ok bool) {
+		reply, push := messages[name](Raw(raw))
+		data, err := NewJSONReplyEncoder().Encode(reply)
+		ok = err == nil
+		if ok {
+			require.True(t, cfjson.Valid(data), "%s %q: %s", name, raw, data)
+			require.NotContains(t, string(data), "\n")
+		}
+		if push != nil {
+			data, err = NewJSONPushEncoder().Encode(push)
+			require.Equal(t, ok, err == nil, "%s %q: the encoders disagree", name, raw)
+			if ok {
+				require.True(t, cfjson.Valid(data), "%s %q: %s", name, raw, data)
+			}
+		}
+		return ok
+	}
+	for name := range messages {
+		for _, raw := range good {
+			require.True(t, encode(name, raw), "%s: %q refused", name, raw)
+		}
+		for _, raw := range bad {
+			require.False(t, encode(name, raw), "%s: %q accepted", name, raw)
+		}
+	}
+	// Messages without payloads.
+	_, err := NewJSONReplyEncoder().Encode(&Reply{})
+	require.NoError(t, err)
+	_, err = NewJSONPushEncoder().Encode(&Push{})
+	require.NoError(t, err)
 }

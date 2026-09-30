@@ -347,7 +347,12 @@ func (d *ProtobufStreamCommandDecoder) decodeLarge(msgLength int) (*Command, int
 	buf := make([]byte, 0, maxBufferLength)
 	for len(buf) < msgLength {
 		read := len(buf)
-		size := min(msgLength, max(2*read, maxBufferLength))
+		size := msgLength
+		// Doubling, without going over msgLength (or over what an int holds
+		// where it is 32 bits).
+		if read <= msgLength/2 {
+			size = min(msgLength, max(2*read, maxBufferLength))
+		}
 		if size > cap(buf) {
 			grown := make([]byte, read, size)
 			copy(grown, buf)

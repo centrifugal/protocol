@@ -42,24 +42,24 @@ goos: linux
 ### Marshal
 
 ```
-                             │  vtprotobuf   │              cfprotobuf              │
-                             │    sec/op     │    sec/op     vs base                │
-cmd_ping                        17.70n ±  5%   15.60n ±  4%  -11.89% (p=0.000 n=10)
-cmd_connect                     433.7n ± 15%   387.2n ± 12%  -10.71% (p=0.029 n=10)
-cmd_subscribe                   192.1n ±  6%   182.7n ± 11%        ~ (p=0.306 n=10)
-cmd_publish_256                 230.0n ± 10%   217.4n ±  5%        ~ (p=0.072 n=10)
-cmd_publish_4k                  1.600µ ±  7%   1.570µ ±  8%        ~ (p=0.315 n=10)
-cmd_rpc                        101.86n ±  7%   98.50n ±  8%        ~ (p=0.393 n=10)
-reply_pub_256                   260.7n ±  5%   253.3n ±  5%   -2.84% (p=0.035 n=10)
-reply_pub_info_256              566.5n ±  9%   575.4n ±  5%        ~ (p=0.811 n=10)
-reply_pub_4k                    1.661µ ±  8%   1.487µ ± 14%  -10.45% (p=0.002 n=10)
-reply_join                      197.0n ± 15%   175.2n ±  9%  -11.09% (p=0.023 n=10)
-reply_connect                   513.9n ± 14%   420.4n ±  9%  -18.21% (p=0.002 n=10)
-reply_subscribe_recovered_20    3.508µ ± 11%   3.453µ ±  7%        ~ (p=1.000 n=10)
-reply_history_100               16.55µ ±  6%   15.69µ ±  3%   -5.15% (p=0.004 n=10)
-reply_presence_100              19.69µ ±  8%   15.31µ ± 13%  -22.27% (p=0.000 n=10)
-reply_error                     88.75n ± 10%   84.86n ± 14%        ~ (p=0.165 n=10)
-geomean                         553.2n         510.5n         -7.73%
+                             │  vtprotobuf  │              cfprotobuf              │
+                             │    sec/op    │    sec/op     vs base                │
+cmd_ping                       17.70n ±  6%   15.63n ±  6%  -11.69% (p=0.000 n=10)
+cmd_connect                    448.4n ± 11%   422.6n ±  8%   -5.78% (p=0.003 n=10)
+cmd_subscribe                  204.0n ±  8%   185.4n ± 13%   -9.09% (p=0.019 n=10)
+cmd_publish_256                207.6n ±  7%   218.2n ±  5%        ~ (p=0.072 n=10)
+cmd_publish_4k                 1.633µ ± 24%   1.521µ ±  6%        ~ (p=0.289 n=10)
+cmd_rpc                        99.84n ±  6%   95.42n ± 16%        ~ (p=0.089 n=10)
+reply_pub_256                  264.6n ± 11%   257.0n ±  7%        ~ (p=0.280 n=10)
+reply_pub_info_256             524.9n ± 14%   531.4n ±  8%        ~ (p=0.971 n=10)
+reply_pub_4k                   1.576µ ±  7%   1.518µ ±  7%        ~ (p=0.617 n=10)
+reply_join                     191.8n ±  6%   179.8n ±  6%   -6.28% (p=0.004 n=10)
+reply_connect                  485.2n ±  3%   459.2n ±  8%   -5.35% (p=0.002 n=10)
+reply_subscribe_recovered_20   3.757µ ± 10%   3.560µ ± 11%        ~ (p=0.123 n=10)
+reply_history_100              17.21µ ±  7%   15.58µ ±  6%   -9.49% (p=0.007 n=10)
+reply_presence_100             21.12µ ±  5%   14.43µ ± 10%  -31.68% (p=0.000 n=10)
+reply_error                    89.52n ± 15%   85.29n ± 12%        ~ (p=0.075 n=10)
+geomean                        552.5n         513.3n         -7.09%
 ```
 
 Allocations:
@@ -90,47 +90,47 @@ geomean                                   ²               +0.00%               
 ### Marshal, codec only
 
 ```
-                             │  vtprotobuf  │              cfprotobuf              │
-                             │    sec/op    │    sec/op     vs base                │
-cmd_ping                       13.91n ±  4%   11.86n ±  8%  -14.80% (p=0.000 n=10)
-cmd_connect                    153.7n ±  5%   139.8n ±  5%   -9.05% (p=0.000 n=10)
-cmd_subscribe                  44.54n ±  9%   42.56n ± 11%        ~ (p=0.470 n=10)
-cmd_publish_256                30.70n ±  7%   30.42n ±  3%        ~ (p=0.579 n=10)
-cmd_publish_4k                 66.76n ± 11%   66.10n ± 19%        ~ (p=0.971 n=10)
-cmd_rpc                        24.39n ± 19%   22.40n ±  4%   -8.16% (p=0.023 n=10)
-reply_pub_256                  52.92n ±  9%   50.48n ± 13%        ~ (p=0.218 n=10)
-reply_pub_info_256             192.9n ± 11%   184.1n ±  3%        ~ (p=0.517 n=10)
-reply_pub_4k                   91.19n ± 15%   84.99n ± 11%   -6.79% (p=0.029 n=10)
-reply_join                     52.33n ±  8%   46.01n ±  9%  -12.09% (p=0.000 n=10)
-reply_connect                  166.4n ± 12%   147.0n ± 10%  -11.69% (p=0.002 n=10)
-reply_subscribe_recovered_20   950.8n ± 10%   899.0n ±  8%        ~ (p=0.089 n=10)
-reply_history_100              5.270µ ± 15%   4.473µ ± 10%  -15.13% (p=0.000 n=10)
-reply_presence_100             6.933µ ± 10%   4.311µ ±  9%  -37.83% (p=0.000 n=10)
-reply_error                    24.69n ±  9%   23.67n ±  9%   -4.13% (p=0.011 n=10)
-geomean                        126.3n         113.8n         -9.87%
+                             │  vtprotobuf   │              cfprotobuf              │
+                             │    sec/op     │    sec/op     vs base                │
+cmd_ping                        13.85n ±  7%   11.85n ±  9%  -14.37% (p=0.000 n=10)
+cmd_connect                     163.2n ± 13%   139.5n ±  2%  -14.47% (p=0.000 n=10)
+cmd_subscribe                   44.34n ± 10%   45.44n ±  9%        ~ (p=0.579 n=10)
+cmd_publish_256                 31.30n ± 12%   30.29n ±  5%        ~ (p=0.325 n=10)
+cmd_publish_4k                  68.60n ±  4%   64.89n ±  6%   -5.39% (p=0.014 n=10)
+cmd_rpc                         24.48n ±  6%   22.72n ± 11%   -7.21% (p=0.019 n=10)
+reply_pub_256                   52.64n ± 11%   49.84n ±  4%   -5.32% (p=0.027 n=10)
+reply_pub_info_256              199.8n ±  6%   180.8n ± 13%   -9.56% (p=0.000 n=10)
+reply_pub_4k                   100.39n ±  7%   96.40n ±  4%        ~ (p=0.165 n=10)
+reply_join                      52.85n ±  8%   47.61n ± 13%        ~ (p=0.052 n=10)
+reply_connect                   164.0n ± 11%   151.8n ±  5%        ~ (p=0.089 n=10)
+reply_subscribe_recovered_20    935.0n ± 10%   890.8n ± 13%   -4.74% (p=0.019 n=10)
+reply_history_100               4.825µ ±  9%   4.387µ ±  2%   -9.10% (p=0.005 n=10)
+reply_presence_100              7.106µ ±  9%   4.396µ ± 11%  -38.13% (p=0.000 n=10)
+reply_error                     23.51n ± 12%   22.68n ± 10%        ~ (p=0.055 n=10)
+geomean                         127.1n         115.1n         -9.44%
 ```
 
 ### Unmarshal
 
 ```
-                             │  vtprotobuf  │              cfprotobuf               │
-                             │    sec/op    │    sec/op      vs base                │
-cmd_ping                       103.8n ±  9%    103.8n ±  5%        ~ (p=0.912 n=10)
-cmd_connect                    887.5n ±  7%    938.7n ± 11%   +5.76% (p=0.043 n=10)
-cmd_subscribe                  443.4n ±  9%    495.3n ± 10%  +11.71% (p=0.019 n=10)
-cmd_publish_256                414.2n ± 13%    412.4n ±  8%        ~ (p=0.739 n=10)
-cmd_publish_4k                 1.865µ ±  6%    1.793µ ± 10%        ~ (p=0.148 n=10)
-cmd_rpc                        269.8n ± 13%    260.4n ±  7%        ~ (p=0.315 n=10)
-reply_pub_256                  574.0n ±  9%    652.4n ±  7%  +13.66% (p=0.000 n=10)
-reply_pub_info_256             1.267µ ±  5%    1.382µ ± 11%   +9.08% (p=0.000 n=10)
-reply_pub_4k                   2.172µ ±  3%    1.964µ ± 10%   -9.58% (p=0.006 n=10)
-reply_join                     563.8n ±  6%    643.5n ±  8%  +14.13% (p=0.000 n=10)
-reply_connect                  941.9n ±  8%   1018.0n ±  6%   +8.09% (p=0.011 n=10)
-reply_subscribe_recovered_20   11.71µ ±  8%    13.25µ ± 11%  +13.12% (p=0.007 n=10)
-reply_history_100              54.92µ ±  7%    60.81µ ± 11%  +10.72% (p=0.023 n=10)
-reply_presence_100             45.58µ ± 12%    56.05µ ±  3%  +22.95% (p=0.000 n=10)
-reply_error                    227.6n ±  6%    252.8n ± 11%  +11.07% (p=0.003 n=10)
-geomean                        1.294µ          1.378µ         +6.53%
+                             │  vtprotobuf  │              cfprotobuf              │
+                             │    sec/op    │    sec/op      vs base               │
+cmd_ping                       102.2n ±  7%    101.4n ±  9%       ~ (p=0.796 n=10)
+cmd_connect                    869.9n ±  4%    800.8n ± 18%       ~ (p=0.579 n=10)
+cmd_subscribe                  460.9n ± 10%    479.6n ± 11%       ~ (p=0.118 n=10)
+cmd_publish_256                406.1n ±  3%    397.2n ± 10%       ~ (p=0.579 n=10)
+cmd_publish_4k                 1.769µ ±  2%    1.717µ ±  4%  -2.91% (p=0.043 n=10)
+cmd_rpc                        273.3n ±  7%    269.5n ±  9%       ~ (p=0.079 n=10)
+reply_pub_256                  556.4n ± 10%    576.2n ±  9%       ~ (p=0.225 n=10)
+reply_pub_info_256             1.295µ ±  8%    1.276µ ±  8%       ~ (p=0.971 n=10)
+reply_pub_4k                   2.162µ ±  6%    2.091µ ±  9%       ~ (p=0.122 n=10)
+reply_join                     620.9n ±  6%    600.6n ± 10%       ~ (p=0.280 n=10)
+reply_connect                  958.0n ± 10%   1000.2n ±  5%       ~ (p=0.109 n=10)
+reply_subscribe_recovered_20   11.40µ ±  7%    12.19µ ±  9%       ~ (p=0.052 n=10)
+reply_history_100              58.75µ ±  9%    61.93µ ±  8%       ~ (p=0.063 n=10)
+reply_presence_100             47.55µ ±  7%    49.28µ ±  7%       ~ (p=0.218 n=10)
+reply_error                    229.9n ±  6%    237.2n ±  6%       ~ (p=0.218 n=10)
+geomean                        1.306µ          1.311µ        +0.45%
 ```
 
 Allocations:
@@ -160,24 +160,24 @@ geomean                        11.74        11.74       +0.00%
 ### protocol before and after
 
 ```
-                                   │    before    │                after                │
-                                   │    sec/op    │   sec/op     vs base                │
-ReplyMarshalProtobuf-8               589.2n ±  6%   560.2n ± 5%        ~ (p=0.089 n=10)
-ReplyMarshalProtobufParallel-8       351.6n ±  9%   390.3n ± 6%  +11.04% (p=0.003 n=10)
-ReplyProtobufUnmarshal-8             325.9n ±  4%   322.8n ± 2%        ~ (p=0.481 n=10)
-ReplyProtobufUnmarshalParallel-8     150.7n ± 10%   173.0n ± 2%  +14.80% (p=0.000 n=10)
-ReplyEncodeProtobufOnly-8            270.8n ±  5%   238.3n ± 6%  -11.97% (p=0.000 n=10)
-PushEncodeProtobufOnly-8             227.7n ±  4%   212.4n ± 2%   -6.72% (p=0.000 n=10)
-EncodeProtobufCommand1-8             234.5n ±  4%   218.6n ± 4%   -6.76% (p=0.001 n=10)
-EncodeProtobufCommand64-8            14.47µ ±  6%   13.46µ ± 4%   -6.98% (p=0.001 n=10)
-ProtobufDataEncoder8-8               1.173µ ± 13%   1.067µ ± 4%   -9.04% (p=0.017 n=10)
-ProtobufDataEncoder64-8              7.742µ ±  4%   7.431µ ± 7%   -4.02% (p=0.035 n=10)
-CommandProtobufUnmarshalMulti1-8     516.1n ±  3%   502.2n ± 3%        ~ (p=0.218 n=10)
-CommandProtobufUnmarshalMulti8-8     3.931µ ±  4%   3.838µ ± 6%        ~ (p=0.218 n=10)
-CommandProtobufUnmarshalMulti64-8    30.54µ ±  5%   29.78µ ± 5%        ~ (p=0.143 n=10)
-CommandProtobufUnmarshalMulti256-8   126.3µ ±  3%   118.7µ ± 6%   -5.97% (p=0.011 n=10)
-StreamingDecode_Protobuf-8           9.027µ ±  4%   9.062µ ± 3%        ~ (p=1.000 n=10)
-geomean                              1.618µ         1.573µ        -2.80%
+                                   │   before    │                after                │
+                                   │   sec/op    │    sec/op     vs base               │
+ReplyMarshalProtobuf-8               563.0n ± 4%   551.2n ±  4%       ~ (p=0.143 n=10)
+ReplyMarshalProtobufParallel-8       395.4n ± 2%   390.5n ± 19%       ~ (p=0.247 n=10)
+ReplyProtobufUnmarshal-8             316.6n ± 5%   323.8n ±  5%       ~ (p=0.315 n=10)
+ReplyProtobufUnmarshalParallel-8     175.7n ± 4%   163.0n ±  7%  -7.23% (p=0.001 n=10)
+ReplyEncodeProtobufOnly-8            257.0n ± 4%   249.3n ±  3%  -3.00% (p=0.035 n=10)
+PushEncodeProtobufOnly-8             235.4n ± 4%   224.4n ±  4%  -4.67% (p=0.029 n=10)
+EncodeProtobufCommand1-8             232.8n ± 6%   218.8n ±  5%  -6.01% (p=0.023 n=10)
+EncodeProtobufCommand64-8            14.66µ ± 5%   13.63µ ±  5%  -6.98% (p=0.002 n=10)
+ProtobufDataEncoder8-8               1.115µ ± 2%   1.053µ ± 10%  -5.61% (p=0.007 n=10)
+ProtobufDataEncoder64-8              7.604µ ± 6%   7.558µ ± 29%       ~ (p=0.796 n=10)
+CommandProtobufUnmarshalMulti1-8     482.5n ± 4%   490.0n ±  5%       ~ (p=0.481 n=10)
+CommandProtobufUnmarshalMulti8-8     3.705µ ± 5%   3.642µ ±  4%       ~ (p=0.436 n=10)
+CommandProtobufUnmarshalMulti64-8    29.15µ ± 3%   29.84µ ±  6%       ~ (p=0.315 n=10)
+CommandProtobufUnmarshalMulti256-8   117.2µ ± 8%   118.7µ ±  3%       ~ (p=0.247 n=10)
+StreamingDecode_Protobuf-8           8.617µ ± 2%   8.589µ ± 38%       ~ (p=0.853 n=10)
+geomean                              1.599µ        1.564µ        -2.18%
 
                                    │    before    │                 after                 │
                                    │     B/op     │     B/op      vs base                 │
@@ -190,13 +190,13 @@ PushEncodeProtobufOnly-8               288.0 ± 0%     288.0 ± 0%       ~ (p=1.
 EncodeProtobufCommand1-8               288.0 ± 0%     288.0 ± 0%       ~ (p=1.000 n=10) ¹
 EncodeProtobufCommand64-8            18.00Ki ± 0%   18.00Ki ± 0%       ~ (p=1.000 n=10) ¹
 ProtobufDataEncoder8-8               2.251Ki ± 0%   2.251Ki ± 0%       ~ (p=1.000 n=10) ¹
-ProtobufDataEncoder64-8              18.01Ki ± 0%   18.01Ki ± 0%       ~ (p=0.851 n=10)
+ProtobufDataEncoder64-8              18.01Ki ± 0%   18.01Ki ± 0%       ~ (p=0.394 n=10)
 CommandProtobufUnmarshalMulti1-8       548.0 ± 0%     548.0 ± 0%       ~ (p=1.000 n=10) ¹
 CommandProtobufUnmarshalMulti8-8     4.282Ki ± 0%   4.282Ki ± 0%       ~ (p=1.000 n=10) ¹
-CommandProtobufUnmarshalMulti64-8    34.26Ki ± 0%   34.26Ki ± 0%  -0.00% (p=0.003 n=10)
+CommandProtobufUnmarshalMulti64-8    34.26Ki ± 0%   34.26Ki ± 0%       ~ (p=0.054 n=10)
 CommandProtobufUnmarshalMulti256-8   137.1Ki ± 0%   137.1Ki ± 0%  -0.00% (p=0.000 n=10)
-StreamingDecode_Protobuf-8           20.85Ki ± 0%   20.85Ki ± 0%       ~ (p=0.725 n=10)
-geomean                              2.273Ki        2.273Ki       -0.00%
+StreamingDecode_Protobuf-8           20.86Ki ± 0%   20.86Ki ± 0%  +0.04% (p=0.008 n=10)
+geomean                              2.273Ki        2.274Ki       +0.00%
 ¹ all samples are equal
 
                                    │   before    │                after                 │

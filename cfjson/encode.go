@@ -197,6 +197,28 @@ func AppendRaw(b, raw []byte) []byte {
 	return b
 }
 
+// ValidRaw reports whether AppendRaw writes a JSON value for raw: raw is one
+// JSON value, optionally with whitespace around it, or has nothing in it
+// (null is written then).
+//
+// Checking the raw values of a message is what it takes to know that the
+// message encodes to valid JSON, everything else in it is written by
+// generated code. It says more than checking the encoded message does: raw
+// bytes like `1,"b":2` leave the message valid, with a field in it nobody
+// has set.
+func ValidRaw(raw []byte) bool {
+	if len(raw) == 0 || Valid(raw) {
+		return true
+	}
+	// Nothing but newlines, which AppendRaw drops.
+	for _, c := range raw {
+		if c != '\n' {
+			return false
+		}
+	}
+	return true
+}
+
 // AppendBool appends true or false to b.
 func AppendBool(b []byte, v bool) []byte {
 	if v {

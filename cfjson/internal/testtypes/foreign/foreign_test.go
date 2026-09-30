@@ -18,6 +18,7 @@ import (
 func TestGeneratedCodeIsUpToDate(t *testing.T) {
 	want, err := gen.Generate(gen.Config{
 		Files: []string{"claims.go", "embedded.go"},
+		Out:   "claims_cfjson.go",
 		Types: []string{"ConnectClaims", "SubscribeClaims", "Depth", "Tie", "TagWins", "DeepTie"},
 	})
 	if err != nil {

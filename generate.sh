@@ -64,7 +64,8 @@ go run ./cfprotobuf/cmd/cfprotobuf -drop-unknown -out client.pb_cfprotobuf.go cl
 
 echo "generating JSON code..."
 # Raw holds an already encoded JSON value.
-go run ./cfjson/cmd/cfjson -raw Raw -out client.pb_cfjson.go client.pb.go
+# validRaw is what the encoders of replies and pushes check payloads with.
+go run ./cfjson/cmd/cfjson -raw Raw -valid-raw validRaw -out client.pb_cfjson.go client.pb.go
 
 # Copy to definitions folder for docs link backwards compatibility.
 cp client.proto definitions/client.proto

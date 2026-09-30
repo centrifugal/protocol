@@ -4,22 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-
-	"github.com/centrifugal/protocol/cfjson"
 )
 
 var errInvalidJSON = errors.New("invalid JSON data")
-
-// checks that JSON is valid.
-func isValidJSON(b []byte) error {
-	if b == nil {
-		return nil
-	}
-	if !cfjson.Valid(b) {
-		return errInvalidJSON
-	}
-	return nil
-}
 
 // PushEncoder encodes Push and its parts to bytes.
 //
@@ -58,11 +45,13 @@ func NewJSONPushEncoder() *JSONPushEncoder {
 
 // Encode Push to bytes.
 func (e *JSONPushEncoder) Encode(message *Push) ([]byte, error) {
-	res := encodeJSON(message)
-	if err := isValidJSON(res); err != nil {
-		return nil, err
+	// Payloads are given by the application and may be anything. The rest
+	// of a message is written by generated code, so payloads which are
+	// valid JSON values are all it takes for the message to be valid.
+	if !message.validRaw() {
+		return nil, errInvalidJSON
 	}
-	return res, nil
+	return encodeJSON(message), nil
 }
 
 // EncodePublication to bytes.
@@ -277,11 +266,11 @@ func NewJSONReplyEncoder() *JSONReplyEncoder {
 
 // Encode Reply to bytes.
 func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
-	result := encodeJSON(r)
-	if err := isValidJSON(result); err != nil {
-		return nil, err
+	// See JSONPushEncoder.Encode.
+	if !r.validRaw() {
+		return nil, errInvalidJSON
 	}
-	return result, nil
+	return encodeJSON(r), nil
 }
 
 // ProtobufReplyEncoder is a ReplyEncoder which encodes to Protobuf.

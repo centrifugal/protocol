@@ -162,3 +162,35 @@ func TestAppendScalars(t *testing.T) {
 		}
 	}
 }
+
+// ValidRaw must say whether AppendRaw writes a JSON value, no more and no
+// less.
+func TestValidRaw(t *testing.T) {
+	for raw, want := range map[string]bool{
+		"":                 true,
+		"\n":               true,
+		"\n\n":             true,
+		`{}`:               true,
+		` [1, "a", null] `: true,
+		"{\n\"a\": 1\n}":   true,
+		`1`:                true,
+		" ":                false,
+		"\r\n":             false,
+		`{`:                false,
+		`1,"b":2`:          false,
+		`{}},"x":{"a":1`:   false,
+		`{} {}`:            false,
+		`"a` + "\n" + `b"`: false,
+		"\xff":             false,
+	} {
+		if got := ValidRaw([]byte(raw)); got != want {
+			t.Errorf("ValidRaw(%q) = %v, want %v", raw, got, want)
+		}
+		// What is valid is written as a valid value. The reverse does not
+		// hold, and is not meant to: a newline inside of a string is dropped
+		// when written, which makes a value of something which was not one.
+		if written := AppendRaw(nil, []byte(raw)); want && !Valid(written) {
+			t.Errorf("AppendRaw(%q) wrote %q", raw, written)
+		}
+	}
+}

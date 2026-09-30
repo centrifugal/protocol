@@ -227,6 +227,15 @@ func (m *EmulationRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *EmulationRequest) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *Command) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -612,6 +621,37 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Command) validRaw() bool {
+	if m.Connect != nil {
+		if !m.Connect.validRaw() {
+			return false
+		}
+	}
+	if m.Subscribe != nil {
+		if !m.Subscribe.validRaw() {
+			return false
+		}
+	}
+	if m.Publish != nil {
+		if !m.Publish.validRaw() {
+			return false
+		}
+	}
+	if m.Send != nil {
+		if !m.Send.validRaw() {
+			return false
+		}
+	}
+	if m.Rpc != nil {
+		if !m.Rpc.validRaw() {
+			return false
+		}
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.
@@ -1027,6 +1067,47 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Reply) validRaw() bool {
+	if m.Push != nil {
+		if !m.Push.validRaw() {
+			return false
+		}
+	}
+	if m.Connect != nil {
+		if !m.Connect.validRaw() {
+			return false
+		}
+	}
+	if m.Subscribe != nil {
+		if !m.Subscribe.validRaw() {
+			return false
+		}
+	}
+	if m.Presence != nil {
+		if !m.Presence.validRaw() {
+			return false
+		}
+	}
+	if m.History != nil {
+		if !m.History.validRaw() {
+			return false
+		}
+	}
+	if m.Rpc != nil {
+		if !m.Rpc.validRaw() {
+			return false
+		}
+	}
+	if m.SubRefresh != nil {
+		if !m.SubRefresh.validRaw() {
+			return false
+		}
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *Push) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -1354,6 +1435,42 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Push) validRaw() bool {
+	if m.Pub != nil {
+		if !m.Pub.validRaw() {
+			return false
+		}
+	}
+	if m.Join != nil {
+		if !m.Join.validRaw() {
+			return false
+		}
+	}
+	if m.Leave != nil {
+		if !m.Leave.validRaw() {
+			return false
+		}
+	}
+	if m.Message != nil {
+		if !m.Message.validRaw() {
+			return false
+		}
+	}
+	if m.Subscribe != nil {
+		if !m.Subscribe.validRaw() {
+			return false
+		}
+	}
+	if m.Connect != nil {
+		if !m.Connect.validRaw() {
+			return false
+		}
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *Dictionary) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -1463,6 +1580,15 @@ func (m *Dictionary) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Dictionary) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.
@@ -1583,6 +1709,18 @@ func (m *ClientInfo) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *ClientInfo) validRaw() bool {
+	if !cfjson.ValidRaw(m.ConnInfo) {
+		return false
+	}
+	if !cfjson.ValidRaw(m.ChanInfo) {
+		return false
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.
@@ -1934,6 +2072,23 @@ func (m *Publication) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Publication) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	if m.Info != nil {
+		if !m.Info.validRaw() {
+			return false
+		}
+	}
+	if !cfjson.ValidRaw(m.PrevData) {
+		return false
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *Join) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -2013,6 +2168,17 @@ func (m *Join) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Join) validRaw() bool {
+	if m.Info != nil {
+		if !m.Info.validRaw() {
+			return false
+		}
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *Leave) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -2090,6 +2256,17 @@ func (m *Leave) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Leave) validRaw() bool {
+	if m.Info != nil {
+		if !m.Info.validRaw() {
+			return false
+		}
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.
@@ -2330,6 +2507,15 @@ func (m *Subscribe) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Subscribe) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *Message) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -2399,6 +2585,15 @@ func (m *Message) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Message) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.
@@ -2713,6 +2908,22 @@ func (m *Connect) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *Connect) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	for _, e1 := range m.Subs {
+		if e1 != nil {
+			if !e1.validRaw() {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.
@@ -3249,6 +3460,22 @@ func (m *ConnectRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *ConnectRequest) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	for _, e1 := range m.Subs {
+		if e1 != nil {
+			if !e1.validRaw() {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *ConnectResult) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -3605,6 +3832,27 @@ func (m *ConnectResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *ConnectResult) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	for _, e1 := range m.Subs {
+		if e1 != nil {
+			if !e1.validRaw() {
+				return false
+			}
+		}
+	}
+	if m.Dict != nil {
+		if !m.Dict.validRaw() {
+			return false
+		}
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.
@@ -4172,6 +4420,15 @@ func (m *SubscribeRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *SubscribeRequest) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *SubscribeResult) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -4645,6 +4902,29 @@ func (m *SubscribeResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *SubscribeResult) validRaw() bool {
+	for _, e1 := range m.Publications {
+		if e1 != nil {
+			if !e1.validRaw() {
+				return false
+			}
+		}
+	}
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	for _, e2 := range m.State {
+		if e2 != nil {
+			if !e2.validRaw() {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.
@@ -5317,6 +5597,19 @@ func (m *SubRefreshResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *SubRefreshResult) validRaw() bool {
+	for _, e1 := range m.Items {
+		if e1 != nil {
+			if !e1.validRaw() {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *UnsubscribeRequest) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -5573,6 +5866,15 @@ func (m *PublishRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *PublishRequest) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *PublishResult) AppendJSON(b []byte) []byte {
 	return append(b, '{', '}')
@@ -5814,6 +6116,19 @@ func (m *PresenceResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *PresenceResult) validRaw() bool {
+	for _, e1 := range m.Presence {
+		if e1 != nil {
+			if !e1.validRaw() {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.
@@ -6363,6 +6678,19 @@ func (m *HistoryResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *HistoryResult) validRaw() bool {
+	for _, e1 := range m.Publications {
+		if e1 != nil {
+			if !e1.validRaw() {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *PingRequest) AppendJSON(b []byte) []byte {
 	return append(b, '{', '}')
@@ -6534,6 +6862,15 @@ func (m *RPCRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *RPCRequest) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *RPCResult) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -6605,6 +6942,15 @@ func (m *RPCResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	}
 }
 
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *RPCResult) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	return true
+}
+
 // AppendJSON appends the JSON encoding of m to b.
 func (m *SendRequest) AppendJSON(b []byte) []byte {
 	s := len(b)
@@ -6674,6 +7020,15 @@ func (m *SendRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			return ^i
 		}
 	}
+}
+
+// validRaw reports whether the raw JSON values in m are valid JSON, which is
+// what it takes for m to encode to valid JSON.
+func (m *SendRequest) validRaw() bool {
+	if !cfjson.ValidRaw(m.Data) {
+		return false
+	}
+	return true
 }
 
 // AppendJSON appends the JSON encoding of m to b.

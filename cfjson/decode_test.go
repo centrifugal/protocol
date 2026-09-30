@@ -258,7 +258,7 @@ func FuzzString(f *testing.F) {
 // Integers must decode to what encoding/json decodes them to, and be
 // rejected when it rejects them.
 func FuzzInt(f *testing.F) {
-	for _, s := range []string{`0`, `-1`, `127`, `128`, `9223372036854775807`, `18446744073709551616`, `1e2`, `1.0`, `01`, `null`} {
+	for _, s := range []string{`0`, `-1`, `127`, `128`, `9223372036854775807`, `18446744073709551616`, `1e2`, `1.0`, `01`, `null`, `1 `, "7\n", `1 2`} {
 		f.Add([]byte(s))
 	}
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -266,7 +266,9 @@ func FuzzInt(f *testing.F) {
 			return
 		}
 		check := func(name string, n int, got any, want any, wantErr error) {
-			if n >= 0 && n != len(data) {
+			// The decoders stop right after the number. encoding/json is
+			// given the whole input, where whitespace may follow.
+			if n >= 0 && SkipSpace(data, n) != len(data) {
 				n = -1
 			}
 			if (n < 0) != (wantErr != nil) {

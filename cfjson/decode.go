@@ -115,7 +115,9 @@ type DecodeError struct {
 	// Offset is the position in the input where decoding stopped.
 	Offset int
 	// Syntax is true if the input is not valid JSON, and false if it is valid
-	// but has a value which does not fit the type it is decoded into.
+	// but is not accepted for what it is decoded into: a value of another
+	// type or out of range, a key which comes twice, values of a recursive
+	// type nested deeper than MaxDepth.
 	Syntax bool
 }
 

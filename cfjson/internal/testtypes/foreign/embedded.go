@@ -2,45 +2,46 @@ package foreign
 
 // Structs which get the same JSON name from more than one embedded struct.
 // encoding/json has a rule for which of the fields is the field, and
-// generated code must follow it. The names which come twice are the point,
-// hence the nolint comments.
+// generated code must follow it. The fields have no tags where they do not
+// need them: go vet takes a tag which comes twice for a mistake, and here it
+// is the point.
 
 // Deep is embedded in Middle.
 type Deep struct {
-	X string `json:"x"`
-	Y string `json:"y"`
+	X string
+	Y string
 }
 
 // Middle puts the fields of Deep one level deeper.
 type Middle struct{ Deep }
 
-// Shallow has the x Deep has.
+// Shallow has the X Deep has.
 type Shallow struct {
-	X string `json:"x"`
+	X string
 }
 
-// Depth has x twice: the one of Shallow is embedded less deep and wins,
+// Depth has X twice: the one of Shallow is embedded less deep and wins,
 // although the one of Deep is declared first.
 type Depth struct {
 	Middle
 	Shallow
 }
 
-// One has z.
+// One has Z.
 type One struct {
-	Z string `json:"z"`
+	Z string
 }
 
-// Two has z as well.
+// Two has Z as well.
 type Two struct {
-	Z string `json:"z"`
-	W int    `json:"w"`
+	Z string
+	W int
 }
 
-// Tie has z twice at the same depth: it has no field z then.
+// Tie has Z twice at the same depth: it has no field Z then.
 type Tie struct {
 	One
-	Two //nolint:govet // structtag: z is there twice on purpose.
+	Two
 }
 
 // Untagged has a field which is N by its name.
@@ -57,9 +58,9 @@ type TagWins struct {
 	Tagged
 }
 
-// Level3 has z.
+// Level3 has Z.
 type Level3 struct {
-	Z string `json:"z"`
+	Z string
 }
 
 // Level2 puts it one level deeper.
@@ -68,9 +69,9 @@ type Level2 struct{ Level3 }
 // Level1 puts it one more level deeper.
 type Level1 struct{ Level2 }
 
-// DeepTie has z twice at one depth and once deeper. The two cancel each
+// DeepTie has Z twice at one depth and once deeper. The two cancel each
 // other, which does not make the deeper one a field.
 type DeepTie struct {
-	Tie    //nolint:govet // structtag: z is there once more on purpose.
-	Level1 //nolint:govet // structtag: z is there once more on purpose.
+	Tie
+	Level1
 }

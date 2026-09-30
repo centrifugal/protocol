@@ -7,9 +7,9 @@
 #                                   (`make protobuf-bench` writes bench.txt,
 #                                   move it there under the name of the machine);
 # results/<machine>.before.txt,
-# results/<machine>.after.txt     - output of the Protobuf benchmarks of
-#                                   protocol itself before and after the switch
-#                                   to cfprotobuf.
+# results/<machine>.after.txt     - the protocol benchmarks with type=protobuf
+#                                   of bench.ref.txt and bench.head.txt written
+#                                   by `make bench-compare REF=v0.22.1`.
 #
 # Requires benchstat: go install golang.org/x/perf/cmd/benchstat@latest
 
@@ -72,9 +72,10 @@ How to read the sections:
 - **Marshal, codec only** sizes a message and writes it into a buffer which
   is reused, leaving only the generated code to compare.
 - **Unmarshal** is decoding into a new message.
-- **protocol before and after** are the Protobuf benchmarks of the `protocol`
-  package itself (`bench_test.go` in the repository root) on master and on
-  the branch which switched to cfprotobuf.
+- **protocol before and after** are the benchmarks of the `protocol`
+  package itself (`bench_test.go` in the repository root, `type=protobuf`), run
+  against v0.22.1, the last release before the switch to cfprotobuf, and against
+  this branch: `make bench-compare REF=v0.22.1` in the repository root.
 HEADER
 
   for file in results/*.txt; do

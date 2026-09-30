@@ -216,7 +216,7 @@ func TestEmbeddedFieldsMatchEncodingJSON(t *testing.T) {
 		if got := v.AppendJSON(nil); !bytes.Equal(got, want) {
 			t.Errorf("%T:\n cfjson %s\n    std %s", v, got, want)
 		}
-		input := []byte(`{"x":"X","y":"Y","z":"Z","w":7,"N":"n"}`)
+		input := []byte(`{"X":"x","Y":"y","Z":"z","W":7,"N":"n"}`)
 		std, got := zero(v), zero(v)
 		if err := stdjson.Unmarshal(input, std); err != nil {
 			t.Fatal(err)
@@ -228,10 +228,10 @@ func TestEmbeddedFieldsMatchEncodingJSON(t *testing.T) {
 			t.Errorf("%T decoded:\n cfjson %+v\n    std %+v", v, got, std)
 		}
 	}
-	if got := string(depth.AppendJSON(nil)); got != `{"y":"y","x":"shallow"}` {
+	if got := string(depth.AppendJSON(nil)); got != `{"Y":"y","X":"shallow"}` {
 		t.Errorf("Depth: %s", got)
 	}
-	if got := string(deepTie.AppendJSON(nil)); got != `{"w":1}` {
+	if got := string(deepTie.AppendJSON(nil)); got != `{"W":1}` {
 		t.Errorf("DeepTie: %s", got)
 	}
 }

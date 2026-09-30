@@ -7,8 +7,9 @@
 #                                   (`make json-bench` writes bench.txt, move it
 #                                   there under the name of the machine);
 # results/<machine>.before.txt,
-# results/<machine>.after.txt     - output of the JSON benchmarks of protocol
-#                                   itself before and after the switch to cfjson.
+# results/<machine>.after.txt     - the protocol benchmarks with type=json of
+#                                   bench.ref.txt and bench.head.txt written by
+#                                   `make bench-compare REF=v0.22.1`.
 #
 # Requires benchstat: go install golang.org/x/perf/cmd/benchstat@latest
 
@@ -95,10 +96,12 @@ How to read the sections:
   cannot leak into the next: that is why cfjson is behind for the two replies
   with many publications here, and only here.
 - **Validate** is checking that an encoded message is valid JSON, which
-  `protocol` does for every Reply and Push it encodes.
-- **protocol before and after** are the JSON benchmarks of the `protocol`
-  package itself (`bench_test.go` in the repository root) on master and on
-  the branch which switched to cfjson.
+  `protocol` did for every Reply and Push it encoded; it checks the payloads
+  of a message only now.
+- **protocol before and after** are the benchmarks of the `protocol`
+  package itself (`bench_test.go` in the repository root, `type=json`), run
+  against v0.22.1, the last release before the switch to cfjson, and against
+  this branch: `make bench-compare REF=v0.22.1` in the repository root.
 HEADER
 
   for file in results/*.txt; do

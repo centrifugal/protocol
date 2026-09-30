@@ -969,9 +969,9 @@ func (m *SubscribeClaims) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 
 // AppendJSON appends the JSON encoding of m to b.
 func (m *Depth) AppendJSON(b []byte) []byte {
-	b = append(b, "{\"y\":"...)
+	b = append(b, "{\"Y\":"...)
 	b = cfjson.AppendString(b, m.Middle.Deep.Y)
-	b = append(b, ",\"x\":"...)
+	b = append(b, ",\"X\":"...)
 	b = cfjson.AppendString(b, m.Shallow.X)
 	return append(b, '}')
 }
@@ -992,12 +992,12 @@ func (m *Depth) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		id := -1
 		switch next {
 		case 0:
-			if len(b)-i >= 4 && string(b[i:i+4]) == "\"y\":" {
+			if len(b)-i >= 4 && string(b[i:i+4]) == "\"Y\":" {
 				id = 0
 				i = cfjson.SkipSpace(b, i+4)
 			}
 		case 1:
-			if len(b)-i >= 4 && string(b[i:i+4]) == "\"x\":" {
+			if len(b)-i >= 4 && string(b[i:i+4]) == "\"X\":" {
 				id = 1
 				i = cfjson.SkipSpace(b, i+4)
 			}
@@ -1009,9 +1009,9 @@ func (m *Depth) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				return i
 			}
 			switch string(key) {
-			case "y":
+			case "Y":
 				id = 0
-			case "x":
+			case "X":
 				id = 1
 			}
 		}
@@ -1053,7 +1053,7 @@ func (m *Depth) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 
 // AppendJSON appends the JSON encoding of m to b.
 func (m *Tie) AppendJSON(b []byte) []byte {
-	b = append(b, "{\"w\":"...)
+	b = append(b, "{\"W\":"...)
 	b = cfjson.AppendInt(b, int64(m.Two.W))
 	return append(b, '}')
 }
@@ -1072,7 +1072,7 @@ func (m *Tie) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	next := 0
 	for {
 		id := -1
-		if next == 0 && len(b)-i >= 4 && string(b[i:i+4]) == "\"w\":" {
+		if next == 0 && len(b)-i >= 4 && string(b[i:i+4]) == "\"W\":" {
 			id = 0
 			i = cfjson.SkipSpace(b, i+4)
 		}
@@ -1082,7 +1082,7 @@ func (m *Tie) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			if i < 0 {
 				return i
 			}
-			if string(key) == "w" {
+			if string(key) == "W" {
 				id = 0
 			}
 		}
@@ -1181,7 +1181,7 @@ func (m *TagWins) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 
 // AppendJSON appends the JSON encoding of m to b.
 func (m *DeepTie) AppendJSON(b []byte) []byte {
-	b = append(b, "{\"w\":"...)
+	b = append(b, "{\"W\":"...)
 	b = cfjson.AppendInt(b, int64(m.Tie.Two.W))
 	return append(b, '}')
 }
@@ -1200,7 +1200,7 @@ func (m *DeepTie) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 	next := 0
 	for {
 		id := -1
-		if next == 0 && len(b)-i >= 4 && string(b[i:i+4]) == "\"w\":" {
+		if next == 0 && len(b)-i >= 4 && string(b[i:i+4]) == "\"W\":" {
 			id = 0
 			i = cfjson.SkipSpace(b, i+4)
 		}
@@ -1210,7 +1210,7 @@ func (m *DeepTie) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 			if i < 0 {
 				return i
 			}
-			if string(key) == "w" {
+			if string(key) == "W" {
 				id = 0
 			}
 		}

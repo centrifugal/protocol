@@ -1,4 +1,4 @@
-.PHONY: all generate test test-cover bench fuzz lint sec cross tidy json-compat json-compat-update json-bench json-bench-doc protobuf-compat protobuf-compat-update protobuf-bench protobuf-bench-doc
+.PHONY: all generate test test-cover bench bench-compare fuzz lint sec cross tidy json-compat json-compat-update json-bench json-bench-doc protobuf-compat protobuf-compat-update protobuf-bench protobuf-bench-doc
 
 all: generate
 
@@ -15,6 +15,20 @@ test-cover:
 
 bench:
 	go test -run=^$$ -bench=. -benchmem
+
+# Compare the benchmarks of the working tree with those of a git ref, master
+# by default: make bench-compare REF=v0.22.1 COUNT=10. bench_test.go uses the
+# exported API only, so it is run against the ref as it is here. Writes
+# bench.ref.txt and bench.head.txt, and compares them with benchstat.
+REF ?= master
+COUNT ?= 6
+bench-compare:
+	@dir=$$(mktemp -d) && git worktree add -q --detach "$$dir" "$(REF)" && \
+	cp bench_test.go "$$dir/" && \
+	(cd "$$dir" && go test -run=^$$ -bench=. -benchmem -count=$(COUNT) .) > bench.ref.txt; \
+	status=$$?; git worktree remove --force "$$dir"; [ $$status -eq 0 ] || exit $$status
+	go test -run=^$$ -bench=. -benchmem -count=$(COUNT) . > bench.head.txt
+	benchstat bench.ref.txt bench.head.txt
 
 # Run every fuzz target for a short time. CI runs them longer, see .github/workflows/fuzz.yml
 # (the target list there is explicit, so that each target gets its own job).

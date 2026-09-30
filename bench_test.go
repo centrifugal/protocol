@@ -1,662 +1,429 @@
-package protocol
+package protocol_test
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"io"
+	"strings"
 	"testing"
+
+	"github.com/centrifugal/protocol"
 )
 
-func benchPayload() []byte {
-	size := 256
-	var p []byte
-	for i := 0; i < size; i++ {
-		p = append(p, 'i')
-	}
-	return []byte(`{"input":"` + string(p) + `"}`)
+// Benchmarks of the package on what a server and a client do with it, on
+// messages shaped like real ones. Names have the form
+// Benchmark<Operation>/type=<json|protobuf>/msg=<message>, for benchstat:
+//
+//	benchstat -col /type -row /msg bench.txt
+//
+// The file uses nothing but the exported API of the package, and none of the
+// methods of messages, so it runs unchanged against earlier versions: see
+// `make bench-compare`, which compares the working tree with any git ref.
+
+var protocolTypes = []protocol.Type{protocol.TypeJSON, protocol.TypeProtobuf}
+
+const (
+	jwt    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MiIsImV4cCI6MTc5MDAwMDAwMCwiaWF0IjoxNzgwMDAwMDAwLCJpbmZvIjp7Im5hbWUiOiJBbGV4In19.q3Yk0n8Zr3bTtB7m5oYV8m2JX0e1VgG5q0m8y9Qw3Hc"
+	client = "c8d9a0f2-0d5f-4d0b-9d5e-6d2f6b8f2a11"
+)
+
+// payload is a JSON object of about size bytes, like an application
+// publishes.
+func payload(size int) protocol.Raw {
+	text := strings.Repeat("hello world ", max(size-60, 0)/12+1)[:max(size-60, 0)]
+	return protocol.Raw(`{"id":184467,"user":"user-42","text":"` + text + `","ts":1790000000123}`)
 }
 
-var preparedPayload = benchPayload()
+func clientInfo(n int) *protocol.ClientInfo {
+	return &protocol.ClientInfo{
+		User: fmt.Sprintf("user-%d", n), Client: fmt.Sprintf("%s-%d", client, n),
+		ConnInfo: protocol.Raw(`{"name":"Alex","avatar":"https://example.com/a.png"}`),
+	}
+}
 
-// func marshalProtobufConnect(reply *Reply) ([]byte, error) {
-// 	encoder := DefaultProtobufReplyEncoder
-// 	res, err := encoder.Encode(reply)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return res, nil
-// }
+func publication(size int, info bool) *protocol.Publication {
+	pub := &protocol.Publication{Data: payload(size), Offset: 1043}
+	if info {
+		pub.Info = clientInfo(0)
+		pub.Tags = map[string]string{"kind": "chat"}
+	}
+	return pub
+}
 
-// func marshalProtobufConnectNoCopy(reply *Reply, buf []byte) ([]byte, error) {
-// 	encoder := DefaultProtobufReplyEncoder
-// 	res, err := encoder.EncodeNoCopy(reply, buf)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return res, nil
-// }
+// Commands, as a client sends them.
+var commands = []struct {
+	name string
+	cmd  *protocol.Command
+}{
+	{"connect", &protocol.Command{Id: 1, Connect: &protocol.ConnectRequest{Token: jwt, Name: "js", Version: "5.3.4"}}},
+	{"subscribe", &protocol.Command{Id: 2, Subscribe: &protocol.SubscribeRequest{Channel: "chat:index", Recover: true, Epoch: "xKdP", Offset: 1042}}},
+	{"publish_256B", &protocol.Command{Id: 3, Publish: &protocol.PublishRequest{Channel: "chat:index", Data: payload(256)}}},
+	{"rpc", &protocol.Command{Id: 4, Rpc: &protocol.RPCRequest{Method: "getMessages", Data: protocol.Raw(`{"room":"index","limit":20}`)}}},
+}
 
-func marshalProtobuf() ([]byte, *Reply, error) {
-	r := &Reply{
-		Push: &Push{
-			Channel: "test",
-			Pub: &Publication{
-				Data: preparedPayload,
-			},
+// Frames of commands, as a server reads them.
+var commandFrames = []struct {
+	name string
+	cmds []*protocol.Command
+}{
+	{"connect", []*protocol.Command{commands[0].cmd}},
+	{"connect+3_subscribes", []*protocol.Command{
+		commands[0].cmd,
+		{Id: 2, Subscribe: &protocol.SubscribeRequest{Channel: "chat:index", Recover: true, Epoch: "xKdP", Offset: 1042}},
+		{Id: 3, Subscribe: &protocol.SubscribeRequest{Channel: "notifications", Recover: true, Epoch: "pQ7z", Offset: 17}},
+		{Id: 4, Subscribe: &protocol.SubscribeRequest{Channel: "#42"}},
+	}},
+	{"64_publishes_256B", func() []*protocol.Command {
+		cmds := make([]*protocol.Command, 64)
+		for i := range cmds {
+			cmds[i] = &protocol.Command{Id: uint32(i + 1), Publish: &protocol.PublishRequest{Channel: "chat:index", Data: payload(256)}}
+		}
+		return cmds
+	}()},
+}
+
+// Replies, as a server sends them in response to commands.
+var replies = []struct {
+	name  string
+	reply *protocol.Reply
+}{
+	{"connect", &protocol.Reply{Id: 1, Connect: &protocol.ConnectResult{
+		Client: client, Version: "6.5.2", Expires: true, Ttl: 3600, Ping: 25, Pong: true,
+	}}},
+	{"connect_data+2_subs", &protocol.Reply{Id: 1, Connect: &protocol.ConnectResult{
+		Client: client, Version: "6.5.2", Expires: true, Ttl: 3600, Ping: 25, Pong: true,
+		Data: protocol.Raw(`{"settings":{"theme":"dark","lang":"en"},"features":["a","b","c"]}`),
+		Subs: map[string]*protocol.SubscribeResult{
+			"#42":           {Recoverable: true, Epoch: "xKdP", Offset: 1042, Positioned: true},
+			"notifications": {Recoverable: true, Epoch: "pQ7z", Offset: 17, Positioned: true},
 		},
-	}
-	encoder := NewProtobufReplyEncoder()
-	res, err := encoder.Encode(r)
-	if err != nil {
-		return nil, nil, err
-	}
-	return res, r, nil
-}
-
-func marshalJSON() ([]byte, *Reply, error) {
-	r := &Reply{
-		Push: &Push{
-			Channel: "test",
-			Pub: &Publication{
-				Data: preparedPayload,
-			},
-		},
-	}
-	res, err := DefaultJsonReplyEncoder.Encode(r)
-	if err != nil {
-		return nil, nil, err
-	}
-	return res, r, nil
-}
-
-// func marshalJSONConnect(reply *Reply) ([]byte, error) {
-// 	encoder := DefaultJsonReplyEncoder
-// 	res, err := encoder.Encode(reply)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return res, nil
-// }
-
-// func marshalJSONConnectNoCopy(reply *Reply, buf []byte) ([]byte, error) {
-// 	encoder := DefaultJsonReplyEncoder
-// 	res, err := encoder.EncodeNoCopy(reply, buf)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return res, nil
-// }
-
-// goland:noinspection GoUnusedGlobalVariable
-var benchData []byte
-
-// goland:noinspection GoUnusedGlobalVariable
-var benchReply *Reply
-
-// goland:noinspection GoUnusedGlobalVariable
-var benchConnectRequest *ConnectRequest
-
-func BenchmarkReplyMarshalProtobuf(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		d, r, err := marshalProtobuf()
-		if err != nil {
-			b.Fatal(err)
-		}
-		benchData = d
-		benchReply = r
-	}
-	b.ReportAllocs()
-}
-
-// // This is how we write command replies in Centrifuge.
-// func BenchmarkReplyMarshalProtobufConnect(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		res := ConnectResultFromVTPool()
-// 		res.Client = "clientclientclientclientclientclientclientclientclientclient"
-// 		res.Version = "0.0.0"
-// 		res.Ping = 25
-// 		res.Pong = true
-// 		r := ReplyPool.AcquireConnectReply(res)
-// 		d, err := marshalProtobufConnect(r)
-// 		if err != nil {
-// 			b.Fatal(err)
-// 		}
-// 		benchData = d
-// 		ReplyPool.ReleaseConnectReply(r)
-// 		res.ReturnToVTPool()
-// 	}
-// 	b.ReportAllocs()
-// }
-
-// // This is how we write command replies in Centrifuge.
-// func BenchmarkReplyMarshalProtobufConnectNoCopy(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		res := ConnectResultFromVTPool()
-// 		res.Client = "clientclientclientclientclientclientclientclientclientclient"
-// 		res.Version = "0.0.0"
-// 		res.Ping = 25
-// 		res.Pong = true
-// 		r := ReplyPool.AcquireConnectReply(res)
-// 		buf := getByteBuffer(r.SizeCF())
-// 		d, err := marshalProtobufConnectNoCopy(r, buf.B)
-// 		if err != nil {
-// 			b.Fatal(err)
-// 		}
-// 		benchData = d
-// 		putByteBuffer(buf)
-// 		ReplyPool.ReleaseConnectReply(r)
-// 		res.ReturnToVTPool()
-// 	}
-// 	b.ReportAllocs()
-// }
-
-func BenchmarkReplyMarshalProtobufParallel(b *testing.B) {
-	b.ReportAllocs()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			d, r, err := marshalProtobuf()
-			if err != nil {
-				b.Fatal(err)
+	}}},
+	{"subscribe_recovered_20", &protocol.Reply{Id: 2, Subscribe: &protocol.SubscribeResult{
+		Recoverable: true, Epoch: "xKdP", Offset: 1062, Recovered: true, Positioned: true,
+		Publications: func() []*protocol.Publication {
+			pubs := make([]*protocol.Publication, 20)
+			for i := range pubs {
+				pubs[i] = publication(256, i%2 == 0)
 			}
-			benchData = d
-			benchReply = r
-		}
-	})
-}
-
-// func BenchmarkReplyMarshalProtobufConnectParallel(b *testing.B) {
-// 	b.ReportAllocs()
-// 	b.RunParallel(func(pb *testing.PB) {
-// 		for pb.Next() {
-// 			res := ConnectResultFromVTPool()
-// 			res.Client = "clientclientclientclientclientclientclientclientclientclient"
-// 			res.Version = "0.0.0"
-// 			res.Ping = 25
-// 			res.Pong = true
-// 			r := ReplyPool.AcquireConnectReply(res)
-// 			d, err := marshalProtobufConnect(r)
-// 			if err != nil {
-// 				b.Fatal(err)
-// 			}
-// 			benchData = d
-// 			ReplyPool.ReleaseConnectReply(r)
-// 			res.ReturnToVTPool()
-// 		}
-// 	})
-// }
-
-// func BenchmarkReplyMarshalProtobufConnectNoCopyParallel(b *testing.B) {
-// 	b.ReportAllocs()
-// 	b.RunParallel(func(pb *testing.PB) {
-// 		for pb.Next() {
-// 			res := ConnectResultFromVTPool()
-// 			res.Client = "clientclientclientclientclientclientclientclientclientclient"
-// 			res.Version = "0.0.0"
-// 			res.Ping = 25
-// 			res.Pong = true
-// 			r := ReplyPool.AcquireConnectReply(res)
-// 			buf := getByteBuffer(r.SizeCF())
-// 			d, err := marshalProtobufConnectNoCopy(r, buf.B)
-// 			if err != nil {
-// 				b.Fatal(err)
-// 			}
-// 			benchData = d
-// 			putByteBuffer(buf)
-// 			ReplyPool.ReleaseConnectReply(r)
-// 			res.ReturnToVTPool()
-// 		}
-// 	})
-// }
-
-func BenchmarkReplyMarshalJSON(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		d, r, err := marshalJSON()
-		if err != nil {
-			b.Fatal(err)
-		}
-		benchData = d
-		benchReply = r
-	}
-	b.ReportAllocs()
-}
-
-// func BenchmarkReplyMarshalJSONConnect(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		res := ConnectResultFromVTPool()
-// 		res.Client = "clientclientclientclientclientclientclientclientclientclient"
-// 		res.Version = "0.0.0"
-// 		res.Ping = 25
-// 		res.Pong = true
-// 		r := ReplyPool.AcquireConnectReply(res)
-// 		d, err := marshalJSONConnect(r)
-// 		if err != nil {
-// 			b.Fatal(err)
-// 		}
-// 		benchData = d
-// 		ReplyPool.ReleaseConnectReply(r)
-// 		res.ReturnToVTPool()
-// 	}
-// 	b.ReportAllocs()
-// }
-
-// func BenchmarkReplyMarshalJSONConnectNoCopy(b *testing.B) {
-// 	for i := 0; i < b.N; i++ {
-// 		res := ConnectResultFromVTPool()
-// 		res.Client = "clientclientclientclientclientclientclientclientclientclient"
-// 		res.Version = "0.0.0"
-// 		res.Ping = 25
-// 		res.Pong = true
-// 		r := ReplyPool.AcquireConnectReply(res)
-// 		buf := getByteBuffer(r.SizeCF())
-// 		d, err := marshalJSONConnectNoCopy(r, buf.B)
-// 		if err != nil {
-// 			b.Fatal(err)
-// 		}
-// 		benchData = d
-// 		putByteBuffer(buf)
-// 		ReplyPool.ReleaseConnectReply(r)
-// 		res.ReturnToVTPool()
-// 	}
-// 	b.ReportAllocs()
-// }
-
-func BenchmarkReplyMarshalJSONParallel(b *testing.B) {
-	b.ReportAllocs()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			d, r, err := marshalJSON()
-			if err != nil {
-				b.Fatal(err)
+			return pubs
+		}(),
+	}}},
+	{"history_100", &protocol.Reply{Id: 3, History: &protocol.HistoryResult{
+		Epoch: "xKdP", Offset: 1142,
+		Publications: func() []*protocol.Publication {
+			pubs := make([]*protocol.Publication, 100)
+			for i := range pubs {
+				pubs[i] = publication(128, false)
 			}
-			benchData = d
-			benchReply = r
-		}
-	})
+			return pubs
+		}(),
+	}}},
+	{"presence_100", &protocol.Reply{Id: 4, Presence: &protocol.PresenceResult{
+		Presence: func() map[string]*protocol.ClientInfo {
+			presence := make(map[string]*protocol.ClientInfo, 100)
+			for i := 0; i < 100; i++ {
+				info := clientInfo(i)
+				presence[info.Client] = info
+			}
+			return presence
+		}(),
+	}}},
+	{"error", &protocol.Reply{Id: 5, Error: &protocol.Error{Code: 103, Message: "permission denied"}}},
 }
 
-// func BenchmarkReplyMarshalJSONConnectParallel(b *testing.B) {
-// 	b.ReportAllocs()
-// 	b.RunParallel(func(pb *testing.PB) {
-// 		for pb.Next() {
-// 			res := ConnectResultFromVTPool()
-// 			res.Client = "clientclientclientclientclientclientclientclientclientclient"
-// 			res.Version = "0.0.0"
-// 			res.Ping = 25
-// 			res.Pong = true
-// 			r := ReplyPool.AcquireConnectReply(res)
-// 			d, err := marshalJSONConnect(r)
-// 			if err != nil {
-// 				b.Fatal(err)
-// 			}
-// 			benchData = d
-// 			ReplyPool.ReleaseConnectReply(r)
-// 			res.ReturnToVTPool()
-// 		}
-// 	})
-// }
-
-// func BenchmarkReplyMarshalJSONConnectNoCopyParallel(b *testing.B) {
-// 	b.ReportAllocs()
-// 	b.RunParallel(func(pb *testing.PB) {
-// 		for pb.Next() {
-// 			res := ConnectResultFromVTPool()
-// 			res.Client = "clientclientclientclientclientclientclientclientclientclient"
-// 			res.Version = "0.0.0"
-// 			res.Ping = 25
-// 			res.Pong = true
-// 			r := ReplyPool.AcquireConnectReply(res)
-// 			buf := getByteBuffer(r.SizeCF())
-// 			d, err := marshalJSONConnectNoCopy(r, buf.B)
-// 			if err != nil {
-// 				b.Fatal(err)
-// 			}
-// 			benchData = d
-// 			putByteBuffer(buf)
-// 			ReplyPool.ReleaseConnectReply(r)
-// 			res.ReturnToVTPool()
-// 		}
-// 	})
-// }
-
-func BenchmarkReplyProtobufUnmarshal(b *testing.B) {
-	params := &ConnectRequest{
-		Token: "token",
-	}
-	cmd := &Command{
-		Id:      1,
-		Connect: params,
-	}
-	encoder := NewProtobufCommandEncoder()
-	data, _ := encoder.Encode(cmd)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		benchConnectRequest = unmarshalProtobuf(b, data)
-	}
-	b.ReportAllocs()
+// Pushes of publications, as a server broadcasts them.
+var pushes = []struct {
+	name string
+	push *protocol.Push
+}{
+	{"publication_64B", &protocol.Push{Channel: "chat:index", Pub: publication(64, false)}},
+	{"publication_256B", &protocol.Push{Channel: "chat:index", Pub: publication(256, false)}},
+	{"publication_256B+info", &protocol.Push{Channel: "chat:index", Pub: publication(256, true)}},
+	{"publication_4KB", &protocol.Push{Channel: "chat:index", Pub: publication(4096, false)}},
+	{"join", &protocol.Push{Channel: "chat:index", Join: &protocol.Join{Info: clientInfo(1)}}},
 }
 
-func BenchmarkReplyProtobufUnmarshalParallel(b *testing.B) {
-	params := &ConnectRequest{
-		Token: "token",
+func encodeCommand(b *testing.B, protoType protocol.Type, cmd *protocol.Command) []byte {
+	var data []byte
+	var err error
+	if protoType == protocol.TypeJSON {
+		data, err = protocol.NewJSONCommandEncoder().Encode(cmd)
+	} else {
+		data, err = protocol.NewProtobufCommandEncoder().Encode(cmd)
 	}
-	cmd := &Command{
-		Id:      1,
-		Connect: params,
-	}
-	encoder := NewProtobufCommandEncoder()
-	data, _ := encoder.Encode(cmd)
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			benchConnectRequest = unmarshalProtobuf(b, data)
-		}
-	})
-	b.ReportAllocs()
-}
-
-func unmarshalProtobuf(b *testing.B, data []byte) *ConnectRequest {
-	decoder := GetCommandDecoder(TypeProtobuf, data)
-	defer PutCommandDecoder(TypeProtobuf, decoder)
-	cmd, err := decoder.Decode()
-	if err != nil && !errors.Is(err, io.EOF) {
+	if err != nil {
 		b.Fatal(err)
 	}
-	if cmd == nil {
-		b.Fatal("nil command")
-	}
-	if cmd.Connect == nil {
-		b.Fatal("nil connect")
-	}
-	if cmd.Connect.Token != "token" {
-		b.Fatal()
-	}
-	return cmd.Connect
+	return data
 }
 
-func BenchmarkReplyJSONUnmarshal(b *testing.B) {
-	params := &ConnectRequest{
-		Token: "token",
-	}
-	cmd := &Command{
-		Id:      1,
-		Connect: params,
-	}
-	encoder := NewJSONCommandEncoder()
-	data, _ := encoder.Encode(cmd)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		benchConnectRequest = unmarshalJSON(b, data)
-	}
-	b.ReportAllocs()
-}
-
-func BenchmarkReplyJSONUnmarshalParallel(b *testing.B) {
-	params := &ConnectRequest{
-		Token: "token",
-	}
-	cmd := &Command{
-		Id:      1,
-		Connect: params,
-	}
-	encoder := NewJSONCommandEncoder()
-	data, _ := encoder.Encode(cmd)
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			benchConnectRequest = unmarshalJSON(b, data)
+// commandFrame puts commands into a frame: JSON ones separated by newlines,
+// Protobuf ones, which come with their length, one after another.
+func commandFrame(b *testing.B, protoType protocol.Type, cmds []*protocol.Command) []byte {
+	var frame []byte
+	for i, cmd := range cmds {
+		if protoType == protocol.TypeJSON && i > 0 {
+			frame = append(frame, '\n')
 		}
-	})
-	b.ReportAllocs()
+		frame = append(frame, encodeCommand(b, protoType, cmd)...)
+	}
+	return frame
 }
 
-func unmarshalJSON(b *testing.B, data []byte) *ConnectRequest {
-	decoder := GetCommandDecoder(TypeJSON, data)
-	defer PutCommandDecoder(TypeJSON, decoder)
-	cmd, err := decoder.Decode()
-	if (err != nil && !errors.Is(err, io.EOF)) || cmd == nil {
+func replyFrame(b *testing.B, protoType protocol.Type, reply *protocol.Reply, n int) []byte {
+	data, err := protocol.GetReplyEncoder(protoType).Encode(reply)
+	if err != nil {
 		b.Fatal(err)
 	}
-	if cmd.Connect == nil {
-		b.Fatal("nil connect")
-	}
-	if cmd.Connect.Token != "token" {
-		b.Fatal()
-	}
-	return cmd.Connect
-}
-
-func buildJSONMultiFrame(b *testing.B, n int) []byte {
-	b.Helper()
-	encoder := NewJSONCommandEncoder()
-	var out []byte
+	encoder := protocol.GetDataEncoder(protoType)
+	defer protocol.PutDataEncoder(protoType, encoder)
 	for i := 0; i < n; i++ {
-		cmd := &Command{
-			Id: uint32(i + 1),
-			Publish: &PublishRequest{
-				Channel: "test",
-				Data:    preparedPayload,
-			},
-		}
-		data, err := encoder.Encode(cmd)
-		if err != nil {
+		if err := encoder.Encode(data); err != nil {
 			b.Fatal(err)
 		}
-		out = append(out, data...)
-		if i < n-1 {
-			out = append(out, '\n')
-		}
 	}
-	return out
+	return encoder.Finish()
 }
 
-func buildProtobufMultiFrame(b *testing.B, n int) []byte {
-	b.Helper()
-	encoder := NewProtobufCommandEncoder()
-	var out []byte
-	for i := 0; i < n; i++ {
-		cmd := &Command{
-			Id: uint32(i + 1),
-			Publish: &PublishRequest{
-				Channel: "test",
-				Data:    preparedPayload,
-			},
+var (
+	sinkBytes   []byte
+	sinkCommand *protocol.Command
+	sinkReply   *protocol.Reply
+)
+
+func BenchmarkEncodeCommand(b *testing.B) {
+	for _, protoType := range protocolTypes {
+		for _, c := range commands {
+			b.Run("type="+string(protoType)+"/msg="+c.name, func(b *testing.B) {
+				b.ReportAllocs()
+				var encoder protocol.CommandEncoder = protocol.NewJSONCommandEncoder()
+				if protoType == protocol.TypeProtobuf {
+					encoder = protocol.NewProtobufCommandEncoder()
+				}
+				for b.Loop() {
+					data, err := encoder.Encode(c.cmd)
+					if err != nil {
+						b.Fatal(err)
+					}
+					sinkBytes = data
+				}
+			})
 		}
-		data, err := encoder.Encode(cmd)
+	}
+}
+
+// decodeFrame is what a server does with a frame a client sent.
+func decodeFrame(b *testing.B, protoType protocol.Type, frame []byte, want int) {
+	decoder := protocol.GetCommandDecoder(protoType, frame)
+	n := 0
+	for {
+		cmd, err := decoder.Decode()
+		if cmd != nil {
+			sinkCommand = cmd
+			n++
+		}
 		if err != nil {
-			b.Fatal(err)
-		}
-		out = append(out, data...)
-	}
-	return out
-}
-
-func benchDecodeJSONMulti(b *testing.B, n int) {
-	data := buildJSONMultiFrame(b, n)
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		decoder := GetCommandDecoder(TypeJSON, data)
-		for {
-			cmd, err := decoder.Decode()
-			if cmd != nil {
-				benchConnectRequest = nil // sink
-				_ = cmd
-			}
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			if err != nil {
+			if !errors.Is(err, io.EOF) {
 				b.Fatal(err)
 			}
+			break
 		}
-		PutCommandDecoder(TypeJSON, decoder)
+	}
+	protocol.PutCommandDecoder(protoType, decoder)
+	if n != want {
+		b.Fatalf("%d commands decoded, want %d", n, want)
 	}
 }
 
-func benchDecodeProtobufMulti(b *testing.B, n int) {
-	data := buildProtobufMultiFrame(b, n)
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		decoder := GetCommandDecoder(TypeProtobuf, data)
-		for {
-			cmd, err := decoder.Decode()
-			if cmd != nil {
-				_ = cmd
-			}
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			if err != nil {
-				b.Fatal(err)
-			}
-		}
-		PutCommandDecoder(TypeProtobuf, decoder)
-	}
-}
-
-func benchEncodeProtobufCommand(b *testing.B, n int) {
-	cmd := &Command{
-		Id: 1,
-		Publish: &PublishRequest{
-			Channel: "test",
-			Data:    preparedPayload,
-		},
-	}
-	enc := NewProtobufCommandEncoder()
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < n; j++ {
-			d, err := enc.Encode(cmd)
-			if err != nil {
-				b.Fatal(err)
-			}
-			benchData = d
+func BenchmarkDecodeFrame(b *testing.B) {
+	for _, protoType := range protocolTypes {
+		for _, f := range commandFrames {
+			frame := commandFrame(b, protoType, f.cmds)
+			b.Run("type="+string(protoType)+"/msg="+f.name, func(b *testing.B) {
+				b.ReportAllocs()
+				b.SetBytes(int64(len(frame)))
+				for b.Loop() {
+					decodeFrame(b, protoType, frame, len(f.cmds))
+				}
+			})
 		}
 	}
 }
 
-func benchEncodeJSONCommand(b *testing.B, n int) {
-	cmd := &Command{
-		Id: 1,
-		Publish: &PublishRequest{
-			Channel: "test",
-			Data:    preparedPayload,
-		},
+func BenchmarkDecodeFrameParallel(b *testing.B) {
+	for _, protoType := range protocolTypes {
+		f := commandFrames[1]
+		frame := commandFrame(b, protoType, f.cmds)
+		b.Run("type="+string(protoType)+"/msg="+f.name, func(b *testing.B) {
+			b.ReportAllocs()
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					decodeFrame(b, protoType, frame, len(f.cmds))
+				}
+			})
+		})
 	}
-	enc := NewJSONCommandEncoder()
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < n; j++ {
-			d, err := enc.Encode(cmd)
-			if err != nil {
-				b.Fatal(err)
-			}
-			benchData = d
+}
+
+// BenchmarkDecodeStream is the same with a decoder which reads from a stream,
+// as the transports which have no frames do.
+func BenchmarkDecodeStream(b *testing.B) {
+	for _, protoType := range protocolTypes {
+		for _, f := range commandFrames {
+			frame := commandFrame(b, protoType, f.cmds)
+			b.Run("type="+string(protoType)+"/msg="+f.name, func(b *testing.B) {
+				b.ReportAllocs()
+				b.SetBytes(int64(len(frame)))
+				reader := bytes.NewReader(frame)
+				for b.Loop() {
+					reader.Reset(frame)
+					decoder := protocol.GetStreamCommandDecoderLimited(protoType, reader, 1<<20)
+					n := 0
+					for {
+						cmd, _, err := decoder.Decode()
+						if cmd != nil {
+							sinkCommand = cmd
+							n++
+						}
+						if err != nil {
+							if !errors.Is(err, io.EOF) {
+								b.Fatal(err)
+							}
+							break
+						}
+					}
+					protocol.PutStreamCommandDecoder(protoType, decoder)
+					if n != len(f.cmds) {
+						b.Fatalf("%d commands decoded, want %d", n, len(f.cmds))
+					}
+				}
+			})
 		}
 	}
 }
 
-func benchProtobufDataEncoder(b *testing.B, n int) {
-	frame := make([]byte, 280)
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		enc := GetDataEncoder(TypeProtobuf)
-		for j := 0; j < n; j++ {
-			_ = enc.Encode(frame)
+func BenchmarkEncodeReply(b *testing.B) {
+	for _, protoType := range protocolTypes {
+		for _, r := range replies {
+			b.Run("type="+string(protoType)+"/msg="+r.name, func(b *testing.B) {
+				b.ReportAllocs()
+				encoder := protocol.GetReplyEncoder(protoType)
+				for b.Loop() {
+					data, err := encoder.Encode(r.reply)
+					if err != nil {
+						b.Fatal(err)
+					}
+					sinkBytes = data
+				}
+			})
 		}
-		benchData = enc.Finish()
-		PutDataEncoder(TypeProtobuf, enc)
 	}
 }
 
-func benchJSONDataEncoder(b *testing.B, n int) {
-	frame := make([]byte, 280)
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		enc := GetDataEncoder(TypeJSON)
-		for j := 0; j < n; j++ {
-			_ = enc.Encode(frame)
+// BenchmarkEncodePush encodes a push the way a server does once per
+// broadcast, for all subscribers of a channel.
+func BenchmarkEncodePush(b *testing.B) {
+	for _, protoType := range protocolTypes {
+		for _, p := range pushes {
+			b.Run("type="+string(protoType)+"/msg="+p.name, func(b *testing.B) {
+				b.ReportAllocs()
+				encoder := protocol.GetPushEncoder(protoType)
+				for b.Loop() {
+					data, err := encoder.Encode(p.push)
+					if err != nil {
+						b.Fatal(err)
+					}
+					sinkBytes = data
+				}
+			})
 		}
-		benchData = enc.Finish()
-		PutDataEncoder(TypeJSON, enc)
 	}
 }
 
-func BenchmarkReplyEncodeProtobufOnly(b *testing.B) {
-	r := &Reply{Push: &Push{Channel: "test", Pub: &Publication{Data: preparedPayload}}}
-	enc := NewProtobufReplyEncoder()
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		d, err := enc.Encode(r)
+func BenchmarkEncodePushParallel(b *testing.B) {
+	for _, protoType := range protocolTypes {
+		p := pushes[2]
+		b.Run("type="+string(protoType)+"/msg="+p.name, func(b *testing.B) {
+			b.ReportAllocs()
+			encoder := protocol.GetPushEncoder(protoType)
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					data, err := encoder.Encode(p.push)
+					if err != nil {
+						b.Error(err)
+						return
+					}
+					sinkBytes = data
+				}
+			})
+		})
+	}
+}
+
+// BenchmarkDecodeReplies is what a client does with a frame of a server.
+func BenchmarkDecodeReplies(b *testing.B) {
+	for _, protoType := range protocolTypes {
+		for _, f := range []struct {
+			name  string
+			reply *protocol.Reply
+			n     int
+		}{
+			{"connect", replies[0].reply, 1},
+			{"8_publications_256B+info", &protocol.Reply{Push: pushes[2].push}, 8},
+			{"history_100", replies[3].reply, 1},
+		} {
+			frame := replyFrame(b, protoType, f.reply, f.n)
+			b.Run("type="+string(protoType)+"/msg="+f.name, func(b *testing.B) {
+				b.ReportAllocs()
+				b.SetBytes(int64(len(frame)))
+				for b.Loop() {
+					var decoder protocol.ReplyDecoder
+					if protoType == protocol.TypeJSON {
+						decoder = protocol.NewJSONReplyDecoder(frame)
+					} else {
+						decoder = protocol.NewProtobufReplyDecoder(frame)
+					}
+					n := 0
+					for {
+						reply, err := decoder.Decode()
+						if err != nil {
+							break
+						}
+						sinkReply = reply
+						n++
+					}
+					if n != f.n {
+						b.Fatalf("%d replies decoded, want %d", n, f.n)
+					}
+				}
+			})
+		}
+	}
+}
+
+// BenchmarkDataEncoder puts encoded messages into a frame, as a server does
+// for what it writes to a connection at once.
+func BenchmarkDataEncoder(b *testing.B) {
+	for _, protoType := range protocolTypes {
+		message, err := protocol.GetPushEncoder(protoType).Encode(pushes[1].push)
 		if err != nil {
 			b.Fatal(err)
 		}
-		benchData = d
-	}
-}
-
-func BenchmarkReplyEncodeJSONOnly(b *testing.B) {
-	r := &Reply{Push: &Push{Channel: "test", Pub: &Publication{Data: preparedPayload}}}
-	enc := NewJSONReplyEncoder()
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		d, err := enc.Encode(r)
-		if err != nil {
-			b.Fatal(err)
+		for _, n := range []int{8, 64} {
+			b.Run(fmt.Sprintf("type=%s/msg=%d_publications_256B", protoType, n), func(b *testing.B) {
+				b.ReportAllocs()
+				for b.Loop() {
+					encoder := protocol.GetDataEncoder(protoType)
+					for i := 0; i < n; i++ {
+						if err := encoder.Encode(message); err != nil {
+							b.Fatal(err)
+						}
+					}
+					sinkBytes = encoder.Finish()
+					protocol.PutDataEncoder(protoType, encoder)
+				}
+			})
 		}
-		benchData = d
 	}
 }
-
-func BenchmarkPushEncodeProtobufOnly(b *testing.B) {
-	p := &Push{Channel: "test", Pub: &Publication{Data: preparedPayload}}
-	enc := NewProtobufPushEncoder()
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		d, err := enc.Encode(p)
-		if err != nil {
-			b.Fatal(err)
-		}
-		benchData = d
-	}
-}
-
-func BenchmarkPushEncodeJSONOnly(b *testing.B) {
-	p := &Push{Channel: "test", Pub: &Publication{Data: preparedPayload}}
-	enc := NewJSONPushEncoder()
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		d, err := enc.Encode(p)
-		if err != nil {
-			b.Fatal(err)
-		}
-		benchData = d
-	}
-}
-
-func BenchmarkEncodeProtobufCommand1(b *testing.B)  { benchEncodeProtobufCommand(b, 1) }
-func BenchmarkEncodeProtobufCommand64(b *testing.B) { benchEncodeProtobufCommand(b, 64) }
-func BenchmarkEncodeJSONCommand1(b *testing.B)      { benchEncodeJSONCommand(b, 1) }
-func BenchmarkEncodeJSONCommand64(b *testing.B)     { benchEncodeJSONCommand(b, 64) }
-func BenchmarkProtobufDataEncoder8(b *testing.B)    { benchProtobufDataEncoder(b, 8) }
-func BenchmarkProtobufDataEncoder64(b *testing.B)   { benchProtobufDataEncoder(b, 64) }
-func BenchmarkJSONDataEncoder8(b *testing.B)        { benchJSONDataEncoder(b, 8) }
-func BenchmarkJSONDataEncoder64(b *testing.B)       { benchJSONDataEncoder(b, 64) }
-
-func BenchmarkCommandJSONUnmarshalMulti1(b *testing.B)   { benchDecodeJSONMulti(b, 1) }
-func BenchmarkCommandJSONUnmarshalMulti8(b *testing.B)   { benchDecodeJSONMulti(b, 8) }
-func BenchmarkCommandJSONUnmarshalMulti64(b *testing.B)  { benchDecodeJSONMulti(b, 64) }
-func BenchmarkCommandJSONUnmarshalMulti256(b *testing.B) { benchDecodeJSONMulti(b, 256) }
-
-func BenchmarkCommandProtobufUnmarshalMulti1(b *testing.B)   { benchDecodeProtobufMulti(b, 1) }
-func BenchmarkCommandProtobufUnmarshalMulti8(b *testing.B)   { benchDecodeProtobufMulti(b, 8) }
-func BenchmarkCommandProtobufUnmarshalMulti64(b *testing.B)  { benchDecodeProtobufMulti(b, 64) }
-func BenchmarkCommandProtobufUnmarshalMulti256(b *testing.B) { benchDecodeProtobufMulti(b, 256) }

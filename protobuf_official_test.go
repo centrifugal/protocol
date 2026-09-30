@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/rand"
 	"reflect"
-	"sort"
 	"strings"
 	"testing"
 
@@ -17,32 +16,6 @@ import (
 
 	"github.com/centrifugal/protocol/cfprotobuf"
 )
-
-// pbMessage is implemented by every generated type: the methods cfprotobuf
-// generates, and what protoc-gen-go generates to make the type a Protobuf
-// message google.golang.org/protobuf can work with.
-type pbMessage interface {
-	proto.Message
-	MarshalCF() ([]byte, error)
-	MarshalToCF([]byte) (int, error)
-	MarshalToSizedBufferCF([]byte) (int, error)
-	SizeCF() int
-	UnmarshalCF([]byte) error
-}
-
-// pbMessageNames are the names of all message types, sorted.
-var pbMessageNames = func() []string {
-	names := make([]string, 0, len(jsonMessages))
-	for name := range jsonMessages {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	return names
-}()
-
-func newPBMessage(name string) pbMessage {
-	return jsonMessages[name]().(pbMessage)
-}
 
 var pbStrings = []string{
 	"a", "news", "chat:index", "user@example.com", "h\xc3\xa9llo \xf0\x9f\x98\x80",
@@ -132,9 +105,9 @@ func fillPB(r *rand.Rand, v reflect.Value, depth, maxMapLen int) {
 	}
 }
 
-func randomPBMessage(r *rand.Rand, maxMapLen int) (string, pbMessage) {
-	name := pbMessageNames[r.Intn(len(pbMessageNames))]
-	m := newPBMessage(name)
+func randomPBMessage(r *rand.Rand, maxMapLen int) (string, message) {
+	name := messageNames[r.Intn(len(messageNames))]
+	m := newMessage(name)
 	fillPB(r, reflect.ValueOf(m).Elem(), 0, maxMapLen)
 	return name, m
 }
@@ -176,7 +149,7 @@ func TestProtobufMarshalMatchesOfficial_MultiKeyMaps(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, proto.Size(m), len(data), name)
 
-		decoded := newPBMessage(name)
+		decoded := newMessage(name)
 		require.NoError(t, proto.Unmarshal(data, decoded), name)
 		require.True(t, proto.Equal(m, decoded), name)
 	}
@@ -188,7 +161,7 @@ func TestProtobufMarshalMatchesOfficial_MultiKeyMaps(t *testing.T) {
 func compareWithOfficial(t testing.TB, name string, data []byte) {
 	t.Helper()
 	input := bytes.Clone(data)
-	want, got := newPBMessage(name), newPBMessage(name)
+	want, got := newMessage(name), newMessage(name)
 	wantErr := proto.Unmarshal(data, want)
 	gotErr := got.UnmarshalCF(data)
 	if !bytes.Equal(input, data) {
@@ -228,7 +201,7 @@ func compareWithOfficial(t testing.TB, name string, data []byte) {
 	if len(encoded) != proto.Size(want) {
 		t.Fatalf("%s input %x: encoded to %d bytes, official size is %d", name, input, len(encoded), proto.Size(want))
 	}
-	again := newPBMessage(name)
+	again := newMessage(name)
 	if err := proto.Unmarshal(encoded, again); err != nil || !proto.Equal(want, again) {
 		t.Fatalf("%s input %x: own output %x does not decode back: %v", name, input, encoded, err)
 	}
@@ -305,21 +278,6 @@ func TestProtobufUnmarshalMatchesOfficial(t *testing.T) {
 	}
 }
 
-// Each input is decoded into a message type picked by its first byte.
-func FuzzProtobufMatchesOfficial(f *testing.F) {
-	r := rand.New(rand.NewSource(4))
-	for n := 0; n < 300; n++ {
-		name, m := randomPBMessage(r, 2)
-		if data, _ := m.MarshalCF(); len(data) < 1024 {
-			f.Add(byte(sort.SearchStrings(pbMessageNames, name)), data)
-		}
-	}
-	f.Add(byte(0), []byte{0xc3, 0x06, 0x08, 0x01, 0xc4, 0x06})
-	f.Fuzz(func(t *testing.T, typ byte, data []byte) {
-		compareWithOfficial(t, pbMessageNames[int(typ)%len(pbMessageNames)], data)
-	})
-}
-
 // An entry of a map is a message of two fields, and a sender is free to write
 // it in ways no encoder does: without the key, without the value, with either
 // of them more than once.
@@ -344,7 +302,7 @@ func TestProtobufMapEntriesMatchOfficial(t *testing.T) {
 			require.NoError(t, err)
 			// The cases are meant to be accepted: one which is not would
 			// compare nothing.
-			require.NoError(t, proto.Unmarshal(data, newPBMessage(tt.message)))
+			require.NoError(t, proto.Unmarshal(data, newMessage(tt.message)))
 			compareWithOfficial(t, tt.message, data)
 		})
 	}

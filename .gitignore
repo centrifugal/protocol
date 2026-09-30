@@ -9,3 +9,5 @@ coverage.out
 internal/cfjsoncmp/bench.txt
 internal/cfprotobufcmp/bench.txt
 .DS_Store
+bench.ref.txt
+bench.head.txt

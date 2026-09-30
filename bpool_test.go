@@ -1,39 +1,38 @@
 package protocol
 
 import (
-	"fmt"
+	"math"
+	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetPutConcurrent(t *testing.T) {
-	const concurrency = 10
-	doneCh := make(chan struct{}, concurrency)
-	for i := 0; i < concurrency; i++ {
+	var wg sync.WaitGroup
+	for g := 0; g < 10; g++ {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			for capacity := 0; capacity < 100; capacity++ {
 				bb := getByteBuffer(capacity)
 				if len(bb.B) > 0 {
-					panic(fmt.Errorf("len(bb.B) must be zero; got %d", len(bb.B)))
-				}
-				if capacity < 0 {
-					capacity = 0
+					t.Errorf("a buffer from the pool has %d bytes in it", len(bb.B))
+					return
 				}
 				bb.B = append(bb.B, make([]byte, capacity)...)
 				putByteBuffer(bb)
 			}
-			doneCh <- struct{}{}
 		}()
 	}
-	tc := time.After(10 * time.Second)
-	for i := 0; i < concurrency; i++ {
-		select {
-		case <-tc:
-			t.Fatalf("timeout")
-		case <-doneCh:
-		}
+	wg.Wait()
+}
+
+func TestGetByteBuffer_NonPositiveLength(t *testing.T) {
+	for _, length := range []int{0, -1, math.MinInt} {
+		bb := getByteBuffer(length)
+		require.NotNil(t, bb)
+		require.Empty(t, bb.B)
 	}
 }
 

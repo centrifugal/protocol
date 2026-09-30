@@ -85,6 +85,13 @@ func AppendString(b []byte, s string) []byte {
 	}
 	b = append(b, '"')
 	i := 0
+	// Four words per branch for long strings, tokens for the most part.
+	for ; i+32 <= len(s); i += 32 {
+		if swarUnsafe(loadString64(s, i))|swarUnsafe(loadString64(s, i+8))|
+			swarUnsafe(loadString64(s, i+16))|swarUnsafe(loadString64(s, i+24)) != 0 {
+			return appendStringSlow(b, s)
+		}
+	}
 	for ; i+8 <= len(s); i += 8 {
 		x := uint64(s[i]) | uint64(s[i+1])<<8 | uint64(s[i+2])<<16 | uint64(s[i+3])<<24 |
 			uint64(s[i+4])<<32 | uint64(s[i+5])<<40 | uint64(s[i+6])<<48 | uint64(s[i+7])<<56

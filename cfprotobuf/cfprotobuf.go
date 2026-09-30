@@ -3,10 +3,11 @@
 // format which generated marshalers and unmarshalers are built from.
 //
 // The generator writes, for structs which protoc-gen-go produced, the methods
-// github.com/planetscale/vtprotobuf writes: MarshalVT, MarshalToVT,
-// MarshalToSizedBufferVT, SizeVT and UnmarshalVT, under the same names and
-// with the same output, so that it is a drop-in replacement. The messages stay
-// regular Protobuf messages: nothing here replaces google.golang.org/protobuf.
+// MarshalCF, MarshalToCF, MarshalToSizedBufferCF, SizeCF and UnmarshalCF.
+// They do what the methods github.com/planetscale/vtprotobuf writes do, with
+// the same output, and can be given the names of those with the -suffix
+// option. The messages stay regular Protobuf messages: nothing here replaces
+// google.golang.org/protobuf.
 //
 // The package depends on the standard library only.
 //

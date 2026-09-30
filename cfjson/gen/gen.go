@@ -1028,8 +1028,14 @@ func (g *generator) encoder(si *structInfo) {
 		if len(conds) > 0 {
 			g.p("if %s {", strings.Join(conds, " && "))
 		}
-		g.p("b = append(b, %s...)", keyLiteral(prefix, f.jsonName))
-		g.encodeValue(f.typ, x, nonEmpty)
+		if nonEmpty && f.typ.kind == kBool && !f.typ.marshaler {
+			// A bool which is written only when it is not empty is true:
+			// the value goes into the literal with the key.
+			g.p("b = append(b, %q...)", prefix+`"`+f.jsonName+`":true`)
+		} else {
+			g.p("b = append(b, %s...)", keyLiteral(prefix, f.jsonName))
+			g.encodeValue(f.typ, x, nonEmpty)
+		}
 		if len(conds) > 0 {
 			g.p("}")
 		}
@@ -1176,25 +1182,77 @@ func (g *generator) decoder(si *structInfo) {
 	for w := 0; w < words; w++ {
 		g.p("var seen%d uint64", w)
 	}
-	g.p("for {")
-	g.p("var key []byte")
-	g.p("key, i = cfjson.Key(b, i, f)")
-	g.p("if i < 0 {")
-	g.p("return i")
-	g.p("}")
 	if len(si.fields) == 0 {
-		g.p("_ = key")
+		g.p("for {")
+		g.p("_, i = cfjson.Key(b, i, f)")
+		g.p("if i < 0 {")
+		g.p("return i")
+		g.p("}")
 		g.p("i = cfjson.Skip(b, i, f)")
 	} else {
+		// Which field a key names is found in two steps: the number of the
+		// field first, what to do with it after. Encoders write fields in
+		// the order they are declared in, so the key which is most likely to
+		// come is the one of the field after the last one: it is compared
+		// with as it is written, quotes and colon included, which takes a
+		// couple of word compares and no look at the key itself. Whatever
+		// else comes is read as a key and looked up.
+		g.p("next := 0")
+		g.p("for {")
+		g.p("id := -1")
+		// A switch with one case is an if, for those who read the code and
+		// for the linters.
+		single := len(si.fields) == 1
+		if !single {
+			g.p("switch next {")
+		}
+		for n, f := range si.fields {
+			lit := `"` + f.jsonName + `":`
+			if single {
+				g.p("if next == 0 && len(b)-i >= %d && string(b[i:i+%d]) == %q {", len(lit), len(lit), lit)
+			} else {
+				g.p("case %d:", n)
+				g.p("if len(b)-i >= %d && string(b[i:i+%d]) == %q {", len(lit), len(lit), lit)
+			}
+			g.p("id = %d", n)
+			g.p("i = cfjson.SkipSpace(b, i+%d)", len(lit))
+			g.p("}")
+		}
+		if !single {
+			g.p("}")
+		}
+		g.p("if id < 0 {")
+		g.p("var key []byte")
+		g.p("key, i = cfjson.Key(b, i, f)")
+		g.p("if i < 0 {")
+		g.p("return i")
+		g.p("}")
 		// Keys are matched exactly. The compiler does not allocate for the
 		// conversion in a switch.
 		if g.cfg.FoldKeys {
 			g.p("folded := false")
 			g.p("match:")
 		}
-		g.p("switch string(key) {")
+		if single && !g.cfg.FoldKeys {
+			g.p("if string(key) == %q {", si.fields[0].jsonName)
+			g.p("id = 0")
+			g.p("}")
+		} else {
+			g.p("switch string(key) {")
+			for n, f := range si.fields {
+				g.p("case %q:", f.jsonName)
+				g.p("id = %d", n)
+			}
+			if g.cfg.FoldKeys {
+				g.p("default:")
+				g.foldKey(si)
+			}
+			g.p("}")
+		}
+		g.p("}")
+		g.p("switch id {")
 		for n, f := range si.fields {
-			g.p("case %q:", f.jsonName)
+			g.p("case %d:", n)
 			g.p("if seen%d&%#x != 0 {", n/64, uint64(1)<<(n%64))
 			g.p("return ^i")
 			g.p("}")
@@ -1207,11 +1265,9 @@ func (g *generator) decoder(si *structInfo) {
 				g.p("}")
 			}
 			g.decodeValue(f.typ, "m."+f.path, false)
+			g.p("next = %d", n+1)
 		}
 		g.p("default:")
-		if g.cfg.FoldKeys {
-			g.foldKey(si)
-		}
 		g.p("i = cfjson.Skip(b, i, f)")
 		g.p("}")
 	}
@@ -1414,6 +1470,8 @@ func (g *generator) decodeValue(t *typ, x string, fresh bool) {
 		g.p("if i < len(b) && b[i] == '}' {")
 		g.p("i++")
 		g.p("} else {")
+		count := g.v("n")
+		g.p("%s := 0", count)
 		g.p("for {")
 		g.p("var %s string", k)
 		g.p("i = cfjson.MapKey(b, i, f, &%s)", k)
@@ -1429,10 +1487,14 @@ func (g *generator) decodeValue(t *typ, x string, fresh bool) {
 		if t.keyNamed {
 			key = t.keySrc + "(" + k + ")"
 		}
-		g.p("if _, dup := %s[%s]; dup {", x, key)
+		// The map was made above, so it has one entry per key stored so
+		// far unless a key came twice. Counting is one lookup less per entry
+		// than asking the map before storing.
+		g.p("%s[%s] = %s", x, key, e)
+		g.p("%s++", count)
+		g.p("if len(%s) != %s {", x, count)
 		g.p("return ^i")
 		g.p("}")
-		g.p("%s[%s] = %s", x, key, e)
 		g.p("i = cfjson.SkipSpace(b, i)")
 		g.p("if i >= len(b) {")
 		g.p("return ^i")

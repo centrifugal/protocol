@@ -86,6 +86,15 @@ one is what was chosen, the other two are not planned:
   CPU has, but assembly is exactly the kind of code that is hard to review
   and that the analysers used here cannot check.
 
+What keeps the door open for it: everything which looks at a run of bytes
+is a function of the runtime package (`printableASCII`, `scanQuote`,
+`scanControl`, the loops of `AppendString`; `ValidString` in cfprotobuf), and
+generated code only calls them. A vectorized version of one of them is a
+change to one function, behind a build tag, with the word at a time code as
+the fallback and as what it is tested against; nothing has to be generated
+again. Optimizations are held to that: no scanning loops in generated code,
+and nothing which makes the result of a scan depend on how it was done.
+
 ### 3. Allocate a Command together with its request
 
 Decoding a command is dominated by allocation: the `Command`, the request
@@ -289,6 +298,55 @@ check that nothing needs escaping are the words it stores. On an Apple M4 a
 string of 4 to 16 bytes takes 2.4 to 2.8 ns where it took 4.7 to 5.4 ns, one
 of 17 to 32 bytes 4.5 ns where it took 5.5 to 8.5 ns.
 
+### What other parsers do for speed
+
+A second look, at what fast JSON libraries do which generated pure Go code
+could do as well: sonic, goccy/go-json, json-iterator, fastjson, simdjson
+and its On-Demand API, yyjson, serde_json, `encoding/json/v2`. Anything
+which takes assembly or SIMD, skips a part of validation, changes the bytes
+written, or has decoded values share memory with each other or with the
+input was out from the start. The numbers are from an Apple M4.
+
+Taken:
+
+- **The key the next field would have** (simdjson On-Demand is fastest when
+  fields are asked for in the order they come). Described in the README.
+  Decoding got 8.5% faster in geomean for the generated code alone, 10 to 20%
+  for messages made of fields rather than of one payload.
+- **One hash operation per map entry.** Presence of 100 clients decodes 2 to
+  3% faster for it.
+- **Long strings checked four words per branch** when encoding. 8 to 12% for
+  a string of 40 to 1000 bytes, 3 to 4% for a connect or subscribe command
+  with a token in it.
+- **An `omitempty` bool is written together with its key**, `,"recover":true`
+  in one append: it is only ever written when true. Too small to measure.
+
+Tried and not taken:
+
+- **Looking a key up as a number**: load eight bytes after the quote, find
+  the closing quote in the word, compare the masked word with constants.
+  Faster than the switch in a benchmark of its own, but on the messages of
+  the protocol it gave 3.6% where the simpler comparison above gives 8.5%,
+  and it is more code to get right.
+
+Looked at and left, with the reason:
+
+- **Elements of a slice allocated in chunks**, and **all strings of a message
+  in one allocation**: fewer allocations (a history of 100 publications
+  decodes about 15% faster with the first), but then one publication or one
+  string which is kept keeps the memory of all the others alive.
+- **A size hint for maps**: needs the entries buffered before the map is
+  made. Pays off above eight entries only.
+- **A table-driven UTF-8 validator** for text which is not ASCII (twice as
+  fast as `utf8.Valid` on arm64 for Cyrillic or emoji): it is a validator of
+  our own to keep right, for payloads which are not the common case.
+- **Eight digits at a time** when parsing numbers, and **digits written
+  straight into the output**: about a nanosecond per number either way.
+
+Already as good as it gets in the standard library, as of Go 1.27: printing
+and parsing floats, `strconv.AppendUint`, `utf8.Valid` on ASCII,
+`bytes.IndexByte`, copying.
+
 ## Moving the other projects over
 
 What was checked against this branch, without changing anything in the other
@@ -309,6 +367,12 @@ repositories (a Go workspace pointing at it):
   so every field type in use is supported. Only the marshal, unmarshal and
   size features of vtprotobuf are used anywhere, and nothing outside of
   generated files uses easyjson's lexer or writer.
+
+The Protobuf methods of the messages are named after cfprotobuf now:
+`MarshalCF`, `SizeCF`, `UnmarshalCF` where they were `MarshalVT`, `SizeVT`,
+`UnmarshalVT`. Code which calls them on the types of `protocol` has to be
+changed with the move to this version, which is a rename and nothing else:
+the methods take and return the same.
 
 What the new packages do not cover:
 

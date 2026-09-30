@@ -153,7 +153,7 @@ func TestProtobufDecode_FilterNodeDepth(t *testing.T) {
 		// Built from the inside out: every level is a node holding the
 		// previous one in its nodes field.
 		node := &FilterNode{Op: "eq", Key: "k", Val: "v"}
-		data, err := node.MarshalVT()
+		data, err := node.MarshalCF()
 		require.NoError(t, err)
 		for ; depth > 1; depth-- {
 			// Field 6 (nodes), length-delimited.
@@ -163,14 +163,14 @@ func TestProtobufDecode_FilterNodeDepth(t *testing.T) {
 		return data
 	}
 	var node FilterNode
-	require.NoError(t, node.UnmarshalVT(filter(cfprotobuf.MaxDepth)))
+	require.NoError(t, node.UnmarshalCF(filter(cfprotobuf.MaxDepth)))
 	depth := 1
 	for n := &node; len(n.Nodes) > 0; n = n.Nodes[0] {
 		depth++
 	}
 	require.Equal(t, cfprotobuf.MaxDepth, depth)
 
-	require.ErrorIs(t, new(FilterNode).UnmarshalVT(filter(cfprotobuf.MaxDepth+1)), cfprotobuf.ErrTooDeep)
+	require.ErrorIs(t, new(FilterNode).UnmarshalCF(filter(cfprotobuf.MaxDepth+1)), cfprotobuf.ErrTooDeep)
 
 	// Inside of a command, through the decoder.
 	cmd := append([]byte{0x6a}, protoLength(len(filter(cfprotobuf.MaxDepth+1)))...) // SubscribeRequest.tf

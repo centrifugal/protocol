@@ -6,8 +6,8 @@ import (
 	cfprotobuf "github.com/centrifugal/protocol/cfprotobuf"
 )
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Error) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Error) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -24,28 +24,28 @@ func (m *Error) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Error) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Error) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Error) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Error) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Error) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Error) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -75,14 +75,14 @@ func (m *Error) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Error) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Error) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Error) unmarshalVT(b []byte, depth int) error {
+func (m *Error) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -143,8 +143,8 @@ func (m *Error) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *EmulationRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *EmulationRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -161,28 +161,28 @@ func (m *EmulationRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *EmulationRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *EmulationRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *EmulationRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *EmulationRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *EmulationRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *EmulationRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -215,14 +215,14 @@ func (m *EmulationRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *EmulationRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *EmulationRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *EmulationRequest) unmarshalVT(b []byte, depth int) error {
+func (m *EmulationRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -292,8 +292,8 @@ func (m *EmulationRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Command) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Command) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -301,67 +301,67 @@ func (m *Command) SizeVT() (n int) {
 		n += 1 + cfprotobuf.SizeOfInt(m.Id)
 	}
 	if m.Connect != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Connect.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Connect.SizeCF())
 	}
 	if m.Subscribe != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Subscribe.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Subscribe.SizeCF())
 	}
 	if m.Unsubscribe != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Unsubscribe.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Unsubscribe.SizeCF())
 	}
 	if m.Publish != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Publish.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Publish.SizeCF())
 	}
 	if m.Presence != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Presence.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Presence.SizeCF())
 	}
 	if m.PresenceStats != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.PresenceStats.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.PresenceStats.SizeCF())
 	}
 	if m.History != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.History.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.History.SizeCF())
 	}
 	if m.Ping != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Ping.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Ping.SizeCF())
 	}
 	if m.Send != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Send.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Send.SizeCF())
 	}
 	if m.Rpc != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Rpc.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Rpc.SizeCF())
 	}
 	if m.Refresh != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Refresh.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Refresh.SizeCF())
 	}
 	if m.SubRefresh != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.SubRefresh.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.SubRefresh.SizeCF())
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Command) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Command) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Command) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Command) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Command) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -372,7 +372,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.SubRefresh != nil {
 		{
-			size, err := m.SubRefresh.MarshalToSizedBufferVT(b[:i])
+			size, err := m.SubRefresh.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -384,7 +384,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Refresh != nil {
 		{
-			size, err := m.Refresh.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Refresh.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -396,7 +396,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Rpc != nil {
 		{
-			size, err := m.Rpc.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Rpc.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -408,7 +408,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Send != nil {
 		{
-			size, err := m.Send.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Send.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -420,7 +420,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Ping != nil {
 		{
-			size, err := m.Ping.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Ping.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -432,7 +432,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.History != nil {
 		{
-			size, err := m.History.MarshalToSizedBufferVT(b[:i])
+			size, err := m.History.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -444,7 +444,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.PresenceStats != nil {
 		{
-			size, err := m.PresenceStats.MarshalToSizedBufferVT(b[:i])
+			size, err := m.PresenceStats.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -456,7 +456,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Presence != nil {
 		{
-			size, err := m.Presence.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Presence.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -468,7 +468,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Publish != nil {
 		{
-			size, err := m.Publish.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Publish.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -480,7 +480,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Unsubscribe != nil {
 		{
-			size, err := m.Unsubscribe.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Unsubscribe.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -492,7 +492,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Subscribe != nil {
 		{
-			size, err := m.Subscribe.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Subscribe.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -504,7 +504,7 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Connect != nil {
 		{
-			size, err := m.Connect.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Connect.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -522,14 +522,14 @@ func (m *Command) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Command) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Command) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Command) unmarshalVT(b []byte, depth int) error {
+func (m *Command) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -563,7 +563,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.Connect == nil {
 					m.Connect = new(ConnectRequest)
 				}
-				if err := m.Connect.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Connect.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -581,7 +581,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.Subscribe == nil {
 					m.Subscribe = new(SubscribeRequest)
 				}
-				if err := m.Subscribe.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Subscribe.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -599,7 +599,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.Unsubscribe == nil {
 					m.Unsubscribe = new(UnsubscribeRequest)
 				}
-				if err := m.Unsubscribe.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Unsubscribe.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -617,7 +617,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.Publish == nil {
 					m.Publish = new(PublishRequest)
 				}
-				if err := m.Publish.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Publish.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -635,7 +635,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.Presence == nil {
 					m.Presence = new(PresenceRequest)
 				}
-				if err := m.Presence.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Presence.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -653,7 +653,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.PresenceStats == nil {
 					m.PresenceStats = new(PresenceStatsRequest)
 				}
-				if err := m.PresenceStats.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.PresenceStats.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -671,7 +671,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.History == nil {
 					m.History = new(HistoryRequest)
 				}
-				if err := m.History.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.History.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -689,7 +689,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.Ping == nil {
 					m.Ping = new(PingRequest)
 				}
-				if err := m.Ping.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Ping.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -707,7 +707,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.Send == nil {
 					m.Send = new(SendRequest)
 				}
-				if err := m.Send.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Send.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -725,7 +725,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.Rpc == nil {
 					m.Rpc = new(RPCRequest)
 				}
-				if err := m.Rpc.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Rpc.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -743,7 +743,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.Refresh == nil {
 					m.Refresh = new(RefreshRequest)
 				}
-				if err := m.Refresh.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Refresh.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -761,7 +761,7 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 				if m.SubRefresh == nil {
 					m.SubRefresh = new(SubRefreshRequest)
 				}
-				if err := m.SubRefresh.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.SubRefresh.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -777,8 +777,8 @@ func (m *Command) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Reply) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Reply) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -786,70 +786,70 @@ func (m *Reply) SizeVT() (n int) {
 		n += 1 + cfprotobuf.SizeOfInt(m.Id)
 	}
 	if m.Error != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Error.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Error.SizeCF())
 	}
 	if m.Push != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Push.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Push.SizeCF())
 	}
 	if m.Connect != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Connect.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Connect.SizeCF())
 	}
 	if m.Subscribe != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Subscribe.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Subscribe.SizeCF())
 	}
 	if m.Unsubscribe != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Unsubscribe.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Unsubscribe.SizeCF())
 	}
 	if m.Publish != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Publish.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Publish.SizeCF())
 	}
 	if m.Presence != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Presence.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Presence.SizeCF())
 	}
 	if m.PresenceStats != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.PresenceStats.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.PresenceStats.SizeCF())
 	}
 	if m.History != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.History.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.History.SizeCF())
 	}
 	if m.Ping != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Ping.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Ping.SizeCF())
 	}
 	if m.Rpc != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Rpc.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Rpc.SizeCF())
 	}
 	if m.Refresh != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Refresh.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Refresh.SizeCF())
 	}
 	if m.SubRefresh != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.SubRefresh.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.SubRefresh.SizeCF())
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Reply) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Reply) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Reply) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Reply) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Reply) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -860,7 +860,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.SubRefresh != nil {
 		{
-			size, err := m.SubRefresh.MarshalToSizedBufferVT(b[:i])
+			size, err := m.SubRefresh.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -872,7 +872,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Refresh != nil {
 		{
-			size, err := m.Refresh.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Refresh.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -884,7 +884,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Rpc != nil {
 		{
-			size, err := m.Rpc.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Rpc.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -896,7 +896,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Ping != nil {
 		{
-			size, err := m.Ping.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Ping.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -908,7 +908,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.History != nil {
 		{
-			size, err := m.History.MarshalToSizedBufferVT(b[:i])
+			size, err := m.History.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -920,7 +920,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.PresenceStats != nil {
 		{
-			size, err := m.PresenceStats.MarshalToSizedBufferVT(b[:i])
+			size, err := m.PresenceStats.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -932,7 +932,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Presence != nil {
 		{
-			size, err := m.Presence.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Presence.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -944,7 +944,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Publish != nil {
 		{
-			size, err := m.Publish.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Publish.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -956,7 +956,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Unsubscribe != nil {
 		{
-			size, err := m.Unsubscribe.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Unsubscribe.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -968,7 +968,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Subscribe != nil {
 		{
-			size, err := m.Subscribe.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Subscribe.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -980,7 +980,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Connect != nil {
 		{
-			size, err := m.Connect.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Connect.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -992,7 +992,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Push != nil {
 		{
-			size, err := m.Push.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Push.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1004,7 +1004,7 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Error != nil {
 		{
-			size, err := m.Error.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Error.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1022,14 +1022,14 @@ func (m *Reply) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Reply) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Reply) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Reply) unmarshalVT(b []byte, depth int) error {
+func (m *Reply) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -1063,7 +1063,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Error == nil {
 					m.Error = new(Error)
 				}
-				if err := m.Error.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Error.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1081,7 +1081,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Push == nil {
 					m.Push = new(Push)
 				}
-				if err := m.Push.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Push.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1099,7 +1099,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Connect == nil {
 					m.Connect = new(ConnectResult)
 				}
-				if err := m.Connect.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Connect.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1117,7 +1117,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Subscribe == nil {
 					m.Subscribe = new(SubscribeResult)
 				}
-				if err := m.Subscribe.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Subscribe.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1135,7 +1135,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Unsubscribe == nil {
 					m.Unsubscribe = new(UnsubscribeResult)
 				}
-				if err := m.Unsubscribe.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Unsubscribe.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1153,7 +1153,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Publish == nil {
 					m.Publish = new(PublishResult)
 				}
-				if err := m.Publish.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Publish.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1171,7 +1171,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Presence == nil {
 					m.Presence = new(PresenceResult)
 				}
-				if err := m.Presence.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Presence.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1189,7 +1189,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.PresenceStats == nil {
 					m.PresenceStats = new(PresenceStatsResult)
 				}
-				if err := m.PresenceStats.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.PresenceStats.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1207,7 +1207,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.History == nil {
 					m.History = new(HistoryResult)
 				}
-				if err := m.History.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.History.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1225,7 +1225,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Ping == nil {
 					m.Ping = new(PingResult)
 				}
-				if err := m.Ping.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Ping.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1243,7 +1243,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Rpc == nil {
 					m.Rpc = new(RPCResult)
 				}
-				if err := m.Rpc.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Rpc.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1261,7 +1261,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.Refresh == nil {
 					m.Refresh = new(RefreshResult)
 				}
-				if err := m.Refresh.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Refresh.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1279,7 +1279,7 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 				if m.SubRefresh == nil {
 					m.SubRefresh = new(SubRefreshResult)
 				}
-				if err := m.SubRefresh.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.SubRefresh.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1295,8 +1295,8 @@ func (m *Reply) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Push) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Push) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1307,58 +1307,58 @@ func (m *Push) SizeVT() (n int) {
 		n += 1 + len(m.Channel) + cfprotobuf.SizeOfLen(len(m.Channel))
 	}
 	if m.Pub != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Pub.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Pub.SizeCF())
 	}
 	if m.Join != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Join.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Join.SizeCF())
 	}
 	if m.Leave != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Leave.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Leave.SizeCF())
 	}
 	if m.Unsubscribe != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Unsubscribe.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Unsubscribe.SizeCF())
 	}
 	if m.Message != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Message.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Message.SizeCF())
 	}
 	if m.Subscribe != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Subscribe.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Subscribe.SizeCF())
 	}
 	if m.Connect != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Connect.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Connect.SizeCF())
 	}
 	if m.Disconnect != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Disconnect.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Disconnect.SizeCF())
 	}
 	if m.Refresh != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Refresh.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Refresh.SizeCF())
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Push) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Push) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Push) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Push) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Push) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -1369,7 +1369,7 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Refresh != nil {
 		{
-			size, err := m.Refresh.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Refresh.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1381,7 +1381,7 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Disconnect != nil {
 		{
-			size, err := m.Disconnect.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Disconnect.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1393,7 +1393,7 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Connect != nil {
 		{
-			size, err := m.Connect.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Connect.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1405,7 +1405,7 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Subscribe != nil {
 		{
-			size, err := m.Subscribe.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Subscribe.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1417,7 +1417,7 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Message != nil {
 		{
-			size, err := m.Message.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Message.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1429,7 +1429,7 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Unsubscribe != nil {
 		{
-			size, err := m.Unsubscribe.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Unsubscribe.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1441,7 +1441,7 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Leave != nil {
 		{
-			size, err := m.Leave.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Leave.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1453,7 +1453,7 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Join != nil {
 		{
-			size, err := m.Join.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Join.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1465,7 +1465,7 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Pub != nil {
 		{
-			size, err := m.Pub.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Pub.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1490,14 +1490,14 @@ func (m *Push) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Push) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Push) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Push) unmarshalVT(b []byte, depth int) error {
+func (m *Push) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -1548,7 +1548,7 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 				if m.Pub == nil {
 					m.Pub = new(Publication)
 				}
-				if err := m.Pub.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Pub.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1566,7 +1566,7 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 				if m.Join == nil {
 					m.Join = new(Join)
 				}
-				if err := m.Join.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Join.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1584,7 +1584,7 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 				if m.Leave == nil {
 					m.Leave = new(Leave)
 				}
-				if err := m.Leave.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Leave.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1602,7 +1602,7 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 				if m.Unsubscribe == nil {
 					m.Unsubscribe = new(Unsubscribe)
 				}
-				if err := m.Unsubscribe.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Unsubscribe.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1620,7 +1620,7 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 				if m.Message == nil {
 					m.Message = new(Message)
 				}
-				if err := m.Message.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Message.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1638,7 +1638,7 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 				if m.Subscribe == nil {
 					m.Subscribe = new(Subscribe)
 				}
-				if err := m.Subscribe.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Subscribe.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1656,7 +1656,7 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 				if m.Connect == nil {
 					m.Connect = new(Connect)
 				}
-				if err := m.Connect.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Connect.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1674,7 +1674,7 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 				if m.Disconnect == nil {
 					m.Disconnect = new(Disconnect)
 				}
-				if err := m.Disconnect.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Disconnect.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1692,7 +1692,7 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 				if m.Refresh == nil {
 					m.Refresh = new(Refresh)
 				}
-				if err := m.Refresh.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Refresh.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -1708,8 +1708,8 @@ func (m *Push) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Dictionary) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Dictionary) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1726,28 +1726,28 @@ func (m *Dictionary) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Dictionary) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Dictionary) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Dictionary) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Dictionary) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Dictionary) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Dictionary) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -1780,14 +1780,14 @@ func (m *Dictionary) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Dictionary) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Dictionary) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Dictionary) unmarshalVT(b []byte, depth int) error {
+func (m *Dictionary) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -1857,8 +1857,8 @@ func (m *Dictionary) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *ClientInfo) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *ClientInfo) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1878,28 +1878,28 @@ func (m *ClientInfo) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *ClientInfo) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *ClientInfo) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *ClientInfo) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *ClientInfo) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *ClientInfo) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *ClientInfo) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -1939,14 +1939,14 @@ func (m *ClientInfo) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *ClientInfo) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *ClientInfo) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *ClientInfo) unmarshalVT(b []byte, depth int) error {
+func (m *ClientInfo) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -2032,8 +2032,8 @@ func (m *ClientInfo) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Publication) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Publication) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2041,7 +2041,7 @@ func (m *Publication) SizeVT() (n int) {
 		n += 1 + len(m.Data) + cfprotobuf.SizeOfLen(len(m.Data))
 	}
 	if m.Info != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Info.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Info.SizeCF())
 	}
 	if m.Offset != 0 {
 		n += 1 + cfprotobuf.SizeOfInt(m.Offset)
@@ -2083,28 +2083,28 @@ func (m *Publication) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Publication) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Publication) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Publication) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Publication) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Publication) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Publication) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -2195,7 +2195,7 @@ func (m *Publication) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Info != nil {
 		{
-			size, err := m.Info.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Info.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -2215,14 +2215,14 @@ func (m *Publication) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Publication) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Publication) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Publication) unmarshalVT(b []byte, depth int) error {
+func (m *Publication) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -2260,7 +2260,7 @@ func (m *Publication) unmarshalVT(b []byte, depth int) error {
 				if m.Info == nil {
 					m.Info = new(ClientInfo)
 				}
-				if err := m.Info.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Info.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -2480,40 +2480,40 @@ func (m *Publication) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Join) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Join) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
 	if m.Info != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Info.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Info.SizeCF())
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Join) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Join) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Join) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Join) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Join) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Join) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -2524,7 +2524,7 @@ func (m *Join) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Info != nil {
 		{
-			size, err := m.Info.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Info.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -2537,14 +2537,14 @@ func (m *Join) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Join) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Join) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Join) unmarshalVT(b []byte, depth int) error {
+func (m *Join) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -2564,7 +2564,7 @@ func (m *Join) unmarshalVT(b []byte, depth int) error {
 			if m.Info == nil {
 				m.Info = new(ClientInfo)
 			}
-			if err := m.Info.unmarshalVT(b[from:to], depth); err != nil {
+			if err := m.Info.unmarshalCF(b[from:to], depth); err != nil {
 				return err
 			}
 			i = to
@@ -2579,40 +2579,40 @@ func (m *Join) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Leave) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Leave) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
 	if m.Info != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Info.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Info.SizeCF())
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Leave) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Leave) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Leave) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Leave) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Leave) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Leave) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -2623,7 +2623,7 @@ func (m *Leave) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Info != nil {
 		{
-			size, err := m.Info.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Info.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -2636,14 +2636,14 @@ func (m *Leave) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Leave) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Leave) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Leave) unmarshalVT(b []byte, depth int) error {
+func (m *Leave) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -2663,7 +2663,7 @@ func (m *Leave) unmarshalVT(b []byte, depth int) error {
 			if m.Info == nil {
 				m.Info = new(ClientInfo)
 			}
-			if err := m.Info.unmarshalVT(b[from:to], depth); err != nil {
+			if err := m.Info.unmarshalCF(b[from:to], depth); err != nil {
 				return err
 			}
 			i = to
@@ -2678,8 +2678,8 @@ func (m *Leave) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Unsubscribe) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Unsubscribe) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2693,28 +2693,28 @@ func (m *Unsubscribe) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Unsubscribe) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Unsubscribe) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Unsubscribe) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Unsubscribe) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Unsubscribe) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Unsubscribe) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -2738,14 +2738,14 @@ func (m *Unsubscribe) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Unsubscribe) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Unsubscribe) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Unsubscribe) unmarshalVT(b []byte, depth int) error {
+func (m *Unsubscribe) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -2794,8 +2794,8 @@ func (m *Unsubscribe) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Subscribe) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Subscribe) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2818,28 +2818,28 @@ func (m *Subscribe) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Subscribe) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Subscribe) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Subscribe) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Subscribe) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Subscribe) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Subscribe) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -2882,14 +2882,14 @@ func (m *Subscribe) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Subscribe) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Subscribe) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Subscribe) unmarshalVT(b []byte, depth int) error {
+func (m *Subscribe) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -2978,8 +2978,8 @@ func (m *Subscribe) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Message) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Message) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2990,28 +2990,28 @@ func (m *Message) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Message) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Message) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Message) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Message) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Message) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Message) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -3030,14 +3030,14 @@ func (m *Message) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Message) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Message) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Message) unmarshalVT(b []byte, depth int) error {
+func (m *Message) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -3070,8 +3070,8 @@ func (m *Message) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Connect) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Connect) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3086,7 +3086,7 @@ func (m *Connect) SizeVT() (n int) {
 	}
 	if len(m.Subs) > 0 {
 		for k, v := range m.Subs {
-			entry := 1 + len(k) + cfprotobuf.SizeOfLen(len(k)) + 1 + cfprotobuf.SizeOfMessage(v.SizeVT())
+			entry := 1 + len(k) + cfprotobuf.SizeOfLen(len(k)) + 1 + cfprotobuf.SizeOfMessage(v.SizeCF())
 			n += 1 + entry + cfprotobuf.SizeOfLen(entry)
 		}
 	}
@@ -3115,28 +3115,28 @@ func (m *Connect) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Connect) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Connect) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Connect) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Connect) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Connect) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Connect) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -3190,7 +3190,7 @@ func (m *Connect) MarshalToSizedBufferVT(b []byte) (int, error) {
 		for k, v := range m.Subs {
 			end := i
 			{
-				size, err := v.MarshalToSizedBufferVT(b[:i])
+				size, err := v.MarshalToSizedBufferCF(b[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -3233,14 +3233,14 @@ func (m *Connect) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Connect) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Connect) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Connect) unmarshalVT(b []byte, depth int) error {
+func (m *Connect) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -3347,7 +3347,7 @@ func (m *Connect) unmarshalVT(b []byte, depth int) error {
 						} else if fromVal, toVal = cfprotobuf.Length(entry, j); fromVal < 0 {
 							return cfprotobuf.Error(fromVal)
 						}
-						if err := val.unmarshalVT(entry[fromVal:toVal], depth); err != nil {
+						if err := val.unmarshalCF(entry[fromVal:toVal], depth); err != nil {
 							return err
 						}
 						j = toVal
@@ -3467,8 +3467,8 @@ func (m *Connect) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Disconnect) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Disconnect) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3485,28 +3485,28 @@ func (m *Disconnect) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Disconnect) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Disconnect) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Disconnect) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Disconnect) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Disconnect) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Disconnect) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -3536,14 +3536,14 @@ func (m *Disconnect) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Disconnect) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Disconnect) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Disconnect) unmarshalVT(b []byte, depth int) error {
+func (m *Disconnect) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -3604,8 +3604,8 @@ func (m *Disconnect) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *Refresh) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *Refresh) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3619,28 +3619,28 @@ func (m *Refresh) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *Refresh) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *Refresh) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Refresh) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Refresh) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *Refresh) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *Refresh) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -3663,14 +3663,14 @@ func (m *Refresh) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *Refresh) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *Refresh) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *Refresh) unmarshalVT(b []byte, depth int) error {
+func (m *Refresh) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -3714,8 +3714,8 @@ func (m *Refresh) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *ConnectRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *ConnectRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3727,7 +3727,7 @@ func (m *ConnectRequest) SizeVT() (n int) {
 	}
 	if len(m.Subs) > 0 {
 		for k, v := range m.Subs {
-			entry := 1 + len(k) + cfprotobuf.SizeOfLen(len(k)) + 1 + cfprotobuf.SizeOfMessage(v.SizeVT())
+			entry := 1 + len(k) + cfprotobuf.SizeOfLen(len(k)) + 1 + cfprotobuf.SizeOfMessage(v.SizeCF())
 			n += 1 + entry + cfprotobuf.SizeOfLen(entry)
 		}
 	}
@@ -3756,28 +3756,28 @@ func (m *ConnectRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *ConnectRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *ConnectRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *ConnectRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *ConnectRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *ConnectRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *ConnectRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -3841,7 +3841,7 @@ func (m *ConnectRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 		for k, v := range m.Subs {
 			end := i
 			{
-				size, err := v.MarshalToSizedBufferVT(b[:i])
+				size, err := v.MarshalToSizedBufferCF(b[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -3877,14 +3877,14 @@ func (m *ConnectRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *ConnectRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *ConnectRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *ConnectRequest) unmarshalVT(b []byte, depth int) error {
+func (m *ConnectRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -3974,7 +3974,7 @@ func (m *ConnectRequest) unmarshalVT(b []byte, depth int) error {
 						} else if fromVal, toVal = cfprotobuf.Length(entry, j); fromVal < 0 {
 							return cfprotobuf.Error(fromVal)
 						}
-						if err := val.unmarshalVT(entry[fromVal:toVal], depth); err != nil {
+						if err := val.unmarshalCF(entry[fromVal:toVal], depth); err != nil {
 							return err
 						}
 						j = toVal
@@ -4145,8 +4145,8 @@ func (m *ConnectRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *ConnectResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *ConnectResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4167,7 +4167,7 @@ func (m *ConnectResult) SizeVT() (n int) {
 	}
 	if len(m.Subs) > 0 {
 		for k, v := range m.Subs {
-			entry := 1 + len(k) + cfprotobuf.SizeOfLen(len(k)) + 1 + cfprotobuf.SizeOfMessage(v.SizeVT())
+			entry := 1 + len(k) + cfprotobuf.SizeOfLen(len(k)) + 1 + cfprotobuf.SizeOfMessage(v.SizeCF())
 			n += 1 + entry + cfprotobuf.SizeOfLen(entry)
 		}
 	}
@@ -4190,34 +4190,34 @@ func (m *ConnectResult) SizeVT() (n int) {
 		n += 1 + cfprotobuf.SizeOfInt(m.Flag)
 	}
 	if m.Dict != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Dict.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Dict.SizeCF())
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *ConnectResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *ConnectResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *ConnectResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *ConnectResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *ConnectResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *ConnectResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -4228,7 +4228,7 @@ func (m *ConnectResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Dict != nil {
 		{
-			size, err := m.Dict.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Dict.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -4277,7 +4277,7 @@ func (m *ConnectResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 		for k, v := range m.Subs {
 			end := i
 			{
-				size, err := v.MarshalToSizedBufferVT(b[:i])
+				size, err := v.MarshalToSizedBufferCF(b[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -4331,14 +4331,14 @@ func (m *ConnectResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *ConnectResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *ConnectResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *ConnectResult) unmarshalVT(b []byte, depth int) error {
+func (m *ConnectResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -4469,7 +4469,7 @@ func (m *ConnectResult) unmarshalVT(b []byte, depth int) error {
 						} else if fromVal, toVal = cfprotobuf.Length(entry, j); fromVal < 0 {
 							return cfprotobuf.Error(fromVal)
 						}
-						if err := val.unmarshalVT(entry[fromVal:toVal], depth); err != nil {
+						if err := val.unmarshalCF(entry[fromVal:toVal], depth); err != nil {
 							return err
 						}
 						j = toVal
@@ -4579,7 +4579,7 @@ func (m *ConnectResult) unmarshalVT(b []byte, depth int) error {
 				if m.Dict == nil {
 					m.Dict = new(Dictionary)
 				}
-				if err := m.Dict.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Dict.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -4595,8 +4595,8 @@ func (m *ConnectResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *RefreshRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *RefreshRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4607,28 +4607,28 @@ func (m *RefreshRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *RefreshRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *RefreshRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *RefreshRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *RefreshRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *RefreshRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *RefreshRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -4647,14 +4647,14 @@ func (m *RefreshRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *RefreshRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *RefreshRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *RefreshRequest) unmarshalVT(b []byte, depth int) error {
+func (m *RefreshRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -4688,8 +4688,8 @@ func (m *RefreshRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *RefreshResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *RefreshResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4709,28 +4709,28 @@ func (m *RefreshResult) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *RefreshResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *RefreshResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *RefreshResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *RefreshResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *RefreshResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *RefreshResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -4767,14 +4767,14 @@ func (m *RefreshResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *RefreshResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *RefreshResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *RefreshResult) unmarshalVT(b []byte, depth int) error {
+func (m *RefreshResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -4852,8 +4852,8 @@ func (m *RefreshResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *SubscribeRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *SubscribeRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4888,7 +4888,7 @@ func (m *SubscribeRequest) SizeVT() (n int) {
 		n += 1 + len(m.Delta) + cfprotobuf.SizeOfLen(len(m.Delta))
 	}
 	if m.Tf != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Tf.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Tf.SizeCF())
 	}
 	if m.Flag != 0 {
 		n += 1 + cfprotobuf.SizeOfInt(m.Flag)
@@ -4912,28 +4912,28 @@ func (m *SubscribeRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *SubscribeRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *SubscribeRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SubscribeRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SubscribeRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SubscribeRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SubscribeRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -4985,7 +4985,7 @@ func (m *SubscribeRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Tf != nil {
 		{
-			size, err := m.Tf.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Tf.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -5062,14 +5062,14 @@ func (m *SubscribeRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *SubscribeRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *SubscribeRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *SubscribeRequest) unmarshalVT(b []byte, depth int) error {
+func (m *SubscribeRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -5235,7 +5235,7 @@ func (m *SubscribeRequest) unmarshalVT(b []byte, depth int) error {
 				if m.Tf == nil {
 					m.Tf = new(FilterNode)
 				}
-				if err := m.Tf.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Tf.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -5328,8 +5328,8 @@ func (m *SubscribeRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *SubscribeResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *SubscribeResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -5346,7 +5346,7 @@ func (m *SubscribeResult) SizeVT() (n int) {
 		n += 1 + len(m.Epoch) + cfprotobuf.SizeOfLen(len(m.Epoch))
 	}
 	for _, e := range m.Publications {
-		n += 1 + cfprotobuf.SizeOfMessage(e.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(e.SizeCF())
 	}
 	if m.Recovered {
 		n += 1 + 1
@@ -5379,7 +5379,7 @@ func (m *SubscribeResult) SizeVT() (n int) {
 		n += 2 + len(m.Cursor) + cfprotobuf.SizeOfLen(len(m.Cursor))
 	}
 	for _, e := range m.State {
-		n += 2 + cfprotobuf.SizeOfMessage(e.SizeVT())
+		n += 2 + cfprotobuf.SizeOfMessage(e.SizeCF())
 	}
 	if m.PublishDebounce != 0 {
 		n += 2 + cfprotobuf.SizeOfInt(m.PublishDebounce)
@@ -5388,28 +5388,28 @@ func (m *SubscribeResult) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *SubscribeResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *SubscribeResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SubscribeResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SubscribeResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SubscribeResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SubscribeResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -5427,7 +5427,7 @@ func (m *SubscribeResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	for n := len(m.State) - 1; n >= 0; n-- {
 		{
-			size, err := m.State[n].MarshalToSizedBufferVT(b[:i])
+			size, err := m.State[n].MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -5503,7 +5503,7 @@ func (m *SubscribeResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	for n := len(m.Publications) - 1; n >= 0; n-- {
 		{
-			size, err := m.Publications[n].MarshalToSizedBufferVT(b[:i])
+			size, err := m.Publications[n].MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -5540,14 +5540,14 @@ func (m *SubscribeResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *SubscribeResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *SubscribeResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *SubscribeResult) unmarshalVT(b []byte, depth int) error {
+func (m *SubscribeResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -5620,7 +5620,7 @@ func (m *SubscribeResult) unmarshalVT(b []byte, depth int) error {
 				} else if from, to = cfprotobuf.Length(b, i); from < 0 {
 					return cfprotobuf.Error(from)
 				}
-				if err := e.unmarshalVT(b[from:to], depth); err != nil {
+				if err := e.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -5766,7 +5766,7 @@ func (m *SubscribeResult) unmarshalVT(b []byte, depth int) error {
 				} else if from, to = cfprotobuf.Length(b, i); from < 0 {
 					return cfprotobuf.Error(from)
 				}
-				if err := e.unmarshalVT(b[from:to], depth); err != nil {
+				if err := e.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -5795,8 +5795,8 @@ func (m *SubscribeResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *KeyedItem) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *KeyedItem) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -5810,28 +5810,28 @@ func (m *KeyedItem) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *KeyedItem) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *KeyedItem) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *KeyedItem) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *KeyedItem) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *KeyedItem) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *KeyedItem) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -5855,14 +5855,14 @@ func (m *KeyedItem) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *KeyedItem) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *KeyedItem) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *KeyedItem) unmarshalVT(b []byte, depth int) error {
+func (m *KeyedItem) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -5911,8 +5911,8 @@ func (m *KeyedItem) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *TrackBatch) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *TrackBatch) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -5920,34 +5920,34 @@ func (m *TrackBatch) SizeVT() (n int) {
 		n += 1 + len(m.Signature) + cfprotobuf.SizeOfLen(len(m.Signature))
 	}
 	for _, e := range m.Items {
-		n += 1 + cfprotobuf.SizeOfMessage(e.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(e.SizeCF())
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *TrackBatch) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *TrackBatch) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *TrackBatch) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *TrackBatch) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *TrackBatch) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *TrackBatch) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -5958,7 +5958,7 @@ func (m *TrackBatch) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	for n := len(m.Items) - 1; n >= 0; n-- {
 		{
-			size, err := m.Items[n].MarshalToSizedBufferVT(b[:i])
+			size, err := m.Items[n].MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -5978,14 +5978,14 @@ func (m *TrackBatch) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *TrackBatch) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *TrackBatch) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *TrackBatch) unmarshalVT(b []byte, depth int) error {
+func (m *TrackBatch) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -6022,7 +6022,7 @@ func (m *TrackBatch) unmarshalVT(b []byte, depth int) error {
 				} else if from, to = cfprotobuf.Length(b, i); from < 0 {
 					return cfprotobuf.Error(from)
 				}
-				if err := e.unmarshalVT(b[from:to], depth); err != nil {
+				if err := e.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -6039,8 +6039,8 @@ func (m *TrackBatch) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *SubRefreshRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *SubRefreshRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6054,7 +6054,7 @@ func (m *SubRefreshRequest) SizeVT() (n int) {
 		n += 1 + cfprotobuf.SizeOfInt(m.Type)
 	}
 	for _, e := range m.Track {
-		n += 1 + cfprotobuf.SizeOfMessage(e.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(e.SizeCF())
 	}
 	for _, e := range m.Untrack {
 		n += 1 + len(e) + cfprotobuf.SizeOfLen(len(e))
@@ -6063,28 +6063,28 @@ func (m *SubRefreshRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *SubRefreshRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *SubRefreshRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SubRefreshRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SubRefreshRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SubRefreshRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SubRefreshRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -6102,7 +6102,7 @@ func (m *SubRefreshRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	for n := len(m.Track) - 1; n >= 0; n-- {
 		{
-			size, err := m.Track[n].MarshalToSizedBufferVT(b[:i])
+			size, err := m.Track[n].MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -6134,14 +6134,14 @@ func (m *SubRefreshRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *SubRefreshRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *SubRefreshRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *SubRefreshRequest) unmarshalVT(b []byte, depth int) error {
+func (m *SubRefreshRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -6207,7 +6207,7 @@ func (m *SubRefreshRequest) unmarshalVT(b []byte, depth int) error {
 				} else if from, to = cfprotobuf.Length(b, i); from < 0 {
 					return cfprotobuf.Error(from)
 				}
-				if err := e.unmarshalVT(b[from:to], depth); err != nil {
+				if err := e.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -6243,8 +6243,8 @@ func (m *SubRefreshRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *SubRefreshResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *SubRefreshResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6255,34 +6255,34 @@ func (m *SubRefreshResult) SizeVT() (n int) {
 		n += 1 + cfprotobuf.SizeOfInt(m.Ttl)
 	}
 	for _, e := range m.Items {
-		n += 1 + cfprotobuf.SizeOfMessage(e.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(e.SizeCF())
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *SubRefreshResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *SubRefreshResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SubRefreshResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SubRefreshResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SubRefreshResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SubRefreshResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -6293,7 +6293,7 @@ func (m *SubRefreshResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	for n := len(m.Items) - 1; n >= 0; n-- {
 		{
-			size, err := m.Items[n].MarshalToSizedBufferVT(b[:i])
+			size, err := m.Items[n].MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -6317,14 +6317,14 @@ func (m *SubRefreshResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *SubRefreshResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *SubRefreshResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *SubRefreshResult) unmarshalVT(b []byte, depth int) error {
+func (m *SubRefreshResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -6368,7 +6368,7 @@ func (m *SubRefreshResult) unmarshalVT(b []byte, depth int) error {
 				} else if from, to = cfprotobuf.Length(b, i); from < 0 {
 					return cfprotobuf.Error(from)
 				}
-				if err := e.unmarshalVT(b[from:to], depth); err != nil {
+				if err := e.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -6385,8 +6385,8 @@ func (m *SubRefreshResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *UnsubscribeRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *UnsubscribeRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6397,28 +6397,28 @@ func (m *UnsubscribeRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *UnsubscribeRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *UnsubscribeRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *UnsubscribeRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *UnsubscribeRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *UnsubscribeRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *UnsubscribeRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -6437,14 +6437,14 @@ func (m *UnsubscribeRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *UnsubscribeRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *UnsubscribeRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *UnsubscribeRequest) unmarshalVT(b []byte, depth int) error {
+func (m *UnsubscribeRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -6478,8 +6478,8 @@ func (m *UnsubscribeRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *UnsubscribeResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *UnsubscribeResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6487,28 +6487,28 @@ func (m *UnsubscribeResult) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *UnsubscribeResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *UnsubscribeResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *UnsubscribeResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *UnsubscribeResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *UnsubscribeResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *UnsubscribeResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -6520,14 +6520,14 @@ func (m *UnsubscribeResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *UnsubscribeResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *UnsubscribeResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *UnsubscribeResult) unmarshalVT(b []byte, depth int) error {
+func (m *UnsubscribeResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -6545,8 +6545,8 @@ func (m *UnsubscribeResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *PublishRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *PublishRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6569,28 +6569,28 @@ func (m *PublishRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *PublishRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *PublishRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PublishRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PublishRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PublishRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PublishRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -6634,14 +6634,14 @@ func (m *PublishRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *PublishRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *PublishRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *PublishRequest) unmarshalVT(b []byte, depth int) error {
+func (m *PublishRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -6735,8 +6735,8 @@ func (m *PublishRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *PublishResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *PublishResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6744,28 +6744,28 @@ func (m *PublishResult) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *PublishResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *PublishResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PublishResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PublishResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PublishResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PublishResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -6777,14 +6777,14 @@ func (m *PublishResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *PublishResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *PublishResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *PublishResult) unmarshalVT(b []byte, depth int) error {
+func (m *PublishResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -6802,8 +6802,8 @@ func (m *PublishResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *PresenceRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *PresenceRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6814,28 +6814,28 @@ func (m *PresenceRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *PresenceRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *PresenceRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PresenceRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PresenceRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PresenceRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PresenceRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -6854,14 +6854,14 @@ func (m *PresenceRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *PresenceRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *PresenceRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *PresenceRequest) unmarshalVT(b []byte, depth int) error {
+func (m *PresenceRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -6895,14 +6895,14 @@ func (m *PresenceRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *PresenceResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *PresenceResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
 	if len(m.Presence) > 0 {
 		for k, v := range m.Presence {
-			entry := 1 + len(k) + cfprotobuf.SizeOfLen(len(k)) + 1 + cfprotobuf.SizeOfMessage(v.SizeVT())
+			entry := 1 + len(k) + cfprotobuf.SizeOfLen(len(k)) + 1 + cfprotobuf.SizeOfMessage(v.SizeCF())
 			n += 1 + entry + cfprotobuf.SizeOfLen(entry)
 		}
 	}
@@ -6910,28 +6910,28 @@ func (m *PresenceResult) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *PresenceResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *PresenceResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PresenceResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PresenceResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PresenceResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PresenceResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -6944,7 +6944,7 @@ func (m *PresenceResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 		for k, v := range m.Presence {
 			end := i
 			{
-				size, err := v.MarshalToSizedBufferVT(b[:i])
+				size, err := v.MarshalToSizedBufferCF(b[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -6966,14 +6966,14 @@ func (m *PresenceResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *PresenceResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *PresenceResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *PresenceResult) unmarshalVT(b []byte, depth int) error {
+func (m *PresenceResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -7028,7 +7028,7 @@ func (m *PresenceResult) unmarshalVT(b []byte, depth int) error {
 					} else if fromVal, toVal = cfprotobuf.Length(entry, j); fromVal < 0 {
 						return cfprotobuf.Error(fromVal)
 					}
-					if err := val.unmarshalVT(entry[fromVal:toVal], depth); err != nil {
+					if err := val.unmarshalCF(entry[fromVal:toVal], depth); err != nil {
 						return err
 					}
 					j = toVal
@@ -7053,8 +7053,8 @@ func (m *PresenceResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *PresenceStatsRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *PresenceStatsRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -7065,28 +7065,28 @@ func (m *PresenceStatsRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *PresenceStatsRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *PresenceStatsRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PresenceStatsRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PresenceStatsRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PresenceStatsRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PresenceStatsRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -7105,14 +7105,14 @@ func (m *PresenceStatsRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *PresenceStatsRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *PresenceStatsRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *PresenceStatsRequest) unmarshalVT(b []byte, depth int) error {
+func (m *PresenceStatsRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -7146,8 +7146,8 @@ func (m *PresenceStatsRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *PresenceStatsResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *PresenceStatsResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -7161,28 +7161,28 @@ func (m *PresenceStatsResult) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *PresenceStatsResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *PresenceStatsResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PresenceStatsResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PresenceStatsResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PresenceStatsResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PresenceStatsResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -7204,14 +7204,14 @@ func (m *PresenceStatsResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *PresenceStatsResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *PresenceStatsResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *PresenceStatsResult) unmarshalVT(b []byte, depth int) error {
+func (m *PresenceStatsResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -7255,8 +7255,8 @@ func (m *PresenceStatsResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *StreamPosition) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *StreamPosition) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -7270,28 +7270,28 @@ func (m *StreamPosition) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *StreamPosition) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *StreamPosition) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *StreamPosition) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *StreamPosition) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *StreamPosition) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *StreamPosition) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -7315,14 +7315,14 @@ func (m *StreamPosition) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *StreamPosition) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *StreamPosition) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *StreamPosition) unmarshalVT(b []byte, depth int) error {
+func (m *StreamPosition) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -7371,8 +7371,8 @@ func (m *StreamPosition) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *HistoryRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *HistoryRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -7383,7 +7383,7 @@ func (m *HistoryRequest) SizeVT() (n int) {
 		n += 1 + cfprotobuf.SizeOfInt(m.Limit)
 	}
 	if m.Since != nil {
-		n += 1 + cfprotobuf.SizeOfMessage(m.Since.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(m.Since.SizeCF())
 	}
 	if m.Reverse {
 		n += 1 + 1
@@ -7392,28 +7392,28 @@ func (m *HistoryRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *HistoryRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *HistoryRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *HistoryRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *HistoryRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *HistoryRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *HistoryRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -7430,7 +7430,7 @@ func (m *HistoryRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	if m.Since != nil {
 		{
-			size, err := m.Since.MarshalToSizedBufferVT(b[:i])
+			size, err := m.Since.MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -7455,14 +7455,14 @@ func (m *HistoryRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *HistoryRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *HistoryRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *HistoryRequest) unmarshalVT(b []byte, depth int) error {
+func (m *HistoryRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -7513,7 +7513,7 @@ func (m *HistoryRequest) unmarshalVT(b []byte, depth int) error {
 				if m.Since == nil {
 					m.Since = new(StreamPosition)
 				}
-				if err := m.Since.unmarshalVT(b[from:to], depth); err != nil {
+				if err := m.Since.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -7541,13 +7541,13 @@ func (m *HistoryRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *HistoryResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *HistoryResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
 	for _, e := range m.Publications {
-		n += 1 + cfprotobuf.SizeOfMessage(e.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(e.SizeCF())
 	}
 	if m.Epoch != "" {
 		n += 1 + len(m.Epoch) + cfprotobuf.SizeOfLen(len(m.Epoch))
@@ -7559,28 +7559,28 @@ func (m *HistoryResult) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *HistoryResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *HistoryResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *HistoryResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *HistoryResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *HistoryResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *HistoryResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -7603,7 +7603,7 @@ func (m *HistoryResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	for n := len(m.Publications) - 1; n >= 0; n-- {
 		{
-			size, err := m.Publications[n].MarshalToSizedBufferVT(b[:i])
+			size, err := m.Publications[n].MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -7616,14 +7616,14 @@ func (m *HistoryResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *HistoryResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *HistoryResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *HistoryResult) unmarshalVT(b []byte, depth int) error {
+func (m *HistoryResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -7643,7 +7643,7 @@ func (m *HistoryResult) unmarshalVT(b []byte, depth int) error {
 				} else if from, to = cfprotobuf.Length(b, i); from < 0 {
 					return cfprotobuf.Error(from)
 				}
-				if err := e.unmarshalVT(b[from:to], depth); err != nil {
+				if err := e.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to
@@ -7689,8 +7689,8 @@ func (m *HistoryResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *PingRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *PingRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -7698,28 +7698,28 @@ func (m *PingRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *PingRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *PingRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PingRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PingRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PingRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PingRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -7731,14 +7731,14 @@ func (m *PingRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *PingRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *PingRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *PingRequest) unmarshalVT(b []byte, depth int) error {
+func (m *PingRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -7756,8 +7756,8 @@ func (m *PingRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *PingResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *PingResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -7765,28 +7765,28 @@ func (m *PingResult) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *PingResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *PingResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PingResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PingResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *PingResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *PingResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -7798,14 +7798,14 @@ func (m *PingResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *PingResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *PingResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *PingResult) unmarshalVT(b []byte, depth int) error {
+func (m *PingResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -7823,8 +7823,8 @@ func (m *PingResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *RPCRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *RPCRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -7838,28 +7838,28 @@ func (m *RPCRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *RPCRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *RPCRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *RPCRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *RPCRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *RPCRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *RPCRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -7885,14 +7885,14 @@ func (m *RPCRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *RPCRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *RPCRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *RPCRequest) unmarshalVT(b []byte, depth int) error {
+func (m *RPCRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -7945,8 +7945,8 @@ func (m *RPCRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *RPCResult) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *RPCResult) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -7957,28 +7957,28 @@ func (m *RPCResult) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *RPCResult) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *RPCResult) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *RPCResult) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *RPCResult) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *RPCResult) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *RPCResult) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -7997,14 +7997,14 @@ func (m *RPCResult) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *RPCResult) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *RPCResult) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *RPCResult) unmarshalVT(b []byte, depth int) error {
+func (m *RPCResult) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -8037,8 +8037,8 @@ func (m *RPCResult) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *SendRequest) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *SendRequest) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -8049,28 +8049,28 @@ func (m *SendRequest) SizeVT() (n int) {
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *SendRequest) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *SendRequest) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SendRequest) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SendRequest) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *SendRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *SendRequest) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -8089,14 +8089,14 @@ func (m *SendRequest) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *SendRequest) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *SendRequest) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *SendRequest) unmarshalVT(b []byte, depth int) error {
+func (m *SendRequest) unmarshalCF(b []byte, depth int) error {
 	for i := 0; i < len(b); {
 		tag, next := uint64(b[i]), i+1
 		if tag >= 0x80 {
@@ -8129,8 +8129,8 @@ func (m *SendRequest) unmarshalVT(b []byte, depth int) error {
 	return nil
 }
 
-// SizeVT returns the size of the Protobuf encoding of m.
-func (m *FilterNode) SizeVT() (n int) {
+// SizeCF returns the size of the Protobuf encoding of m.
+func (m *FilterNode) SizeCF() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -8150,34 +8150,34 @@ func (m *FilterNode) SizeVT() (n int) {
 		n += 1 + len(e) + cfprotobuf.SizeOfLen(len(e))
 	}
 	for _, e := range m.Nodes {
-		n += 1 + cfprotobuf.SizeOfMessage(e.SizeVT())
+		n += 1 + cfprotobuf.SizeOfMessage(e.SizeCF())
 	}
 	n += len(m.unknownFields)
 	return n
 }
 
-// MarshalVT returns the Protobuf encoding of m.
-func (m *FilterNode) MarshalVT() ([]byte, error) {
+// MarshalCF returns the Protobuf encoding of m.
+func (m *FilterNode) MarshalCF() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	b := make([]byte, m.SizeVT())
-	n, err := m.MarshalToSizedBufferVT(b)
+	b := make([]byte, m.SizeCF())
+	n, err := m.MarshalToSizedBufferCF(b)
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
 }
 
-// MarshalToVT writes the Protobuf encoding of m to the beginning of b, which must
-// have room for SizeVT bytes, and returns the number of bytes written.
-func (m *FilterNode) MarshalToVT(b []byte) (int, error) {
-	return m.MarshalToSizedBufferVT(b[:m.SizeVT()])
+// MarshalToCF writes the Protobuf encoding of m to the beginning of b, which must
+// have room for SizeCF bytes, and returns the number of bytes written.
+func (m *FilterNode) MarshalToCF(b []byte) (int, error) {
+	return m.MarshalToSizedBufferCF(b[:m.SizeCF()])
 }
 
-// MarshalToSizedBufferVT writes the Protobuf encoding of m to the end of b, which
-// must have room for SizeVT bytes, and returns the number of bytes written.
-func (m *FilterNode) MarshalToSizedBufferVT(b []byte) (int, error) {
+// MarshalToSizedBufferCF writes the Protobuf encoding of m to the end of b, which
+// must have room for SizeCF bytes, and returns the number of bytes written.
+func (m *FilterNode) MarshalToSizedBufferCF(b []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -8188,7 +8188,7 @@ func (m *FilterNode) MarshalToSizedBufferVT(b []byte) (int, error) {
 	}
 	for n := len(m.Nodes) - 1; n >= 0; n-- {
 		{
-			size, err := m.Nodes[n].MarshalToSizedBufferVT(b[:i])
+			size, err := m.Nodes[n].MarshalToSizedBufferCF(b[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -8236,14 +8236,14 @@ func (m *FilterNode) MarshalToSizedBufferVT(b []byte) (int, error) {
 	return len(b) - i, nil
 }
 
-// UnmarshalVT decodes the Protobuf encoding of a message from b into m. Fields
+// UnmarshalCF decodes the Protobuf encoding of a message from b into m. Fields
 // which are not in b are left as they are. Everything decoded is copied out of
 // b, which may be reused afterwards.
-func (m *FilterNode) UnmarshalVT(b []byte) error {
-	return m.unmarshalVT(b, 0)
+func (m *FilterNode) UnmarshalCF(b []byte) error {
+	return m.unmarshalCF(b, 0)
 }
 
-func (m *FilterNode) unmarshalVT(b []byte, depth int) error {
+func (m *FilterNode) unmarshalCF(b []byte, depth int) error {
 	depth++
 	if depth > cfprotobuf.MaxDepth {
 		return cfprotobuf.ErrTooDeep
@@ -8354,7 +8354,7 @@ func (m *FilterNode) unmarshalVT(b []byte, depth int) error {
 				} else if from, to = cfprotobuf.Length(b, i); from < 0 {
 					return cfprotobuf.Error(from)
 				}
-				if err := e.unmarshalVT(b[from:to], depth); err != nil {
+				if err := e.unmarshalCF(b[from:to], depth); err != nil {
 					return err
 				}
 				i = to

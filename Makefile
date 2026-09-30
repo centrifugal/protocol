@@ -69,10 +69,10 @@ protobuf-compat:
 	cd internal/cfprotobufcmp && go test -vet=off -count=1 .
 
 # Regenerate what protobuf-compat checks after changing the cfprotobuf
-# generator. The CF suffix keeps the generated methods apart from the ones
-# vtprotobuf generated for the same types.
+# generator. The methods of the two generators live side by side there:
+# MarshalCF and MarshalVT, and so on.
 protobuf-compat-update:
-	go run ./cfprotobuf/cmd/cfprotobuf -suffix CF -out internal/cfprotobufcmp/types_cfprotobuf.go \
+	go run ./cfprotobuf/cmd/cfprotobuf -out internal/cfprotobufcmp/types_cfprotobuf.go \
 		internal/cfprotobufcmp/types.go internal/cfprotobufcmp/raw.go
 
 # Writes internal/cfprotobufcmp/bench.txt. To publish the numbers move the file

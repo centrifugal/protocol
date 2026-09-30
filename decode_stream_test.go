@@ -29,7 +29,7 @@ func getTestFrame(tb testing.TB, protoType Type, minCommandLength int) []byte {
 	}
 	var frame []byte
 	if protoType == TypeProtobuf {
-		data, err := cmd.MarshalVT()
+		data, err := cmd.MarshalCF()
 		require.NoError(tb, err)
 		encoder := GetDataEncoder(TypeProtobuf)
 		err = encoder.Encode(data)
@@ -381,7 +381,7 @@ func TestStreamingDecode_JSON_PoolReuse(t *testing.T) {
 // caller which keeps decoding sees the next message instead of this body again.
 func TestStreamingDecode_Protobuf_AdvancesPastBadMessage(t *testing.T) {
 	badBody := []byte{0x0F} // Field 1 with wire type 7, which is not valid.
-	goodBody, err := (&Command{Id: 42}).MarshalVT()
+	goodBody, err := (&Command{Id: 42}).MarshalCF()
 	require.NoError(t, err)
 
 	var frame []byte
@@ -498,7 +498,7 @@ func TestStreamingDecode_JSON_DropsOversizedBuffer(t *testing.T) {
 func TestProtobufStreamCommandDecoder_LargeMessage(t *testing.T) {
 	for _, size := range []int{maxBufferLength - 1, maxBufferLength, maxBufferLength + 1, 3*maxBufferLength + 17, 5 << 20} {
 		cmd := &Command{Id: 7, Publish: &PublishRequest{Channel: "news", Data: bytes.Repeat([]byte("x"), size)}}
-		body, err := cmd.MarshalVT()
+		body, err := cmd.MarshalCF()
 		require.NoError(t, err)
 		frame := binary.AppendUvarint(nil, uint64(len(body)))
 		frame = append(frame, body...)

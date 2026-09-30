@@ -293,7 +293,7 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 
 	// Fast path: the whole message is already buffered, so it can be unmarshaled
 	// straight out of the bufio.Reader without copying it into a scratch buffer
-	// first. UnmarshalVT copies what it keeps, so the peeked slice may be
+	// first. UnmarshalCF copies what it keeps, so the peeked slice may be
 	// invalidated by the Discard below.
 	// Only worth trying when the message can fit in the bufio.Reader buffer:
 	// Peek fills the whole buffer before reporting that it cannot hold the
@@ -302,7 +302,7 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	if int64(msgLength) <= int64(d.reader.Size()) {
 		if msgBytes, peekErr := d.reader.Peek(int(msgLength)); peekErr == nil {
 			var c Command
-			err = c.UnmarshalVT(msgBytes) // Note, UnmarshalVTUnsafe here will result into issues.
+			err = c.UnmarshalCF(msgBytes) // Copies what it keeps: the buffer is reused.
 			// The message is consumed even when it failed to unmarshal, matching
 			// the scratch buffer path below, which reads it off the stream before
 			// unmarshaling it. A caller which keeps decoding after an error must
@@ -332,7 +332,7 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 		return nil, 0, io.ErrShortBuffer
 	}
 	var c Command
-	err = c.UnmarshalVT(bb.B[:int(msgLength)]) // Note, UnmarshalVTUnsafe here will result into issues.
+	err = c.UnmarshalCF(bb.B[:int(msgLength)]) // Copies what it keeps: the buffer is reused.
 	if err != nil {
 		return nil, 0, err
 	}
@@ -359,7 +359,7 @@ func (d *ProtobufStreamCommandDecoder) decodeLarge(msgLength int) (*Command, int
 		}
 	}
 	var c Command
-	if err := c.UnmarshalVT(buf); err != nil { // Note, UnmarshalVTUnsafe here will result into issues.
+	if err := c.UnmarshalCF(buf); err != nil { // Copies what it keeps: the buffer is reused.
 		return nil, 0, err
 	}
 	return &c, msgLength + 8, nil

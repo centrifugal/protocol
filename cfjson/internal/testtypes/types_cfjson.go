@@ -22,12 +22,10 @@ func (m *Empty) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
+		_, i = cfjson.Key(b, i, f)
 		if i < 0 {
 			return i
 		}
-		_ = key
 		i = cfjson.Skip(b, i, f)
 		if i < 0 {
 			return i
@@ -76,25 +74,49 @@ func (m *Leaf) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 5 && string(b[i:i+5]) == "\"id\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+5)
+			}
+		case 1:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"text\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+7)
+			}
 		}
-		switch string(key) {
-		case "id":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "id":
+				id = 0
+			case "text":
+				id = 1
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Uint(b, i, &m.ID)
-		case "text":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Text)
+			next = 2
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -124,8 +146,7 @@ func (m *All) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendString(b, m.String)
 	}
 	if m.Bool {
-		b = append(b, ",\"bool\":"...)
-		b = cfjson.AppendBool(b, m.Bool)
+		b = append(b, ",\"bool\":true"...)
 	}
 	if m.Int != 0 {
 		b = append(b, ",\"int\":"...)
@@ -433,116 +454,414 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"string\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 1:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"bool\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 2:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"int\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 3:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"int8\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 4:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"int16\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 5:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"int32\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 6:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"int64\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 7:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"uint\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 8:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"uint8\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 9:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"uint16\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 10:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"uint32\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 11:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"uint64\":" {
+				id = 11
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 12:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"float32\":" {
+				id = 12
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 13:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"float64\":" {
+				id = 13
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 14:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"raw\":" {
+				id = 14
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 15:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"level\":" {
+				id = 15
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 16:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"name\":" {
+				id = 16
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 17:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"labels\":" {
+				id = 17
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 18:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"names\":" {
+				id = 18
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 19:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"leaf\":" {
+				id = 19
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 20:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"leaf_ptr\":" {
+				id = 20
+				i = cfjson.SkipSpace(b, i+11)
+			}
+		case 21:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"self\":" {
+				id = 21
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 22:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"str_ptr\":" {
+				id = 22
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 23:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"int_ptr\":" {
+				id = 23
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 24:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"strings\":" {
+				id = 24
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 25:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"ints\":" {
+				id = 25
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 26:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"floats\":" {
+				id = 26
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 27:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"bools\":" {
+				id = 27
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 28:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"raws\":" {
+				id = 28
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 29:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"leaves\":" {
+				id = 29
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 30:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"leaf_ptrs\":" {
+				id = 30
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 31:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"matrix\":" {
+				id = 31
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 32:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"str_map\":" {
+				id = 32
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 33:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"float_map\":" {
+				id = 33
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 34:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"leaf_map\":" {
+				id = 34
+				i = cfjson.SkipSpace(b, i+11)
+			}
+		case 35:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"list_map\":" {
+				id = 35
+				i = cfjson.SkipSpace(b, i+11)
+			}
+		case 36:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"name_map\":" {
+				id = 36
+				i = cfjson.SkipSpace(b, i+11)
+			}
+		case 37:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"mixedCase\":" {
+				id = 37
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 38:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"Untagged\":" {
+				id = 38
+				i = cfjson.SkipSpace(b, i+11)
+			}
 		}
-		switch string(key) {
-		case "string":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "string":
+				id = 0
+			case "bool":
+				id = 1
+			case "int":
+				id = 2
+			case "int8":
+				id = 3
+			case "int16":
+				id = 4
+			case "int32":
+				id = 5
+			case "int64":
+				id = 6
+			case "uint":
+				id = 7
+			case "uint8":
+				id = 8
+			case "uint16":
+				id = 9
+			case "uint32":
+				id = 10
+			case "uint64":
+				id = 11
+			case "float32":
+				id = 12
+			case "float64":
+				id = 13
+			case "raw":
+				id = 14
+			case "level":
+				id = 15
+			case "name":
+				id = 16
+			case "labels":
+				id = 17
+			case "names":
+				id = 18
+			case "leaf":
+				id = 19
+			case "leaf_ptr":
+				id = 20
+			case "self":
+				id = 21
+			case "str_ptr":
+				id = 22
+			case "int_ptr":
+				id = 23
+			case "strings":
+				id = 24
+			case "ints":
+				id = 25
+			case "floats":
+				id = 26
+			case "bools":
+				id = 27
+			case "raws":
+				id = 28
+			case "leaves":
+				id = 29
+			case "leaf_ptrs":
+				id = 30
+			case "matrix":
+				id = 31
+			case "str_map":
+				id = 32
+			case "float_map":
+				id = 33
+			case "leaf_map":
+				id = 34
+			case "list_map":
+				id = 35
+			case "name_map":
+				id = 36
+			case "mixedCase":
+				id = 37
+			case "Untagged":
+				id = 38
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.String)
-		case "bool":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Bool(b, i, &m.Bool)
-		case "int":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Int(b, i, &m.Int)
-		case "int8":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.Int(b, i, &m.Int8)
-		case "int16":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10
 			i = cfjson.Int(b, i, &m.Int16)
-		case "int32":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
 			seen0 |= 0x20
 			i = cfjson.Int(b, i, &m.Int32)
-		case "int64":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
 			seen0 |= 0x40
 			i = cfjson.Int(b, i, &m.Int64)
-		case "uint":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
 			seen0 |= 0x80
 			i = cfjson.Uint(b, i, &m.Uint)
-		case "uint8":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
 			seen0 |= 0x100
 			i = cfjson.Uint(b, i, &m.Uint8)
-		case "uint16":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
 			seen0 |= 0x200
 			i = cfjson.Uint(b, i, &m.Uint16)
-		case "uint32":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
 			seen0 |= 0x400
 			i = cfjson.Uint(b, i, &m.Uint32)
-		case "uint64":
+			next = 11
+		case 11:
 			if seen0&0x800 != 0 {
 				return ^i
 			}
 			seen0 |= 0x800
 			i = cfjson.Uint(b, i, &m.Uint64)
-		case "float32":
+			next = 12
+		case 12:
 			if seen0&0x1000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1000
 			i = cfjson.Float(b, i, &m.Float32)
-		case "float64":
+			next = 13
+		case 13:
 			if seen0&0x2000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2000
 			i = cfjson.Float(b, i, &m.Float64)
-		case "raw":
+			next = 14
+		case 14:
 			if seen0&0x4000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4000
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Raw))
-		case "level":
+			next = 15
+		case 15:
 			if seen0&0x8000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8000
 			i = cfjson.Int(b, i, &m.Level)
-		case "name":
+			next = 16
+		case 16:
 			if seen0&0x10000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10000
 			i = cfjson.String(b, i, f, (*string)(&m.Name))
-		case "labels":
+			next = 17
+		case 17:
 			if seen0&0x20000 != 0 {
 				return ^i
 			}
@@ -559,6 +878,7 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n3 := 0
 					for {
 						var k1 string
 						i = cfjson.MapKey(b, i, f, &k1)
@@ -570,10 +890,11 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.Labels[k1]; dup {
+						m.Labels[k1] = e2
+						n3++
+						if len(m.Labels) != n3 {
 							return ^i
 						}
-						m.Labels[k1] = e2
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -590,7 +911,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "names":
+			next = 18
+		case 18:
 			if seen0&0x40000 != 0 {
 				return ^i
 			}
@@ -617,12 +939,12 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						m.Names = m.Names[:0]
 					}
 					for {
-						var e3 Name
-						i = cfjson.String(b, i, f, (*string)(&e3))
+						var e4 Name
+						i = cfjson.String(b, i, f, (*string)(&e4))
 						if i < 0 {
 							return i
 						}
-						m.Names = append(m.Names, e3)
+						m.Names = append(m.Names, e4)
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -639,13 +961,15 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "leaf":
+			next = 19
+		case 19:
 			if seen0&0x80000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x80000
 			i = m.Leaf.DecodeJSON(b, i, f)
-		case "leaf_ptr":
+			next = 20
+		case 20:
 			if seen0&0x100000 != 0 {
 				return ^i
 			}
@@ -659,7 +983,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.LeafPtr.DecodeJSON(b, i, f)
 			}
-		case "self":
+			next = 21
+		case 21:
 			if seen0&0x200000 != 0 {
 				return ^i
 			}
@@ -673,7 +998,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Self.DecodeJSON(b, i, f)
 			}
-		case "str_ptr":
+			next = 22
+		case 22:
 			if seen0&0x400000 != 0 {
 				return ^i
 			}
@@ -687,7 +1013,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = cfjson.String(b, i, f, m.StrPtr)
 			}
-		case "int_ptr":
+			next = 23
+		case 23:
 			if seen0&0x800000 != 0 {
 				return ^i
 			}
@@ -701,7 +1028,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = cfjson.Int(b, i, m.IntPtr)
 			}
-		case "strings":
+			next = 24
+		case 24:
 			if seen0&0x1000000 != 0 {
 				return ^i
 			}
@@ -728,12 +1056,12 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						m.Strings = m.Strings[:0]
 					}
 					for {
-						var e4 string
-						i = cfjson.String(b, i, f, &e4)
+						var e5 string
+						i = cfjson.String(b, i, f, &e5)
 						if i < 0 {
 							return i
 						}
-						m.Strings = append(m.Strings, e4)
+						m.Strings = append(m.Strings, e5)
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -750,7 +1078,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "ints":
+			next = 25
+		case 25:
 			if seen0&0x2000000 != 0 {
 				return ^i
 			}
@@ -777,12 +1106,12 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						m.Ints = m.Ints[:0]
 					}
 					for {
-						var e5 int64
-						i = cfjson.Int(b, i, &e5)
+						var e6 int64
+						i = cfjson.Int(b, i, &e6)
 						if i < 0 {
 							return i
 						}
-						m.Ints = append(m.Ints, e5)
+						m.Ints = append(m.Ints, e6)
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -799,7 +1128,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "floats":
+			next = 26
+		case 26:
 			if seen0&0x4000000 != 0 {
 				return ^i
 			}
@@ -826,12 +1156,12 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						m.Floats = m.Floats[:0]
 					}
 					for {
-						var e6 float64
-						i = cfjson.Float(b, i, &e6)
+						var e7 float64
+						i = cfjson.Float(b, i, &e7)
 						if i < 0 {
 							return i
 						}
-						m.Floats = append(m.Floats, e6)
+						m.Floats = append(m.Floats, e7)
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -848,7 +1178,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "bools":
+			next = 27
+		case 27:
 			if seen0&0x8000000 != 0 {
 				return ^i
 			}
@@ -875,12 +1206,12 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						m.Bools = m.Bools[:0]
 					}
 					for {
-						var e7 bool
-						i = cfjson.Bool(b, i, &e7)
+						var e8 bool
+						i = cfjson.Bool(b, i, &e8)
 						if i < 0 {
 							return i
 						}
-						m.Bools = append(m.Bools, e7)
+						m.Bools = append(m.Bools, e8)
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -897,7 +1228,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "raws":
+			next = 28
+		case 28:
 			if seen0&0x10000000 != 0 {
 				return ^i
 			}
@@ -924,12 +1256,12 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						m.Raws = m.Raws[:0]
 					}
 					for {
-						var e8 Raw
-						i = cfjson.Raw(b, i, f, (*[]byte)(&e8))
+						var e9 Raw
+						i = cfjson.Raw(b, i, f, (*[]byte)(&e9))
 						if i < 0 {
 							return i
 						}
-						m.Raws = append(m.Raws, e8)
+						m.Raws = append(m.Raws, e9)
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -946,7 +1278,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "leaves":
+			next = 29
+		case 29:
 			if seen0&0x20000000 != 0 {
 				return ^i
 			}
@@ -973,12 +1306,12 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						m.Leaves = m.Leaves[:0]
 					}
 					for {
-						var e9 Leaf
-						i = e9.DecodeJSON(b, i, f)
+						var e10 Leaf
+						i = e10.DecodeJSON(b, i, f)
 						if i < 0 {
 							return i
 						}
-						m.Leaves = append(m.Leaves, e9)
+						m.Leaves = append(m.Leaves, e10)
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -995,7 +1328,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "leaf_ptrs":
+			next = 30
+		case 30:
 			if seen0&0x40000000 != 0 {
 				return ^i
 			}
@@ -1022,17 +1356,17 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						m.LeafPtrs = m.LeafPtrs[:0]
 					}
 					for {
-						var e10 *Leaf
+						var e11 *Leaf
 						if cfjson.IsNull(b, i) {
 							i += 4
 						} else {
-							e10 = new(Leaf)
-							i = e10.DecodeJSON(b, i, f)
+							e11 = new(Leaf)
+							i = e11.DecodeJSON(b, i, f)
 						}
 						if i < 0 {
 							return i
 						}
-						m.LeafPtrs = append(m.LeafPtrs, e10)
+						m.LeafPtrs = append(m.LeafPtrs, e11)
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1049,7 +1383,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "matrix":
+			next = 31
+		case 31:
 			if seen0&0x80000000 != 0 {
 				return ^i
 			}
@@ -1076,7 +1411,7 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						m.Matrix = m.Matrix[:0]
 					}
 					for {
-						var e11 []uint32
+						var e12 []uint32
 						if cfjson.IsNull(b, i) {
 							i += 4
 						} else {
@@ -1086,16 +1421,16 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 							i = cfjson.SkipSpace(b, i+1)
 							if i < len(b) && b[i] == ']' {
 								i++
-								e11 = []uint32{}
+								e12 = []uint32{}
 							} else {
-								e11 = make([]uint32, 0, 10)
+								e12 = make([]uint32, 0, 10)
 								for {
-									var e12 uint32
-									i = cfjson.Uint(b, i, &e12)
+									var e13 uint32
+									i = cfjson.Uint(b, i, &e13)
 									if i < 0 {
 										return i
 									}
-									e11 = append(e11, e12)
+									e12 = append(e12, e13)
 									i = cfjson.SkipSpace(b, i)
 									if i >= len(b) {
 										return ^i
@@ -1115,7 +1450,7 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						m.Matrix = append(m.Matrix, e11)
+						m.Matrix = append(m.Matrix, e12)
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1132,7 +1467,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "str_map":
+			next = 32
+		case 32:
 			if seen0&0x100000000 != 0 {
 				return ^i
 			}
@@ -1149,21 +1485,23 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n16 := 0
 					for {
-						var k13 string
-						i = cfjson.MapKey(b, i, f, &k13)
+						var k14 string
+						i = cfjson.MapKey(b, i, f, &k14)
 						if i < 0 {
 							return i
 						}
-						var e14 string
-						i = cfjson.String(b, i, f, &e14)
+						var e15 string
+						i = cfjson.String(b, i, f, &e15)
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.StrMap[k13]; dup {
+						m.StrMap[k14] = e15
+						n16++
+						if len(m.StrMap) != n16 {
 							return ^i
 						}
-						m.StrMap[k13] = e14
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1180,7 +1518,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "float_map":
+			next = 33
+		case 33:
 			if seen0&0x200000000 != 0 {
 				return ^i
 			}
@@ -1197,21 +1536,23 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n19 := 0
 					for {
-						var k15 string
-						i = cfjson.MapKey(b, i, f, &k15)
+						var k17 string
+						i = cfjson.MapKey(b, i, f, &k17)
 						if i < 0 {
 							return i
 						}
-						var e16 float64
-						i = cfjson.Float(b, i, &e16)
+						var e18 float64
+						i = cfjson.Float(b, i, &e18)
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.FloatMap[k15]; dup {
+						m.FloatMap[k17] = e18
+						n19++
+						if len(m.FloatMap) != n19 {
 							return ^i
 						}
-						m.FloatMap[k15] = e16
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1228,7 +1569,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "leaf_map":
+			next = 34
+		case 34:
 			if seen0&0x400000000 != 0 {
 				return ^i
 			}
@@ -1245,26 +1587,28 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n22 := 0
 					for {
-						var k17 string
-						i = cfjson.MapKey(b, i, f, &k17)
+						var k20 string
+						i = cfjson.MapKey(b, i, f, &k20)
 						if i < 0 {
 							return i
 						}
-						var e18 *Leaf
+						var e21 *Leaf
 						if cfjson.IsNull(b, i) {
 							i += 4
 						} else {
-							e18 = new(Leaf)
-							i = e18.DecodeJSON(b, i, f)
+							e21 = new(Leaf)
+							i = e21.DecodeJSON(b, i, f)
 						}
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.LeafMap[k17]; dup {
+						m.LeafMap[k20] = e21
+						n22++
+						if len(m.LeafMap) != n22 {
 							return ^i
 						}
-						m.LeafMap[k17] = e18
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1281,7 +1625,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "list_map":
+			next = 35
+		case 35:
 			if seen0&0x800000000 != 0 {
 				return ^i
 			}
@@ -1298,13 +1643,14 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n25 := 0
 					for {
-						var k19 string
-						i = cfjson.MapKey(b, i, f, &k19)
+						var k23 string
+						i = cfjson.MapKey(b, i, f, &k23)
 						if i < 0 {
 							return i
 						}
-						var e20 []string
+						var e24 []string
 						if cfjson.IsNull(b, i) {
 							i += 4
 						} else {
@@ -1314,16 +1660,16 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 							i = cfjson.SkipSpace(b, i+1)
 							if i < len(b) && b[i] == ']' {
 								i++
-								e20 = []string{}
+								e24 = []string{}
 							} else {
-								e20 = make([]string, 0, 10)
+								e24 = make([]string, 0, 10)
 								for {
-									var e21 string
-									i = cfjson.String(b, i, f, &e21)
+									var e26 string
+									i = cfjson.String(b, i, f, &e26)
 									if i < 0 {
 										return i
 									}
-									e20 = append(e20, e21)
+									e24 = append(e24, e26)
 									i = cfjson.SkipSpace(b, i)
 									if i >= len(b) {
 										return ^i
@@ -1343,10 +1689,11 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.ListMap[k19]; dup {
+						m.ListMap[k23] = e24
+						n25++
+						if len(m.ListMap) != n25 {
 							return ^i
 						}
-						m.ListMap[k19] = e20
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1363,7 +1710,8 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "name_map":
+			next = 36
+		case 36:
 			if seen0&0x1000000000 != 0 {
 				return ^i
 			}
@@ -1380,21 +1728,23 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n29 := 0
 					for {
-						var k22 string
-						i = cfjson.MapKey(b, i, f, &k22)
+						var k27 string
+						i = cfjson.MapKey(b, i, f, &k27)
 						if i < 0 {
 							return i
 						}
-						var e23 Level
-						i = cfjson.Int(b, i, &e23)
+						var e28 Level
+						i = cfjson.Int(b, i, &e28)
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.NameMap[Name(k22)]; dup {
+						m.NameMap[Name(k27)] = e28
+						n29++
+						if len(m.NameMap) != n29 {
 							return ^i
 						}
-						m.NameMap[Name(k22)] = e23
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1411,18 +1761,21 @@ func (m *All) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "mixedCase":
+			next = 37
+		case 37:
 			if seen0&0x2000000000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2000000000
 			i = cfjson.String(b, i, f, &m.MixedCase)
-		case "Untagged":
+			next = 38
+		case 38:
 			if seen0&0x4000000000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4000000000
 			i = cfjson.String(b, i, f, &m.Untagged)
+			next = 39
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1556,56 +1909,162 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"string\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 1:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"bool\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 2:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"int64\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 3:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"uint32\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 4:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"float64\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 5:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"raw\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 6:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"leaf\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 7:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"leaf_ptr\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+11)
+			}
+		case 8:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"str_ptr\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 9:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"strings\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 10:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"leaf_ptrs\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 11:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"str_map\":" {
+				id = 11
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 12:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"leaf_map\":" {
+				id = 12
+				i = cfjson.SkipSpace(b, i+11)
+			}
 		}
-		switch string(key) {
-		case "string":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "string":
+				id = 0
+			case "bool":
+				id = 1
+			case "int64":
+				id = 2
+			case "uint32":
+				id = 3
+			case "float64":
+				id = 4
+			case "raw":
+				id = 5
+			case "leaf":
+				id = 6
+			case "leaf_ptr":
+				id = 7
+			case "str_ptr":
+				id = 8
+			case "strings":
+				id = 9
+			case "leaf_ptrs":
+				id = 10
+			case "str_map":
+				id = 11
+			case "leaf_map":
+				id = 12
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.String)
-		case "bool":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Bool(b, i, &m.Bool)
-		case "int64":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Int(b, i, &m.Int64)
-		case "uint32":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.Uint(b, i, &m.Uint32)
-		case "float64":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10
 			i = cfjson.Float(b, i, &m.Float64)
-		case "raw":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
 			seen0 |= 0x20
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Raw))
-		case "leaf":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
 			seen0 |= 0x40
 			i = m.Leaf.DecodeJSON(b, i, f)
-		case "leaf_ptr":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
@@ -1619,7 +2078,8 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.LeafPtr.DecodeJSON(b, i, f)
 			}
-		case "str_ptr":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
@@ -1633,7 +2093,8 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = cfjson.String(b, i, f, m.StrPtr)
 			}
-		case "strings":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
@@ -1682,7 +2143,8 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "leaf_ptrs":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
@@ -1736,7 +2198,8 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "str_map":
+			next = 11
+		case 11:
 			if seen0&0x800 != 0 {
 				return ^i
 			}
@@ -1753,6 +2216,7 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n5 := 0
 					for {
 						var k3 string
 						i = cfjson.MapKey(b, i, f, &k3)
@@ -1764,10 +2228,11 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.StrMap[k3]; dup {
+						m.StrMap[k3] = e4
+						n5++
+						if len(m.StrMap) != n5 {
 							return ^i
 						}
-						m.StrMap[k3] = e4
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1784,7 +2249,8 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "leaf_map":
+			next = 12
+		case 12:
 			if seen0&0x1000 != 0 {
 				return ^i
 			}
@@ -1801,26 +2267,28 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n8 := 0
 					for {
-						var k5 string
-						i = cfjson.MapKey(b, i, f, &k5)
+						var k6 string
+						i = cfjson.MapKey(b, i, f, &k6)
 						if i < 0 {
 							return i
 						}
-						var e6 *Leaf
+						var e7 *Leaf
 						if cfjson.IsNull(b, i) {
 							i += 4
 						} else {
-							e6 = new(Leaf)
-							i = e6.DecodeJSON(b, i, f)
+							e7 = new(Leaf)
+							i = e7.DecodeJSON(b, i, f)
 						}
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.LeafMap[k5]; dup {
+						m.LeafMap[k6] = e7
+						n8++
+						if len(m.LeafMap) != n8 {
 							return ^i
 						}
-						m.LeafMap[k5] = e6
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1837,6 +2305,7 @@ func (m *Required) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
+			next = 13
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1889,31 +2358,63 @@ func (m *Mixed) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 4 && string(b[i:i+4]) == "\"a\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+4)
+			}
+		case 1:
+			if len(b)-i >= 4 && string(b[i:i+4]) == "\"b\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+4)
+			}
+		case 2:
+			if len(b)-i >= 4 && string(b[i:i+4]) == "\"c\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+4)
+			}
 		}
-		switch string(key) {
-		case "a":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "a":
+				id = 0
+			case "b":
+				id = 1
+			case "c":
+				id = 2
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.A)
-		case "b":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.B)
-		case "c":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.String(b, i, f, &m.C)
+			next = 3
 		default:
 			i = cfjson.Skip(b, i, f)
 		}

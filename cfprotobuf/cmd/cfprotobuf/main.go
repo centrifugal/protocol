@@ -20,7 +20,7 @@ func main() {
 	var out, typeNames string
 	flag.StringVar(&out, "out", "", "output file, defaults to the first input file with the _cfprotobuf.go suffix")
 	flag.StringVar(&typeNames, "types", "", "comma-separated names of structs to generate code for, all messages by default")
-	flag.StringVar(&cfg.Suffix, "suffix", "VT", "what the names of generated methods end with: MarshalVT, UnmarshalVT and so on")
+	flag.StringVar(&cfg.Suffix, "suffix", "CF", "what the names of generated methods end with: MarshalCF, UnmarshalCF and so on")
 	flag.StringVar(&cfg.Runtime, "runtime", gen.DefaultRuntime, "import path of the cfprotobuf runtime package")
 	flag.BoolVar(&cfg.DropUnknown, "drop-unknown", false, "skip fields a message does not have when decoding, instead of keeping them with the message")
 	flag.Usage = func() {

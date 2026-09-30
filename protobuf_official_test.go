@@ -23,11 +23,11 @@ import (
 // message google.golang.org/protobuf can work with.
 type pbMessage interface {
 	proto.Message
-	MarshalVT() ([]byte, error)
-	MarshalToVT([]byte) (int, error)
-	MarshalToSizedBufferVT([]byte) (int, error)
-	SizeVT() int
-	UnmarshalVT([]byte) error
+	MarshalCF() ([]byte, error)
+	MarshalToCF([]byte) (int, error)
+	MarshalToSizedBufferCF([]byte) (int, error)
+	SizeCF() int
+	UnmarshalCF([]byte) error
 }
 
 // pbMessageNames are the names of all message types, sorted.
@@ -150,17 +150,17 @@ func TestProtobufMarshalMatchesOfficial(t *testing.T) {
 		want, err := official.Marshal(m)
 		require.NoError(t, err)
 
-		got, err := m.MarshalVT()
+		got, err := m.MarshalCF()
 		require.NoError(t, err)
 		require.True(t, bytes.Equal(got, want), "%s:\n got %x\nwant %x", name, got, want)
-		require.Equal(t, len(want), m.SizeVT(), name)
+		require.Equal(t, len(want), m.SizeCF(), name)
 		require.Equal(t, len(want), proto.Size(m), name)
 
 		buf := make([]byte, len(want)+8)
-		written, err := m.MarshalToVT(buf)
+		written, err := m.MarshalToCF(buf)
 		require.NoError(t, err)
 		require.True(t, bytes.Equal(buf[:written], want), name)
-		written, err = m.MarshalToSizedBufferVT(buf)
+		written, err = m.MarshalToSizedBufferCF(buf)
 		require.NoError(t, err)
 		require.True(t, bytes.Equal(buf[len(buf)-written:], want), name)
 	}
@@ -172,7 +172,7 @@ func TestProtobufMarshalMatchesOfficial_MultiKeyMaps(t *testing.T) {
 	r := rand.New(rand.NewSource(2))
 	for n := 0; n < 20000; n++ {
 		name, m := randomPBMessage(r, 4)
-		data, err := m.MarshalVT()
+		data, err := m.MarshalCF()
 		require.NoError(t, err)
 		require.Equal(t, proto.Size(m), len(data), name)
 
@@ -190,7 +190,7 @@ func compareWithOfficial(t testing.TB, name string, data []byte) {
 	input := bytes.Clone(data)
 	want, got := newPBMessage(name), newPBMessage(name)
 	wantErr := proto.Unmarshal(data, want)
-	gotErr := got.UnmarshalVT(data)
+	gotErr := got.UnmarshalCF(data)
 	if !bytes.Equal(input, data) {
 		t.Fatalf("%s: decoding modified the input %x", name, input)
 	}
@@ -221,7 +221,7 @@ func compareWithOfficial(t testing.TB, name string, data []byte) {
 		t.Fatalf("%s input %x: decoded to different messages:\nofficial:  %v\ngenerated: %v", name, input, want, got)
 	}
 	// And it must encode to the same size, and back to an equal message.
-	encoded, err := got.MarshalVT()
+	encoded, err := got.MarshalCF()
 	if err != nil {
 		t.Fatalf("%s input %x: %v", name, input, err)
 	}
@@ -266,15 +266,15 @@ func TestProtobufUnknownFields(t *testing.T) {
 	data := []byte{0x08, 0x07, 0xa0, 0x06, 0x05} // id = 7, and field 100.
 	var viaOfficial, viaGenerated Command
 	require.NoError(t, proto.Unmarshal(data, &viaOfficial))
-	require.NoError(t, viaGenerated.UnmarshalVT(data))
+	require.NoError(t, viaGenerated.UnmarshalCF(data))
 	require.Equal(t, uint32(7), viaGenerated.Id)
 
-	encoded, err := viaOfficial.MarshalVT()
+	encoded, err := viaOfficial.MarshalCF()
 	require.NoError(t, err)
 	require.Equal(t, data, encoded)
-	require.Equal(t, len(data), viaOfficial.SizeVT())
+	require.Equal(t, len(data), viaOfficial.SizeCF())
 
-	encoded, err = viaGenerated.MarshalVT()
+	encoded, err = viaGenerated.MarshalCF()
 	require.NoError(t, err)
 	require.Equal(t, []byte{0x08, 0x07}, encoded)
 }
@@ -283,7 +283,7 @@ func TestProtobufUnmarshalMatchesOfficial(t *testing.T) {
 	r := rand.New(rand.NewSource(3))
 	for n := 0; n < 100000; n++ {
 		name, m := randomPBMessage(r, 3)
-		data, err := m.MarshalVT()
+		data, err := m.MarshalCF()
 		require.NoError(t, err)
 		compareWithOfficial(t, name, data)
 		if len(data) == 0 || len(data) > 4096 {
@@ -310,7 +310,7 @@ func FuzzProtobufMatchesOfficial(f *testing.F) {
 	r := rand.New(rand.NewSource(4))
 	for n := 0; n < 300; n++ {
 		name, m := randomPBMessage(r, 2)
-		if data, _ := m.MarshalVT(); len(data) < 1024 {
+		if data, _ := m.MarshalCF(); len(data) < 1024 {
 			f.Add(byte(sort.SearchStrings(pbMessageNames, name)), data)
 		}
 	}
@@ -352,7 +352,7 @@ func TestProtobufMapEntriesMatchOfficial(t *testing.T) {
 	var req ConnectRequest
 	data, err := hex.DecodeString("1a0b0a01611202180112023805")
 	require.NoError(t, err)
-	require.NoError(t, req.UnmarshalVT(data))
+	require.NoError(t, req.UnmarshalCF(data))
 	require.True(t, req.Subs["a"].Recover)
 	require.Equal(t, uint64(5), req.Subs["a"].Offset)
 }
@@ -371,7 +371,7 @@ func TestProtobufSkippedGroupNesting(t *testing.T) {
 		data := nested(levels)
 		compareWithOfficial(t, "Command", data)
 		var c Command
-		if c.UnmarshalVT(data) == nil {
+		if c.UnmarshalCF(data) == nil {
 			deepest = levels
 		}
 	}
@@ -380,5 +380,5 @@ func TestProtobufSkippedGroupNesting(t *testing.T) {
 
 	// Groups which are opened and never closed.
 	var c Command
-	require.Error(t, c.UnmarshalVT(bytes.Repeat([]byte{0x0b}, 1<<20)))
+	require.Error(t, c.UnmarshalCF(bytes.Repeat([]byte{0x0b}, 1<<20)))
 }

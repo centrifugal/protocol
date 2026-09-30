@@ -54,28 +54,74 @@ func (m *Lower) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 1:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"user\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 2:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"info\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 3:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"tags\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+7)
+			}
 		}
-		folded := false
-	match:
-		switch string(key) {
-		case "channel":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			folded := false
+		match:
+			switch string(key) {
+			case "channel":
+				id = 0
+			case "user":
+				id = 1
+			case "info":
+				id = 2
+			case "tags":
+				id = 3
+			default:
+				if !folded {
+					folded = true
+					if k, ok := cfjson.FoldKey(key); ok {
+						key = k
+						goto match
+					}
+				}
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Channel)
-		case "user":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.User)
-		case "info":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
@@ -89,7 +135,8 @@ func (m *Lower) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Info.DecodeJSON(b, i, f)
 			}
-		case "tags":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
@@ -106,6 +153,7 @@ func (m *Lower) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n3 := 0
 					for {
 						var k1 string
 						i = cfjson.MapKey(b, i, f, &k1)
@@ -117,10 +165,11 @@ func (m *Lower) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.Tags[k1]; dup {
+						m.Tags[k1] = e2
+						n3++
+						if len(m.Tags) != n3 {
 							return ^i
 						}
-						m.Tags[k1] = e2
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -137,14 +186,8 @@ func (m *Lower) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
+			next = 4
 		default:
-			if !folded {
-				folded = true
-				if k, ok := cfjson.FoldKey(key); ok {
-					key = k
-					goto match
-				}
-			}
 			i = cfjson.Skip(b, i, f)
 		}
 		if i < 0 {
@@ -196,49 +239,82 @@ func (m *Mixed) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 13 && string(b[i:i+13]) == "\"numClients\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+13)
+			}
+		case 1:
+			if len(b)-i >= 5 && string(b[i:i+5]) == "\"ID\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+5)
+			}
+		case 2:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"Untagged\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+11)
+			}
 		}
-		folded := false
-	match:
-		switch string(key) {
-		case "numClients":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			folded := false
+		match:
+			switch string(key) {
+			case "numClients":
+				id = 0
+			case "ID":
+				id = 1
+			case "Untagged":
+				id = 2
+			default:
+				if !folded {
+					folded = true
+					k, _ := cfjson.FoldKey(key)
+					switch string(k) {
+					case "numclients":
+						key = []byte("numClients")
+						goto match
+					case "id":
+						key = []byte("ID")
+						goto match
+					case "untagged":
+						key = []byte("Untagged")
+						goto match
+					}
+				}
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Int(b, i, &m.NumClients)
-		case "ID":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.ID)
-		case "Untagged":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.String(b, i, f, &m.Untagged)
+			next = 3
 		default:
-			if !folded {
-				folded = true
-				k, _ := cfjson.FoldKey(key)
-				switch string(k) {
-				case "numclients":
-					key = []byte("numClients")
-					goto match
-				case "id":
-					key = []byte("ID")
-					goto match
-				case "untagged":
-					key = []byte("Untagged")
-					goto match
-				}
-			}
 			i = cfjson.Skip(b, i, f)
 		}
 		if i < 0 {

@@ -124,7 +124,7 @@ func (d *ProtobufCommandDecoder) Decode() (*Command, error) {
 		}
 		to := from + int(l) //nolint:gosec // G115: l fits what is left, checked above.
 		cmdBytes := d.data[from:to]
-		err := c.UnmarshalVT(cmdBytes) // Check whether UnmarshalVTUnsafe here is OK.
+		err := c.UnmarshalCF(cmdBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -240,7 +240,7 @@ func (d *ProtobufReplyDecoder) Decode() (*Reply, error) {
 		}
 		to := from + int(l) //nolint:gosec // G115: l fits what is left, checked above.
 		replyBytes := d.data[from:to]
-		err := c.UnmarshalVT(replyBytes)
+		err := c.UnmarshalCF(replyBytes)
 		if err != nil {
 			return nil, err
 		}

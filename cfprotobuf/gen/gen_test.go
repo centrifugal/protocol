@@ -89,7 +89,7 @@ type Plain struct{ X int }
 			t.Errorf("no %q in the output", want)
 		}
 	}
-	for _, unwanted := range []string{"Plain", "NotAField", "VT(", "unknownFields", "encoding/binary", `"math"`} {
+	for _, unwanted := range []string{"Plain", "NotAField", "CF(", "unknownFields", "encoding/binary", `"math"`} {
 		if strings.Contains(out, unwanted) {
 			t.Errorf("%q in the output", unwanted)
 		}
@@ -99,7 +99,7 @@ type Plain struct{ X int }
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(out, "func (m *A)") || !strings.Contains(out, "func (m *B) MarshalVT()") {
+	if strings.Contains(out, "func (m *A)") || !strings.Contains(out, "func (m *B) MarshalCF()") {
 		t.Error("the Types option is not respected")
 	}
 	if _, err := generate(t, Config{Types: []string{"Missing"}}, src); err == nil {
@@ -152,7 +152,7 @@ type Leaf struct {
 	if got := strings.Count(out, "cfprotobuf.ErrTooDeep"); got != 1 {
 		t.Fatalf("%d depth checks, want 1", got)
 	}
-	_, leaf, found := strings.Cut(out, "func (m *Leaf) unmarshalVT")
+	_, leaf, found := strings.Cut(out, "func (m *Leaf) unmarshalCF")
 	if !found || strings.Contains(leaf, "ErrTooDeep") {
 		t.Fatal("depth check in a type which is not recursive")
 	}

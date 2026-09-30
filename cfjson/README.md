@@ -212,8 +212,16 @@ How this is checked:
   error value to pass around on the happy path.
 - A short string is written with the words which were loaded to check that
   it needs no escaping, two to four stores instead of a call to `memmove`.
-- Field lookup is a `switch` on the key, which the compiler turns into a
-  search by length and content without hashing or allocating.
+- Encoders write fields in the order they are declared in, so a decoder first
+  compares the input with the key the next field would have, as it is
+  written: `"channel":`, quotes and colon included. That is a couple of word
+  compares with a constant, and when it holds the key was never read as a
+  key. Anything else (another order, a field left out, whitespace, an
+  escape) is read as a key and looked up with a `switch`, which the compiler
+  turns into a search by length and content without hashing or allocating.
+- A map is filled with one hash operation per entry: whether a key came
+  twice is told by counting the entries, not by asking the map before every
+  store.
 - The whole input is looked at once before decoding (`Prescan`). Most
   messages are printable ASCII without a single backslash, and knowing that
   up front means the end of a string is simply the next quote: no escape

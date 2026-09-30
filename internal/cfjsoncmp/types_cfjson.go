@@ -18,8 +18,7 @@ func (m *Error) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendString(b, m.Message)
 	}
 	if m.Temporary {
-		b = append(b, ",\"temporary\":"...)
-		b = cfjson.AppendBool(b, m.Temporary)
+		b = append(b, ",\"temporary\":true"...)
 	}
 	if len(b) == s {
 		return append(b, '{', '}')
@@ -39,31 +38,63 @@ func (m *Error) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"code\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 1:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"message\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 2:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"temporary\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+12)
+			}
 		}
-		switch string(key) {
-		case "code":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "code":
+				id = 0
+			case "message":
+				id = 1
+			case "temporary":
+				id = 2
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Uint(b, i, &m.Code)
-		case "message":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Message)
-		case "temporary":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Bool(b, i, &m.Temporary)
+			next = 3
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -118,31 +149,63 @@ func (m *EmulationRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"node\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 1:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"session\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 2:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+7)
+			}
 		}
-		switch string(key) {
-		case "node":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "node":
+				id = 0
+			case "session":
+				id = 1
+			case "data":
+				id = 2
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Node)
-		case "session":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Session)
-		case "data":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
+			next = 3
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -237,20 +300,120 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 5 && string(b[i:i+5]) == "\"id\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+5)
+			}
+		case 1:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"connect\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 2:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"subscribe\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 3:
+			if len(b)-i >= 14 && string(b[i:i+14]) == "\"unsubscribe\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+14)
+			}
+		case 4:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"publish\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 5:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"presence\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+11)
+			}
+		case 6:
+			if len(b)-i >= 17 && string(b[i:i+17]) == "\"presence_stats\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+17)
+			}
+		case 7:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"history\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 8:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"ping\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 9:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"send\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 10:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"rpc\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 11:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"refresh\":" {
+				id = 11
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 12:
+			if len(b)-i >= 14 && string(b[i:i+14]) == "\"sub_refresh\":" {
+				id = 12
+				i = cfjson.SkipSpace(b, i+14)
+			}
 		}
-		switch string(key) {
-		case "id":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "id":
+				id = 0
+			case "connect":
+				id = 1
+			case "subscribe":
+				id = 2
+			case "unsubscribe":
+				id = 3
+			case "publish":
+				id = 4
+			case "presence":
+				id = 5
+			case "presence_stats":
+				id = 6
+			case "history":
+				id = 7
+			case "ping":
+				id = 8
+			case "send":
+				id = 9
+			case "rpc":
+				id = 10
+			case "refresh":
+				id = 11
+			case "sub_refresh":
+				id = 12
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Uint(b, i, &m.Id)
-		case "connect":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
@@ -264,7 +427,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Connect.DecodeJSON(b, i, f)
 			}
-		case "subscribe":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
@@ -278,7 +442,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Subscribe.DecodeJSON(b, i, f)
 			}
-		case "unsubscribe":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
@@ -292,7 +457,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Unsubscribe.DecodeJSON(b, i, f)
 			}
-		case "publish":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
@@ -306,7 +472,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Publish.DecodeJSON(b, i, f)
 			}
-		case "presence":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
@@ -320,7 +487,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Presence.DecodeJSON(b, i, f)
 			}
-		case "presence_stats":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
@@ -334,7 +502,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.PresenceStats.DecodeJSON(b, i, f)
 			}
-		case "history":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
@@ -348,7 +517,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.History.DecodeJSON(b, i, f)
 			}
-		case "ping":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
@@ -362,7 +532,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Ping.DecodeJSON(b, i, f)
 			}
-		case "send":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
@@ -376,7 +547,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Send.DecodeJSON(b, i, f)
 			}
-		case "rpc":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
@@ -390,7 +562,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Rpc.DecodeJSON(b, i, f)
 			}
-		case "refresh":
+			next = 11
+		case 11:
 			if seen0&0x800 != 0 {
 				return ^i
 			}
@@ -404,7 +577,8 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Refresh.DecodeJSON(b, i, f)
 			}
-		case "sub_refresh":
+			next = 12
+		case 12:
 			if seen0&0x1000 != 0 {
 				return ^i
 			}
@@ -418,6 +592,7 @@ func (m *Command) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.SubRefresh.DecodeJSON(b, i, f)
 			}
+			next = 13
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -516,20 +691,127 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 5 && string(b[i:i+5]) == "\"id\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+5)
+			}
+		case 1:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"error\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 2:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"push\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 3:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"connect\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 4:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"subscribe\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 5:
+			if len(b)-i >= 14 && string(b[i:i+14]) == "\"unsubscribe\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+14)
+			}
+		case 6:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"publish\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 7:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"presence\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+11)
+			}
+		case 8:
+			if len(b)-i >= 17 && string(b[i:i+17]) == "\"presence_stats\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+17)
+			}
+		case 9:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"history\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 10:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"ping\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 11:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"rpc\":" {
+				id = 11
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 12:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"refresh\":" {
+				id = 12
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 13:
+			if len(b)-i >= 14 && string(b[i:i+14]) == "\"sub_refresh\":" {
+				id = 13
+				i = cfjson.SkipSpace(b, i+14)
+			}
 		}
-		switch string(key) {
-		case "id":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "id":
+				id = 0
+			case "error":
+				id = 1
+			case "push":
+				id = 2
+			case "connect":
+				id = 3
+			case "subscribe":
+				id = 4
+			case "unsubscribe":
+				id = 5
+			case "publish":
+				id = 6
+			case "presence":
+				id = 7
+			case "presence_stats":
+				id = 8
+			case "history":
+				id = 9
+			case "ping":
+				id = 10
+			case "rpc":
+				id = 11
+			case "refresh":
+				id = 12
+			case "sub_refresh":
+				id = 13
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Uint(b, i, &m.Id)
-		case "error":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
@@ -543,7 +825,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Error.DecodeJSON(b, i, f)
 			}
-		case "push":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
@@ -557,7 +840,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Push.DecodeJSON(b, i, f)
 			}
-		case "connect":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
@@ -571,7 +855,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Connect.DecodeJSON(b, i, f)
 			}
-		case "subscribe":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
@@ -585,7 +870,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Subscribe.DecodeJSON(b, i, f)
 			}
-		case "unsubscribe":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
@@ -599,7 +885,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Unsubscribe.DecodeJSON(b, i, f)
 			}
-		case "publish":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
@@ -613,7 +900,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Publish.DecodeJSON(b, i, f)
 			}
-		case "presence":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
@@ -627,7 +915,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Presence.DecodeJSON(b, i, f)
 			}
-		case "presence_stats":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
@@ -641,7 +930,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.PresenceStats.DecodeJSON(b, i, f)
 			}
-		case "history":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
@@ -655,7 +945,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.History.DecodeJSON(b, i, f)
 			}
-		case "ping":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
@@ -669,7 +960,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Ping.DecodeJSON(b, i, f)
 			}
-		case "rpc":
+			next = 11
+		case 11:
 			if seen0&0x800 != 0 {
 				return ^i
 			}
@@ -683,7 +975,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Rpc.DecodeJSON(b, i, f)
 			}
-		case "refresh":
+			next = 12
+		case 12:
 			if seen0&0x1000 != 0 {
 				return ^i
 			}
@@ -697,7 +990,8 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Refresh.DecodeJSON(b, i, f)
 			}
-		case "sub_refresh":
+			next = 13
+		case 13:
 			if seen0&0x2000 != 0 {
 				return ^i
 			}
@@ -711,6 +1005,7 @@ func (m *Reply) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.SubRefresh.DecodeJSON(b, i, f)
 			}
+			next = 14
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -797,26 +1092,113 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 5 && string(b[i:i+5]) == "\"id\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+5)
+			}
+		case 1:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 2:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"pub\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 3:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"join\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 4:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"leave\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 5:
+			if len(b)-i >= 14 && string(b[i:i+14]) == "\"unsubscribe\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+14)
+			}
+		case 6:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"message\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 7:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"subscribe\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 8:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"connect\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 9:
+			if len(b)-i >= 13 && string(b[i:i+13]) == "\"disconnect\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+13)
+			}
+		case 10:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"refresh\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+10)
+			}
 		}
-		switch string(key) {
-		case "id":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "id":
+				id = 0
+			case "channel":
+				id = 1
+			case "pub":
+				id = 2
+			case "join":
+				id = 3
+			case "leave":
+				id = 4
+			case "unsubscribe":
+				id = 5
+			case "message":
+				id = 6
+			case "subscribe":
+				id = 7
+			case "connect":
+				id = 8
+			case "disconnect":
+				id = 9
+			case "refresh":
+				id = 10
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Int(b, i, &m.Id)
-		case "channel":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Channel)
-		case "pub":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
@@ -830,7 +1212,8 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Pub.DecodeJSON(b, i, f)
 			}
-		case "join":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
@@ -844,7 +1227,8 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Join.DecodeJSON(b, i, f)
 			}
-		case "leave":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
@@ -858,7 +1242,8 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Leave.DecodeJSON(b, i, f)
 			}
-		case "unsubscribe":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
@@ -872,7 +1257,8 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Unsubscribe.DecodeJSON(b, i, f)
 			}
-		case "message":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
@@ -886,7 +1272,8 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Message.DecodeJSON(b, i, f)
 			}
-		case "subscribe":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
@@ -900,7 +1287,8 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Subscribe.DecodeJSON(b, i, f)
 			}
-		case "connect":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
@@ -914,7 +1302,8 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Connect.DecodeJSON(b, i, f)
 			}
-		case "disconnect":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
@@ -928,7 +1317,8 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Disconnect.DecodeJSON(b, i, f)
 			}
-		case "refresh":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
@@ -942,6 +1332,7 @@ func (m *Push) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Refresh.DecodeJSON(b, i, f)
 			}
+			next = 11
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -996,31 +1387,63 @@ func (m *Dictionary) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 5 && string(b[i:i+5]) == "\"id\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+5)
+			}
+		case 1:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 2:
+			if len(b)-i >= 11 && string(b[i:i+11]) == "\"data_b64\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+11)
+			}
 		}
-		switch string(key) {
-		case "id":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "id":
+				id = 0
+			case "data":
+				id = 1
+			case "data_b64":
+				id = 2
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Id)
-		case "data":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
-		case "data_b64":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.String(b, i, f, &m.DataB64)
+			next = 3
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1070,37 +1493,77 @@ func (m *ClientInfo) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"user\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 1:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"client\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 2:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"conn_info\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 3:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"chan_info\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+12)
+			}
 		}
-		switch string(key) {
-		case "user":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "user":
+				id = 0
+			case "client":
+				id = 1
+			case "conn_info":
+				id = 2
+			case "chan_info":
+				id = 3
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.User)
-		case "client":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Client)
-		case "conn_info":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.ConnInfo))
-		case "chan_info":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.ChanInfo))
+			next = 4
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1150,8 +1613,7 @@ func (m *Publication) AppendJSON(b []byte) []byte {
 		b = append(b, '}')
 	}
 	if m.Delta {
-		b = append(b, ",\"delta\":"...)
-		b = cfjson.AppendBool(b, m.Delta)
+		b = append(b, ",\"delta\":true"...)
 	}
 	if m.Time != 0 {
 		b = append(b, ",\"time\":"...)
@@ -1166,8 +1628,7 @@ func (m *Publication) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendString(b, m.Key)
 	}
 	if m.Removed {
-		b = append(b, ",\"removed\":"...)
-		b = cfjson.AppendBool(b, m.Removed)
+		b = append(b, ",\"removed\":true"...)
 	}
 	if m.Score != 0 {
 		b = append(b, ",\"score\":"...)
@@ -1203,20 +1664,120 @@ func (m *Publication) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 1:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"info\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 2:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"offset\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 3:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"tags\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 4:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"delta\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 5:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"time\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 6:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 7:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"key\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 8:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"removed\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 9:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"score\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 10:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"epoch\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 11:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"prev_data\":" {
+				id = 11
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 12:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"version\":" {
+				id = 12
+				i = cfjson.SkipSpace(b, i+10)
+			}
 		}
-		switch string(key) {
-		case "data":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "data":
+				id = 0
+			case "info":
+				id = 1
+			case "offset":
+				id = 2
+			case "tags":
+				id = 3
+			case "delta":
+				id = 4
+			case "time":
+				id = 5
+			case "channel":
+				id = 6
+			case "key":
+				id = 7
+			case "removed":
+				id = 8
+			case "score":
+				id = 9
+			case "epoch":
+				id = 10
+			case "prev_data":
+				id = 11
+			case "version":
+				id = 12
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
-		case "info":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
@@ -1230,13 +1791,15 @@ func (m *Publication) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Info.DecodeJSON(b, i, f)
 			}
-		case "offset":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Uint(b, i, &m.Offset)
-		case "tags":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
@@ -1253,6 +1816,7 @@ func (m *Publication) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n3 := 0
 					for {
 						var k1 string
 						i = cfjson.MapKey(b, i, f, &k1)
@@ -1264,10 +1828,11 @@ func (m *Publication) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.Tags[k1]; dup {
+						m.Tags[k1] = e2
+						n3++
+						if len(m.Tags) != n3 {
 							return ^i
 						}
-						m.Tags[k1] = e2
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1284,60 +1849,70 @@ func (m *Publication) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "delta":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10
 			i = cfjson.Bool(b, i, &m.Delta)
-		case "time":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
 			seen0 |= 0x20
 			i = cfjson.Int(b, i, &m.Time)
-		case "channel":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
 			seen0 |= 0x40
 			i = cfjson.String(b, i, f, &m.Channel)
-		case "key":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
 			seen0 |= 0x80
 			i = cfjson.String(b, i, f, &m.Key)
-		case "removed":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
 			seen0 |= 0x100
 			i = cfjson.Bool(b, i, &m.Removed)
-		case "score":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
 			seen0 |= 0x200
 			i = cfjson.Int(b, i, &m.Score)
-		case "epoch":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
 			seen0 |= 0x400
 			i = cfjson.String(b, i, f, &m.Epoch)
-		case "prev_data":
+			next = 11
+		case 11:
 			if seen0&0x800 != 0 {
 				return ^i
 			}
 			seen0 |= 0x800
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.PrevData))
-		case "version":
+			next = 12
+		case 12:
 			if seen0&0x1000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1000
 			i = cfjson.Uint(b, i, &m.Version)
+			next = 13
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1384,14 +1959,25 @@ func (m *Join) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 7 && string(b[i:i+7]) == "\"info\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+7)
 		}
-		switch string(key) {
-		case "info":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "info" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
@@ -1405,6 +1991,7 @@ func (m *Join) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Info.DecodeJSON(b, i, f)
 			}
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1451,14 +2038,25 @@ func (m *Leave) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 7 && string(b[i:i+7]) == "\"info\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+7)
 		}
-		switch string(key) {
-		case "info":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "info" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
@@ -1472,6 +2070,7 @@ func (m *Leave) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Info.DecodeJSON(b, i, f)
 			}
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1522,25 +2121,49 @@ func (m *Unsubscribe) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"code\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 1:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"reason\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+9)
+			}
 		}
-		switch string(key) {
-		case "code":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "code":
+				id = 0
+			case "reason":
+				id = 1
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Uint(b, i, &m.Code)
-		case "reason":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Reason)
+			next = 2
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1566,8 +2189,7 @@ func (m *Unsubscribe) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 func (m *Subscribe) AppendJSON(b []byte) []byte {
 	s := len(b)
 	if m.Recoverable {
-		b = append(b, ",\"recoverable\":"...)
-		b = cfjson.AppendBool(b, m.Recoverable)
+		b = append(b, ",\"recoverable\":true"...)
 	}
 	if m.Epoch != "" {
 		b = append(b, ",\"epoch\":"...)
@@ -1578,8 +2200,7 @@ func (m *Subscribe) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendUint(b, m.Offset)
 	}
 	if m.Positioned {
-		b = append(b, ",\"positioned\":"...)
-		b = cfjson.AppendBool(b, m.Positioned)
+		b = append(b, ",\"positioned\":true"...)
 	}
 	if len(m.Data) != 0 {
 		b = append(b, ",\"data\":"...)
@@ -1603,43 +2224,91 @@ func (m *Subscribe) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 14 && string(b[i:i+14]) == "\"recoverable\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+14)
+			}
+		case 1:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"epoch\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 2:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"offset\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 3:
+			if len(b)-i >= 13 && string(b[i:i+13]) == "\"positioned\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+13)
+			}
+		case 4:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+7)
+			}
 		}
-		switch string(key) {
-		case "recoverable":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "recoverable":
+				id = 0
+			case "epoch":
+				id = 1
+			case "offset":
+				id = 2
+			case "positioned":
+				id = 3
+			case "data":
+				id = 4
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Bool(b, i, &m.Recoverable)
-		case "epoch":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Epoch)
-		case "offset":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Uint(b, i, &m.Offset)
-		case "positioned":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.Bool(b, i, &m.Positioned)
-		case "data":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
+			next = 5
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1686,19 +2355,31 @@ func (m *Message) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+7)
 		}
-		switch string(key) {
-		case "data":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "data" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1752,8 +2433,7 @@ func (m *Connect) AppendJSON(b []byte) []byte {
 		b = append(b, '}')
 	}
 	if m.Expires {
-		b = append(b, ",\"expires\":"...)
-		b = cfjson.AppendBool(b, m.Expires)
+		b = append(b, ",\"expires\":true"...)
 	}
 	if m.Ttl != 0 {
 		b = append(b, ",\"ttl\":"...)
@@ -1764,8 +2444,7 @@ func (m *Connect) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendUint(b, uint64(m.Ping))
 	}
 	if m.Pong {
-		b = append(b, ",\"pong\":"...)
-		b = cfjson.AppendBool(b, m.Pong)
+		b = append(b, ",\"pong\":true"...)
 	}
 	if m.Session != "" {
 		b = append(b, ",\"session\":"...)
@@ -1797,32 +2476,120 @@ func (m *Connect) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"client\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 1:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"version\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 2:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 3:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"subs\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 4:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"expires\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 5:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"ttl\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 6:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"ping\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 7:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"pong\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 8:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"session\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 9:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"node\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 10:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"time\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+7)
+			}
 		}
-		switch string(key) {
-		case "client":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "client":
+				id = 0
+			case "version":
+				id = 1
+			case "data":
+				id = 2
+			case "subs":
+				id = 3
+			case "expires":
+				id = 4
+			case "ttl":
+				id = 5
+			case "ping":
+				id = 6
+			case "pong":
+				id = 7
+			case "session":
+				id = 8
+			case "node":
+				id = 9
+			case "time":
+				id = 10
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Client)
-		case "version":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Version)
-		case "data":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
-		case "subs":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
@@ -1839,6 +2606,7 @@ func (m *Connect) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n3 := 0
 					for {
 						var k1 string
 						i = cfjson.MapKey(b, i, f, &k1)
@@ -1855,10 +2623,11 @@ func (m *Connect) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.Subs[k1]; dup {
+						m.Subs[k1] = e2
+						n3++
+						if len(m.Subs) != n3 {
 							return ^i
 						}
-						m.Subs[k1] = e2
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -1875,48 +2644,56 @@ func (m *Connect) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "expires":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10
 			i = cfjson.Bool(b, i, &m.Expires)
-		case "ttl":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
 			seen0 |= 0x20
 			i = cfjson.Uint(b, i, &m.Ttl)
-		case "ping":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
 			seen0 |= 0x40
 			i = cfjson.Uint(b, i, &m.Ping)
-		case "pong":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
 			seen0 |= 0x80
 			i = cfjson.Bool(b, i, &m.Pong)
-		case "session":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
 			seen0 |= 0x100
 			i = cfjson.String(b, i, f, &m.Session)
-		case "node":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
 			seen0 |= 0x200
 			i = cfjson.String(b, i, f, &m.Node)
-		case "time":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
 			seen0 |= 0x400
 			i = cfjson.Int(b, i, &m.Time)
+			next = 11
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -1950,8 +2727,7 @@ func (m *Disconnect) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendString(b, m.Reason)
 	}
 	if m.Reconnect {
-		b = append(b, ",\"reconnect\":"...)
-		b = cfjson.AppendBool(b, m.Reconnect)
+		b = append(b, ",\"reconnect\":true"...)
 	}
 	if len(b) == s {
 		return append(b, '{', '}')
@@ -1971,31 +2747,63 @@ func (m *Disconnect) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"code\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 1:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"reason\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 2:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"reconnect\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+12)
+			}
 		}
-		switch string(key) {
-		case "code":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "code":
+				id = 0
+			case "reason":
+				id = 1
+			case "reconnect":
+				id = 2
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Uint(b, i, &m.Code)
-		case "reason":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Reason)
-		case "reconnect":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Bool(b, i, &m.Reconnect)
+			next = 3
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -2021,8 +2829,7 @@ func (m *Disconnect) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 func (m *Refresh) AppendJSON(b []byte) []byte {
 	s := len(b)
 	if m.Expires {
-		b = append(b, ",\"expires\":"...)
-		b = cfjson.AppendBool(b, m.Expires)
+		b = append(b, ",\"expires\":true"...)
 	}
 	if m.Ttl != 0 {
 		b = append(b, ",\"ttl\":"...)
@@ -2046,25 +2853,49 @@ func (m *Refresh) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"expires\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 1:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"ttl\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+6)
+			}
 		}
-		switch string(key) {
-		case "expires":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "expires":
+				id = 0
+			case "ttl":
+				id = 1
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Bool(b, i, &m.Expires)
-		case "ttl":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Uint(b, i, &m.Ttl)
+			next = 2
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -2163,26 +2994,99 @@ func (m *ConnectRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"token\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 1:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 2:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"subs\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 3:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"name\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 4:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"version\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 5:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"headers\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 6:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"flag\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 7:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"profile\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 8:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"dict\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+7)
+			}
 		}
-		switch string(key) {
-		case "token":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "token":
+				id = 0
+			case "data":
+				id = 1
+			case "subs":
+				id = 2
+			case "name":
+				id = 3
+			case "version":
+				id = 4
+			case "headers":
+				id = 5
+			case "flag":
+				id = 6
+			case "profile":
+				id = 7
+			case "dict":
+				id = 8
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Token)
-		case "data":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
-		case "subs":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
@@ -2199,6 +3103,7 @@ func (m *ConnectRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n3 := 0
 					for {
 						var k1 string
 						i = cfjson.MapKey(b, i, f, &k1)
@@ -2215,10 +3120,11 @@ func (m *ConnectRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.Subs[k1]; dup {
+						m.Subs[k1] = e2
+						n3++
+						if len(m.Subs) != n3 {
 							return ^i
 						}
-						m.Subs[k1] = e2
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -2235,19 +3141,22 @@ func (m *ConnectRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "name":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.String(b, i, f, &m.Name)
-		case "version":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10
 			i = cfjson.String(b, i, f, &m.Version)
-		case "headers":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
@@ -2264,21 +3173,23 @@ func (m *ConnectRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n6 := 0
 					for {
-						var k3 string
-						i = cfjson.MapKey(b, i, f, &k3)
+						var k4 string
+						i = cfjson.MapKey(b, i, f, &k4)
 						if i < 0 {
 							return i
 						}
-						var e4 string
-						i = cfjson.String(b, i, f, &e4)
+						var e5 string
+						i = cfjson.String(b, i, f, &e5)
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.Headers[k3]; dup {
+						m.Headers[k4] = e5
+						n6++
+						if len(m.Headers) != n6 {
 							return ^i
 						}
-						m.Headers[k3] = e4
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -2295,24 +3206,28 @@ func (m *ConnectRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "flag":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
 			seen0 |= 0x40
 			i = cfjson.Int(b, i, &m.Flag)
-		case "profile":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
 			seen0 |= 0x80
 			i = cfjson.String(b, i, f, &m.Profile)
-		case "dict":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
 			seen0 |= 0x100
 			i = cfjson.String(b, i, f, &m.Dict)
+			next = 9
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -2346,8 +3261,7 @@ func (m *ConnectResult) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendString(b, m.Version)
 	}
 	if m.Expires {
-		b = append(b, ",\"expires\":"...)
-		b = cfjson.AppendBool(b, m.Expires)
+		b = append(b, ",\"expires\":true"...)
 	}
 	if m.Ttl != 0 {
 		b = append(b, ",\"ttl\":"...)
@@ -2378,8 +3292,7 @@ func (m *ConnectResult) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendUint(b, uint64(m.Ping))
 	}
 	if m.Pong {
-		b = append(b, ",\"pong\":"...)
-		b = cfjson.AppendBool(b, m.Pong)
+		b = append(b, ",\"pong\":true"...)
 	}
 	if m.Session != "" {
 		b = append(b, ",\"session\":"...)
@@ -2419,44 +3332,148 @@ func (m *ConnectResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"client\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 1:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"version\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 2:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"expires\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 3:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"ttl\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 4:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 5:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"subs\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 6:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"ping\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 7:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"pong\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 8:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"session\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 9:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"node\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 10:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"time\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 11:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"flag\":" {
+				id = 11
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 12:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"dict\":" {
+				id = 12
+				i = cfjson.SkipSpace(b, i+7)
+			}
 		}
-		switch string(key) {
-		case "client":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "client":
+				id = 0
+			case "version":
+				id = 1
+			case "expires":
+				id = 2
+			case "ttl":
+				id = 3
+			case "data":
+				id = 4
+			case "subs":
+				id = 5
+			case "ping":
+				id = 6
+			case "pong":
+				id = 7
+			case "session":
+				id = 8
+			case "node":
+				id = 9
+			case "time":
+				id = 10
+			case "flag":
+				id = 11
+			case "dict":
+				id = 12
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Client)
-		case "version":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Version)
-		case "expires":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Bool(b, i, &m.Expires)
-		case "ttl":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.Uint(b, i, &m.Ttl)
-		case "data":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
-		case "subs":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
@@ -2473,6 +3490,7 @@ func (m *ConnectResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n3 := 0
 					for {
 						var k1 string
 						i = cfjson.MapKey(b, i, f, &k1)
@@ -2489,10 +3507,11 @@ func (m *ConnectResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.Subs[k1]; dup {
+						m.Subs[k1] = e2
+						n3++
+						if len(m.Subs) != n3 {
 							return ^i
 						}
-						m.Subs[k1] = e2
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -2509,43 +3528,50 @@ func (m *ConnectResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "ping":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
 			seen0 |= 0x40
 			i = cfjson.Uint(b, i, &m.Ping)
-		case "pong":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
 			seen0 |= 0x80
 			i = cfjson.Bool(b, i, &m.Pong)
-		case "session":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
 			seen0 |= 0x100
 			i = cfjson.String(b, i, f, &m.Session)
-		case "node":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
 			seen0 |= 0x200
 			i = cfjson.String(b, i, f, &m.Node)
-		case "time":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
 			seen0 |= 0x400
 			i = cfjson.Int(b, i, &m.Time)
-		case "flag":
+			next = 11
+		case 11:
 			if seen0&0x800 != 0 {
 				return ^i
 			}
 			seen0 |= 0x800
 			i = cfjson.Int(b, i, &m.Flag)
-		case "dict":
+			next = 12
+		case 12:
 			if seen0&0x1000 != 0 {
 				return ^i
 			}
@@ -2559,6 +3585,7 @@ func (m *ConnectResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Dict.DecodeJSON(b, i, f)
 			}
+			next = 13
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -2605,19 +3632,31 @@ func (m *RefreshRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 8 && string(b[i:i+8]) == "\"token\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+8)
 		}
-		switch string(key) {
-		case "token":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "token" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Token)
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -2651,8 +3690,7 @@ func (m *RefreshResult) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendString(b, m.Version)
 	}
 	if m.Expires {
-		b = append(b, ",\"expires\":"...)
-		b = cfjson.AppendBool(b, m.Expires)
+		b = append(b, ",\"expires\":true"...)
 	}
 	if m.Ttl != 0 {
 		b = append(b, ",\"ttl\":"...)
@@ -2676,37 +3714,77 @@ func (m *RefreshResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"client\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 1:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"version\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 2:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"expires\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 3:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"ttl\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+6)
+			}
 		}
-		switch string(key) {
-		case "client":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "client":
+				id = 0
+			case "version":
+				id = 1
+			case "expires":
+				id = 2
+			case "ttl":
+				id = 3
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Client)
-		case "version":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Version)
-		case "expires":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Bool(b, i, &m.Expires)
-		case "ttl":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.Uint(b, i, &m.Ttl)
+			next = 4
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -2740,8 +3818,7 @@ func (m *SubscribeRequest) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendString(b, m.Token)
 	}
 	if m.Recover {
-		b = append(b, ",\"recover\":"...)
-		b = cfjson.AppendBool(b, m.Recover)
+		b = append(b, ",\"recover\":true"...)
 	}
 	if m.Epoch != "" {
 		b = append(b, ",\"epoch\":"...)
@@ -2756,16 +3833,13 @@ func (m *SubscribeRequest) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendRaw(b, m.Data)
 	}
 	if m.Positioned {
-		b = append(b, ",\"positioned\":"...)
-		b = cfjson.AppendBool(b, m.Positioned)
+		b = append(b, ",\"positioned\":true"...)
 	}
 	if m.Recoverable {
-		b = append(b, ",\"recoverable\":"...)
-		b = cfjson.AppendBool(b, m.Recoverable)
+		b = append(b, ",\"recoverable\":true"...)
 	}
 	if m.JoinLeave {
-		b = append(b, ",\"join_leave\":"...)
-		b = cfjson.AppendBool(b, m.JoinLeave)
+		b = append(b, ",\"join_leave\":true"...)
 	}
 	if m.Delta != "" {
 		b = append(b, ",\"delta\":"...)
@@ -2796,8 +3870,7 @@ func (m *SubscribeRequest) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendInt(b, int64(m.Limit))
 	}
 	if m.Asc {
-		b = append(b, ",\"asc\":"...)
-		b = cfjson.AppendBool(b, m.Asc)
+		b = append(b, ",\"asc\":true"...)
 	}
 	if len(b) == s {
 		return append(b, '{', '}')
@@ -2817,74 +3890,211 @@ func (m *SubscribeRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 1:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"token\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 2:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"recover\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 3:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"epoch\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 4:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"offset\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 5:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 6:
+			if len(b)-i >= 13 && string(b[i:i+13]) == "\"positioned\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+13)
+			}
+		case 7:
+			if len(b)-i >= 14 && string(b[i:i+14]) == "\"recoverable\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+14)
+			}
+		case 8:
+			if len(b)-i >= 13 && string(b[i:i+13]) == "\"join_leave\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+13)
+			}
+		case 9:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"delta\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 10:
+			if len(b)-i >= 5 && string(b[i:i+5]) == "\"tf\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+5)
+			}
+		case 11:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"flag\":" {
+				id = 11
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 12:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"type\":" {
+				id = 12
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 13:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"phase\":" {
+				id = 13
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 14:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"cursor\":" {
+				id = 14
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 15:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"limit\":" {
+				id = 15
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 16:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"asc\":" {
+				id = 16
+				i = cfjson.SkipSpace(b, i+6)
+			}
 		}
-		switch string(key) {
-		case "channel":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "channel":
+				id = 0
+			case "token":
+				id = 1
+			case "recover":
+				id = 2
+			case "epoch":
+				id = 3
+			case "offset":
+				id = 4
+			case "data":
+				id = 5
+			case "positioned":
+				id = 6
+			case "recoverable":
+				id = 7
+			case "join_leave":
+				id = 8
+			case "delta":
+				id = 9
+			case "tf":
+				id = 10
+			case "flag":
+				id = 11
+			case "type":
+				id = 12
+			case "phase":
+				id = 13
+			case "cursor":
+				id = 14
+			case "limit":
+				id = 15
+			case "asc":
+				id = 16
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Channel)
-		case "token":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Token)
-		case "recover":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Bool(b, i, &m.Recover)
-		case "epoch":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.String(b, i, f, &m.Epoch)
-		case "offset":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10
 			i = cfjson.Uint(b, i, &m.Offset)
-		case "data":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
 			seen0 |= 0x20
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
-		case "positioned":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
 			seen0 |= 0x40
 			i = cfjson.Bool(b, i, &m.Positioned)
-		case "recoverable":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
 			seen0 |= 0x80
 			i = cfjson.Bool(b, i, &m.Recoverable)
-		case "join_leave":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
 			seen0 |= 0x100
 			i = cfjson.Bool(b, i, &m.JoinLeave)
-		case "delta":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
 			seen0 |= 0x200
 			i = cfjson.String(b, i, f, &m.Delta)
-		case "tf":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
@@ -2898,42 +4108,49 @@ func (m *SubscribeRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Tf.DecodeJSON(b, i, f)
 			}
-		case "flag":
+			next = 11
+		case 11:
 			if seen0&0x800 != 0 {
 				return ^i
 			}
 			seen0 |= 0x800
 			i = cfjson.Int(b, i, &m.Flag)
-		case "type":
+			next = 12
+		case 12:
 			if seen0&0x1000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1000
 			i = cfjson.Int(b, i, &m.Type)
-		case "phase":
+			next = 13
+		case 13:
 			if seen0&0x2000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2000
 			i = cfjson.Int(b, i, &m.Phase)
-		case "cursor":
+			next = 14
+		case 14:
 			if seen0&0x4000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4000
 			i = cfjson.String(b, i, f, &m.Cursor)
-		case "limit":
+			next = 15
+		case 15:
 			if seen0&0x8000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8000
 			i = cfjson.Int(b, i, &m.Limit)
-		case "asc":
+			next = 16
+		case 16:
 			if seen0&0x10000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10000
 			i = cfjson.Bool(b, i, &m.Asc)
+			next = 17
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -2959,16 +4176,14 @@ func (m *SubscribeRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 func (m *SubscribeResult) AppendJSON(b []byte) []byte {
 	s := len(b)
 	if m.Expires {
-		b = append(b, ",\"expires\":"...)
-		b = cfjson.AppendBool(b, m.Expires)
+		b = append(b, ",\"expires\":true"...)
 	}
 	if m.Ttl != 0 {
 		b = append(b, ",\"ttl\":"...)
 		b = cfjson.AppendUint(b, uint64(m.Ttl))
 	}
 	if m.Recoverable {
-		b = append(b, ",\"recoverable\":"...)
-		b = cfjson.AppendBool(b, m.Recoverable)
+		b = append(b, ",\"recoverable\":true"...)
 	}
 	if m.Epoch != "" {
 		b = append(b, ",\"epoch\":"...)
@@ -2990,28 +4205,24 @@ func (m *SubscribeResult) AppendJSON(b []byte) []byte {
 		b = append(b, ']')
 	}
 	if m.Recovered {
-		b = append(b, ",\"recovered\":"...)
-		b = cfjson.AppendBool(b, m.Recovered)
+		b = append(b, ",\"recovered\":true"...)
 	}
 	if m.Offset != 0 {
 		b = append(b, ",\"offset\":"...)
 		b = cfjson.AppendUint(b, m.Offset)
 	}
 	if m.Positioned {
-		b = append(b, ",\"positioned\":"...)
-		b = cfjson.AppendBool(b, m.Positioned)
+		b = append(b, ",\"positioned\":true"...)
 	}
 	if len(m.Data) != 0 {
 		b = append(b, ",\"data\":"...)
 		b = cfjson.AppendRaw(b, m.Data)
 	}
 	if m.WasRecovering {
-		b = append(b, ",\"was_recovering\":"...)
-		b = cfjson.AppendBool(b, m.WasRecovering)
+		b = append(b, ",\"was_recovering\":true"...)
 	}
 	if m.Delta {
-		b = append(b, ",\"delta\":"...)
-		b = cfjson.AppendBool(b, m.Delta)
+		b = append(b, ",\"delta\":true"...)
 	}
 	if m.Id != 0 {
 		b = append(b, ",\"id\":"...)
@@ -3066,38 +4277,169 @@ func (m *SubscribeResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"expires\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 1:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"ttl\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 2:
+			if len(b)-i >= 14 && string(b[i:i+14]) == "\"recoverable\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+14)
+			}
+		case 3:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"epoch\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 4:
+			if len(b)-i >= 15 && string(b[i:i+15]) == "\"publications\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+15)
+			}
+		case 5:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"recovered\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 6:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"offset\":" {
+				id = 6
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 7:
+			if len(b)-i >= 13 && string(b[i:i+13]) == "\"positioned\":" {
+				id = 7
+				i = cfjson.SkipSpace(b, i+13)
+			}
+		case 8:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 8
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 9:
+			if len(b)-i >= 17 && string(b[i:i+17]) == "\"was_recovering\":" {
+				id = 9
+				i = cfjson.SkipSpace(b, i+17)
+			}
+		case 10:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"delta\":" {
+				id = 10
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 11:
+			if len(b)-i >= 5 && string(b[i:i+5]) == "\"id\":" {
+				id = 11
+				i = cfjson.SkipSpace(b, i+5)
+			}
+		case 12:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"type\":" {
+				id = 12
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 13:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"phase\":" {
+				id = 13
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 14:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"cursor\":" {
+				id = 14
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 15:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"state\":" {
+				id = 15
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 16:
+			if len(b)-i >= 19 && string(b[i:i+19]) == "\"publish_debounce\":" {
+				id = 16
+				i = cfjson.SkipSpace(b, i+19)
+			}
 		}
-		switch string(key) {
-		case "expires":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "expires":
+				id = 0
+			case "ttl":
+				id = 1
+			case "recoverable":
+				id = 2
+			case "epoch":
+				id = 3
+			case "publications":
+				id = 4
+			case "recovered":
+				id = 5
+			case "offset":
+				id = 6
+			case "positioned":
+				id = 7
+			case "data":
+				id = 8
+			case "was_recovering":
+				id = 9
+			case "delta":
+				id = 10
+			case "id":
+				id = 11
+			case "type":
+				id = 12
+			case "phase":
+				id = 13
+			case "cursor":
+				id = 14
+			case "state":
+				id = 15
+			case "publish_debounce":
+				id = 16
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Bool(b, i, &m.Expires)
-		case "ttl":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Uint(b, i, &m.Ttl)
-		case "recoverable":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Bool(b, i, &m.Recoverable)
-		case "epoch":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.String(b, i, f, &m.Epoch)
-		case "publications":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
@@ -3151,67 +4493,78 @@ func (m *SubscribeResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "recovered":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
 			seen0 |= 0x20
 			i = cfjson.Bool(b, i, &m.Recovered)
-		case "offset":
+			next = 6
+		case 6:
 			if seen0&0x40 != 0 {
 				return ^i
 			}
 			seen0 |= 0x40
 			i = cfjson.Uint(b, i, &m.Offset)
-		case "positioned":
+			next = 7
+		case 7:
 			if seen0&0x80 != 0 {
 				return ^i
 			}
 			seen0 |= 0x80
 			i = cfjson.Bool(b, i, &m.Positioned)
-		case "data":
+			next = 8
+		case 8:
 			if seen0&0x100 != 0 {
 				return ^i
 			}
 			seen0 |= 0x100
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
-		case "was_recovering":
+			next = 9
+		case 9:
 			if seen0&0x200 != 0 {
 				return ^i
 			}
 			seen0 |= 0x200
 			i = cfjson.Bool(b, i, &m.WasRecovering)
-		case "delta":
+			next = 10
+		case 10:
 			if seen0&0x400 != 0 {
 				return ^i
 			}
 			seen0 |= 0x400
 			i = cfjson.Bool(b, i, &m.Delta)
-		case "id":
+			next = 11
+		case 11:
 			if seen0&0x800 != 0 {
 				return ^i
 			}
 			seen0 |= 0x800
 			i = cfjson.Int(b, i, &m.Id)
-		case "type":
+			next = 12
+		case 12:
 			if seen0&0x1000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1000
 			i = cfjson.Int(b, i, &m.Type)
-		case "phase":
+			next = 13
+		case 13:
 			if seen0&0x2000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2000
 			i = cfjson.Int(b, i, &m.Phase)
-		case "cursor":
+			next = 14
+		case 14:
 			if seen0&0x4000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4000
 			i = cfjson.String(b, i, f, &m.Cursor)
-		case "state":
+			next = 15
+		case 15:
 			if seen0&0x8000 != 0 {
 				return ^i
 			}
@@ -3265,12 +4618,14 @@ func (m *SubscribeResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "publish_debounce":
+			next = 16
+		case 16:
 			if seen0&0x10000 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10000
 			i = cfjson.Uint(b, i, &m.PublishDebounce)
+			next = 17
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -3321,25 +4676,49 @@ func (m *KeyedItem) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"key\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 1:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"version\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+10)
+			}
 		}
-		switch string(key) {
-		case "key":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "key":
+				id = 0
+			case "version":
+				id = 1
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Key)
-		case "version":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Uint(b, i, &m.Version)
+			next = 2
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -3401,20 +4780,43 @@ func (m *TrackBatch) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"signature\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+12)
+			}
+		case 1:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"items\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+8)
+			}
 		}
-		switch string(key) {
-		case "signature":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "signature":
+				id = 0
+			case "items":
+				id = 1
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Signature)
-		case "items":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
@@ -3468,6 +4870,7 @@ func (m *TrackBatch) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
+			next = 2
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -3548,32 +4951,78 @@ func (m *SubRefreshRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 1:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"token\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 2:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"type\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 3:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"track\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 4:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"untrack\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+10)
+			}
 		}
-		switch string(key) {
-		case "channel":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "channel":
+				id = 0
+			case "token":
+				id = 1
+			case "type":
+				id = 2
+			case "track":
+				id = 3
+			case "untrack":
+				id = 4
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Channel)
-		case "token":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Token)
-		case "type":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Int(b, i, &m.Type)
-		case "track":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
@@ -3627,7 +5076,8 @@ func (m *SubRefreshRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "untrack":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
@@ -3676,6 +5126,7 @@ func (m *SubRefreshRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
+			next = 5
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -3701,8 +5152,7 @@ func (m *SubRefreshRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 func (m *SubRefreshResult) AppendJSON(b []byte) []byte {
 	s := len(b)
 	if m.Expires {
-		b = append(b, ",\"expires\":"...)
-		b = cfjson.AppendBool(b, m.Expires)
+		b = append(b, ",\"expires\":true"...)
 	}
 	if m.Ttl != 0 {
 		b = append(b, ",\"ttl\":"...)
@@ -3741,26 +5191,57 @@ func (m *SubRefreshResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"expires\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 1:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"ttl\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 2:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"items\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+8)
+			}
 		}
-		switch string(key) {
-		case "expires":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "expires":
+				id = 0
+			case "ttl":
+				id = 1
+			case "items":
+				id = 2
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Bool(b, i, &m.Expires)
-		case "ttl":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Uint(b, i, &m.Ttl)
-		case "items":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
@@ -3814,6 +5295,7 @@ func (m *SubRefreshResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
+			next = 3
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -3860,19 +5342,31 @@ func (m *UnsubscribeRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+10)
 		}
-		switch string(key) {
-		case "channel":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "channel" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Channel)
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -3910,12 +5404,10 @@ func (m *UnsubscribeResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
+		_, i = cfjson.Key(b, i, f)
 		if i < 0 {
 			return i
 		}
-		_ = key
 		i = cfjson.Skip(b, i, f)
 		if i < 0 {
 			return i
@@ -3955,8 +5447,7 @@ func (m *PublishRequest) AppendJSON(b []byte) []byte {
 		b = cfjson.AppendString(b, m.Key)
 	}
 	if m.Removed {
-		b = append(b, ",\"removed\":"...)
-		b = cfjson.AppendBool(b, m.Removed)
+		b = append(b, ",\"removed\":true"...)
 	}
 	if len(b) == s {
 		return append(b, '{', '}')
@@ -3976,43 +5467,91 @@ func (m *PublishRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 1:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 2:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"type\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 3:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"key\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 4:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"removed\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+10)
+			}
 		}
-		switch string(key) {
-		case "channel":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "channel":
+				id = 0
+			case "data":
+				id = 1
+			case "type":
+				id = 2
+			case "key":
+				id = 3
+			case "removed":
+				id = 4
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Channel)
-		case "data":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
-		case "type":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Int(b, i, &m.Type)
-		case "key":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.String(b, i, f, &m.Key)
-		case "removed":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
 			seen0 |= 0x10
 			i = cfjson.Bool(b, i, &m.Removed)
+			next = 5
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4050,12 +5589,10 @@ func (m *PublishResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
+		_, i = cfjson.Key(b, i, f)
 		if i < 0 {
 			return i
 		}
-		_ = key
 		i = cfjson.Skip(b, i, f)
 		if i < 0 {
 			return i
@@ -4100,19 +5637,31 @@ func (m *PresenceRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+10)
 		}
-		switch string(key) {
-		case "channel":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "channel" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Channel)
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4172,14 +5721,25 @@ func (m *PresenceResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 11 && string(b[i:i+11]) == "\"presence\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+11)
 		}
-		switch string(key) {
-		case "presence":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "presence" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
@@ -4196,6 +5756,7 @@ func (m *PresenceResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				if i < len(b) && b[i] == '}' {
 					i++
 				} else {
+					n3 := 0
 					for {
 						var k1 string
 						i = cfjson.MapKey(b, i, f, &k1)
@@ -4212,10 +5773,11 @@ func (m *PresenceResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 						if i < 0 {
 							return i
 						}
-						if _, dup := m.Presence[k1]; dup {
+						m.Presence[k1] = e2
+						n3++
+						if len(m.Presence) != n3 {
 							return ^i
 						}
-						m.Presence[k1] = e2
 						i = cfjson.SkipSpace(b, i)
 						if i >= len(b) {
 							return ^i
@@ -4232,6 +5794,7 @@ func (m *PresenceResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4278,19 +5841,31 @@ func (m *PresenceStatsRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+10)
 		}
-		switch string(key) {
-		case "channel":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "channel" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Channel)
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4332,25 +5907,49 @@ func (m *PresenceStatsResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 14 && string(b[i:i+14]) == "\"num_clients\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+14)
+			}
+		case 1:
+			if len(b)-i >= 12 && string(b[i:i+12]) == "\"num_users\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+12)
+			}
 		}
-		switch string(key) {
-		case "num_clients":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "num_clients":
+				id = 0
+			case "num_users":
+				id = 1
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Uint(b, i, &m.NumClients)
-		case "num_users":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Uint(b, i, &m.NumUsers)
+			next = 2
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4401,25 +6000,49 @@ func (m *StreamPosition) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"offset\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+9)
+			}
+		case 1:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"epoch\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+8)
+			}
 		}
-		switch string(key) {
-		case "offset":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "offset":
+				id = 0
+			case "epoch":
+				id = 1
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Uint(b, i, &m.Offset)
-		case "epoch":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Epoch)
+			next = 2
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4457,8 +6080,7 @@ func (m *HistoryRequest) AppendJSON(b []byte) []byte {
 		b = m.Since.AppendJSON(b)
 	}
 	if m.Reverse {
-		b = append(b, ",\"reverse\":"...)
-		b = cfjson.AppendBool(b, m.Reverse)
+		b = append(b, ",\"reverse\":true"...)
 	}
 	if len(b) == s {
 		return append(b, '{', '}')
@@ -4478,26 +6100,64 @@ func (m *HistoryRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"channel\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+10)
+			}
+		case 1:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"limit\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 2:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"since\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 3:
+			if len(b)-i >= 10 && string(b[i:i+10]) == "\"reverse\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+10)
+			}
 		}
-		switch string(key) {
-		case "channel":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "channel":
+				id = 0
+			case "limit":
+				id = 1
+			case "since":
+				id = 2
+			case "reverse":
+				id = 3
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Channel)
-		case "limit":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.Int(b, i, &m.Limit)
-		case "since":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
@@ -4511,12 +6171,14 @@ func (m *HistoryRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 				}
 				i = m.Since.DecodeJSON(b, i, f)
 			}
-		case "reverse":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.Bool(b, i, &m.Reverse)
+			next = 4
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4575,14 +6237,43 @@ func (m *HistoryResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 15 && string(b[i:i+15]) == "\"publications\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+15)
+			}
+		case 1:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"epoch\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+8)
+			}
+		case 2:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"offset\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+9)
+			}
 		}
-		switch string(key) {
-		case "publications":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "publications":
+				id = 0
+			case "epoch":
+				id = 1
+			case "offset":
+				id = 2
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
@@ -4636,18 +6327,21 @@ func (m *HistoryResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "epoch":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Epoch)
-		case "offset":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.Uint(b, i, &m.Offset)
+			next = 3
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4685,12 +6379,10 @@ func (m *PingRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
+		_, i = cfjson.Key(b, i, f)
 		if i < 0 {
 			return i
 		}
-		_ = key
 		i = cfjson.Skip(b, i, f)
 		if i < 0 {
 			return i
@@ -4726,12 +6418,10 @@ func (m *PingResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
+		_, i = cfjson.Key(b, i, f)
 		if i < 0 {
 			return i
 		}
-		_ = key
 		i = cfjson.Skip(b, i, f)
 		if i < 0 {
 			return i
@@ -4780,25 +6470,49 @@ func (m *RPCRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 1:
+			if len(b)-i >= 9 && string(b[i:i+9]) == "\"method\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+9)
+			}
 		}
-		switch string(key) {
-		case "data":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "data":
+				id = 0
+			case "method":
+				id = 1
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
-		case "method":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Method)
+			next = 2
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4845,19 +6559,31 @@ func (m *RPCResult) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+7)
 		}
-		switch string(key) {
-		case "data":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "data" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -4904,19 +6630,31 @@ func (m *SendRequest) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		if next == 0 && len(b)-i >= 7 && string(b[i:i+7]) == "\"data\":" {
+			id = 0
+			i = cfjson.SkipSpace(b, i+7)
 		}
-		switch string(key) {
-		case "data":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			if string(key) == "data" {
+				id = 0
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.Raw(b, i, f, (*[]byte)(&m.Data))
+			next = 1
 		default:
 			i = cfjson.Skip(b, i, f)
 		}
@@ -5004,38 +6742,92 @@ func (m *FilterNode) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 		return i + 1
 	}
 	var seen0 uint64
+	next := 0
 	for {
-		var key []byte
-		key, i = cfjson.Key(b, i, f)
-		if i < 0 {
-			return i
+		id := -1
+		switch next {
+		case 0:
+			if len(b)-i >= 5 && string(b[i:i+5]) == "\"op\":" {
+				id = 0
+				i = cfjson.SkipSpace(b, i+5)
+			}
+		case 1:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"key\":" {
+				id = 1
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 2:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"cmp\":" {
+				id = 2
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 3:
+			if len(b)-i >= 6 && string(b[i:i+6]) == "\"val\":" {
+				id = 3
+				i = cfjson.SkipSpace(b, i+6)
+			}
+		case 4:
+			if len(b)-i >= 7 && string(b[i:i+7]) == "\"vals\":" {
+				id = 4
+				i = cfjson.SkipSpace(b, i+7)
+			}
+		case 5:
+			if len(b)-i >= 8 && string(b[i:i+8]) == "\"nodes\":" {
+				id = 5
+				i = cfjson.SkipSpace(b, i+8)
+			}
 		}
-		switch string(key) {
-		case "op":
+		if id < 0 {
+			var key []byte
+			key, i = cfjson.Key(b, i, f)
+			if i < 0 {
+				return i
+			}
+			switch string(key) {
+			case "op":
+				id = 0
+			case "key":
+				id = 1
+			case "cmp":
+				id = 2
+			case "val":
+				id = 3
+			case "vals":
+				id = 4
+			case "nodes":
+				id = 5
+			}
+		}
+		switch id {
+		case 0:
 			if seen0&0x1 != 0 {
 				return ^i
 			}
 			seen0 |= 0x1
 			i = cfjson.String(b, i, f, &m.Op)
-		case "key":
+			next = 1
+		case 1:
 			if seen0&0x2 != 0 {
 				return ^i
 			}
 			seen0 |= 0x2
 			i = cfjson.String(b, i, f, &m.Key)
-		case "cmp":
+			next = 2
+		case 2:
 			if seen0&0x4 != 0 {
 				return ^i
 			}
 			seen0 |= 0x4
 			i = cfjson.String(b, i, f, &m.Cmp)
-		case "val":
+			next = 3
+		case 3:
 			if seen0&0x8 != 0 {
 				return ^i
 			}
 			seen0 |= 0x8
 			i = cfjson.String(b, i, f, &m.Val)
-		case "vals":
+			next = 4
+		case 4:
 			if seen0&0x10 != 0 {
 				return ^i
 			}
@@ -5084,7 +6876,8 @@ func (m *FilterNode) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
-		case "nodes":
+			next = 5
+		case 5:
 			if seen0&0x20 != 0 {
 				return ^i
 			}
@@ -5138,6 +6931,7 @@ func (m *FilterNode) DecodeJSON(b []byte, i int, f cfjson.Flags) int {
 					}
 				}
 			}
+			next = 6
 		default:
 			i = cfjson.Skip(b, i, f)
 		}

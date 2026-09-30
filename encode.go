@@ -122,142 +122,142 @@ func NewProtobufPushEncoder() *ProtobufPushEncoder {
 
 // Encode Push to bytes.
 func (e *ProtobufPushEncoder) Encode(message *Push) ([]byte, error) {
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodePublication to bytes.
 func (e *ProtobufPushEncoder) EncodePublication(message *Publication, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeMessage to bytes.
 func (e *ProtobufPushEncoder) EncodeMessage(message *Message, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeJoin to bytes.
 func (e *ProtobufPushEncoder) EncodeJoin(message *Join, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeLeave to bytes.
 func (e *ProtobufPushEncoder) EncodeLeave(message *Leave, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeUnsubscribe to bytes.
 func (e *ProtobufPushEncoder) EncodeUnsubscribe(message *Unsubscribe, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeSubscribe to bytes.
 func (e *ProtobufPushEncoder) EncodeSubscribe(message *Subscribe, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeConnect to bytes.
 func (e *ProtobufPushEncoder) EncodeConnect(message *Connect, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeDisconnect to bytes.
 func (e *ProtobufPushEncoder) EncodeDisconnect(message *Disconnect, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeRefresh to bytes.
 func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // ReplyEncoder encodes Reply to bytes. Use GetReplyEncoder to get an
@@ -295,7 +295,7 @@ func NewProtobufReplyEncoder() *ProtobufReplyEncoder {
 
 // Encode Reply to bytes.
 func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
-	return r.MarshalVT()
+	return r.MarshalCF()
 }
 
 // DataEncoder concatenates already encoded messages into a single transport
@@ -494,57 +494,57 @@ func NewProtobufResultEncoder() *ProtobufResultEncoder {
 
 // EncodeConnectResult encodes ConnectResult to bytes.
 func (e *ProtobufResultEncoder) EncodeConnectResult(res *ConnectResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeRefreshResult encodes RefreshResult to bytes.
 func (e *ProtobufResultEncoder) EncodeRefreshResult(res *RefreshResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeSubscribeResult encodes SubscribeResult to bytes.
 func (e *ProtobufResultEncoder) EncodeSubscribeResult(res *SubscribeResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeSubRefreshResult encodes SubRefreshResult to bytes.
 func (e *ProtobufResultEncoder) EncodeSubRefreshResult(res *SubRefreshResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeUnsubscribeResult encodes UnsubscribeResult to bytes.
 func (e *ProtobufResultEncoder) EncodeUnsubscribeResult(res *UnsubscribeResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodePublishResult encodes PublishResult to bytes.
 func (e *ProtobufResultEncoder) EncodePublishResult(res *PublishResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodePresenceResult encodes PresenceResult to bytes.
 func (e *ProtobufResultEncoder) EncodePresenceResult(res *PresenceResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodePresenceStatsResult encodes PresenceStatsResult to bytes.
 func (e *ProtobufResultEncoder) EncodePresenceStatsResult(res *PresenceStatsResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeHistoryResult encodes HistoryResult to bytes.
 func (e *ProtobufResultEncoder) EncodeHistoryResult(res *HistoryResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodePingResult encodes PingResult to bytes.
 func (e *ProtobufResultEncoder) EncodePingResult(res *PingResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeRPCResult encodes RPCResult to bytes.
 func (e *ProtobufResultEncoder) EncodeRPCResult(res *RPCResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // CommandEncoder encodes Command to bytes. It's the client-side counterpart of
@@ -582,12 +582,12 @@ func NewProtobufCommandEncoder() *ProtobufCommandEncoder {
 // Encode Command to bytes prefixed with the command length encoded as a varint,
 // so that encoded commands may be sent one after another in a single frame.
 func (e *ProtobufCommandEncoder) Encode(cmd *Command) ([]byte, error) {
-	size := cmd.SizeVT()
+	size := cmd.SizeCF()
 	var prefix [binary.MaxVarintLen64]byte
 	prefixLen := binary.PutUvarint(prefix[:], uint64(size)) //nolint:gosec // G115: a size is never negative.
 	out := make([]byte, prefixLen+size)
 	copy(out, prefix[:prefixLen])
-	if _, err := cmd.MarshalToSizedBufferVT(out[prefixLen:]); err != nil {
+	if _, err := cmd.MarshalToSizedBufferCF(out[prefixLen:]); err != nil {
 		return nil, err
 	}
 	return out, nil

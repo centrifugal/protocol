@@ -29,8 +29,9 @@ type Config struct {
 	// Types limits generation to the listed structs. All structs of Files
 	// which have fields with a protobuf tag are used if it is empty.
 	Types []string
-	// Suffix is what the names of generated methods end with: MarshalVT,
-	// UnmarshalVT and so on by default, the names vtprotobuf uses.
+	// Suffix is what the names of generated methods end with: MarshalCF,
+	// UnmarshalCF and so on by default. With "VT" they are the names
+	// vtprotobuf uses.
 	Suffix string
 	// Runtime is the import path of the cfprotobuf runtime package.
 	Runtime string
@@ -102,7 +103,7 @@ var scalarKinds = map[string]bool{
 // selects.
 func Generate(cfg Config) ([]byte, error) {
 	if cfg.Suffix == "" {
-		cfg.Suffix = "VT"
+		cfg.Suffix = "CF"
 	}
 	if cfg.Runtime == "" {
 		cfg.Runtime = DefaultRuntime

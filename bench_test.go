@@ -136,7 +136,7 @@ func BenchmarkReplyMarshalProtobuf(b *testing.B) {
 // 		res.Ping = 25
 // 		res.Pong = true
 // 		r := ReplyPool.AcquireConnectReply(res)
-// 		buf := getByteBuffer(r.SizeVT())
+// 		buf := getByteBuffer(r.SizeCF())
 // 		d, err := marshalProtobufConnectNoCopy(r, buf.B)
 // 		if err != nil {
 // 			b.Fatal(err)
@@ -194,7 +194,7 @@ func BenchmarkReplyMarshalProtobufParallel(b *testing.B) {
 // 			res.Ping = 25
 // 			res.Pong = true
 // 			r := ReplyPool.AcquireConnectReply(res)
-// 			buf := getByteBuffer(r.SizeVT())
+// 			buf := getByteBuffer(r.SizeCF())
 // 			d, err := marshalProtobufConnectNoCopy(r, buf.B)
 // 			if err != nil {
 // 				b.Fatal(err)
@@ -246,7 +246,7 @@ func BenchmarkReplyMarshalJSON(b *testing.B) {
 // 		res.Ping = 25
 // 		res.Pong = true
 // 		r := ReplyPool.AcquireConnectReply(res)
-// 		buf := getByteBuffer(r.SizeVT())
+// 		buf := getByteBuffer(r.SizeCF())
 // 		d, err := marshalJSONConnectNoCopy(r, buf.B)
 // 		if err != nil {
 // 			b.Fatal(err)
@@ -304,7 +304,7 @@ func BenchmarkReplyMarshalJSONParallel(b *testing.B) {
 // 			res.Ping = 25
 // 			res.Pong = true
 // 			r := ReplyPool.AcquireConnectReply(res)
-// 			buf := getByteBuffer(r.SizeVT())
+// 			buf := getByteBuffer(r.SizeCF())
 // 			d, err := marshalJSONConnectNoCopy(r, buf.B)
 // 			if err != nil {
 // 				b.Fatal(err)

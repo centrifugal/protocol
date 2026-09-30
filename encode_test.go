@@ -41,7 +41,7 @@ func TestEncodeStd(t *testing.T) {
 // protoMessage is the part of a generated message this file needs to decode a
 // payload an encoder produced, whichever protocol Type it was encoded with.
 type protoMessage interface {
-	UnmarshalVT([]byte) error
+	UnmarshalCF([]byte) error
 }
 
 // decodeInto parses data produced by a PushEncoder or a ResultEncoder back into
@@ -52,7 +52,7 @@ func decodeInto(t *testing.T, protoType Type, data []byte, msg protoMessage) {
 		require.NoError(t, json.Unmarshal(data, msg))
 		return
 	}
-	require.NoError(t, msg.UnmarshalVT(data))
+	require.NoError(t, msg.UnmarshalCF(data))
 }
 
 func TestPushEncoder_Encode(t *testing.T) {

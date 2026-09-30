@@ -75,19 +75,21 @@ func TestAppendString(t *testing.T) {
 	}
 }
 
-// The fast path looks at 8 bytes at a time, so a byte which needs escaping
+// The fast path looks at 8 or 32 bytes at a time, so a byte which needs escaping
 // must be noticed at every position of a word, and in the tail after the last
 // full word.
 func TestAppendString_EveryByteEveryPosition(t *testing.T) {
 	for c := 0; c < 256; c++ {
-		for size := 1; size <= 40; size++ {
+		// Long strings are looked at four words at a time: the sizes go
+		// through three such steps and every tail after them.
+		for size := 1; size <= 110; size++ {
 			for pos := 0; pos < size; pos++ {
 				in := []byte(strings.Repeat("a", size))
 				in[pos] = byte(c)
 				want := appendStringSlow([]byte(`x"`), string(in))
 				// Short strings are written in another way when the buffer
 				// has room for them, so try with and without room.
-				for _, room := range []int{0, 64} {
+				for _, room := range []int{0, 128} {
 					buf := make([]byte, 1, 1+room)
 					buf[0] = 'x'
 					if got := AppendString(buf, string(in)); !bytes.Equal(got, want) {

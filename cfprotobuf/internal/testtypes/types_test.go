@@ -259,35 +259,35 @@ func TestMarshalMatchesReference(t *testing.T) {
 		m := randomAll(r, 1)
 		want := refAll(m)
 
-		got, err := m.MarshalVT()
+		got, err := m.MarshalCF()
 		if err != nil {
 			t.Fatal(err)
 		}
 		if !bytes.Equal(got, want) {
-			t.Fatalf("MarshalVT of %+v:\n got %x\nwant %x", m, got, want)
+			t.Fatalf("MarshalCF of %+v:\n got %x\nwant %x", m, got, want)
 		}
-		if size := m.SizeVT(); size != len(want) {
-			t.Fatalf("SizeVT = %d, the encoding has %d bytes", size, len(want))
+		if size := m.SizeCF(); size != len(want) {
+			t.Fatalf("SizeCF = %d, the encoding has %d bytes", size, len(want))
 		}
 
-		// MarshalToVT writes to the beginning of a buffer.
+		// MarshalToCF writes to the beginning of a buffer.
 		buf := bytes.Repeat([]byte{0xAA}, len(want)+10)
-		written, err := m.MarshalToVT(buf)
+		written, err := m.MarshalToCF(buf)
 		if err != nil || written != len(want) || !bytes.Equal(buf[:written], want) {
-			t.Fatalf("MarshalToVT wrote %d bytes, %v", written, err)
+			t.Fatalf("MarshalToCF wrote %d bytes, %v", written, err)
 		}
 		if !bytes.Equal(buf[written:], bytes.Repeat([]byte{0xAA}, 10)) {
-			t.Fatal("MarshalToVT wrote past the encoding")
+			t.Fatal("MarshalToCF wrote past the encoding")
 		}
 
-		// MarshalToSizedBufferVT writes to the end of one.
+		// MarshalToSizedBufferCF writes to the end of one.
 		buf = bytes.Repeat([]byte{0xAA}, len(want)+10)
-		written, err = m.MarshalToSizedBufferVT(buf)
+		written, err = m.MarshalToSizedBufferCF(buf)
 		if err != nil || written != len(want) || !bytes.Equal(buf[10:], want) {
-			t.Fatalf("MarshalToSizedBufferVT wrote %d bytes, %v", written, err)
+			t.Fatalf("MarshalToSizedBufferCF wrote %d bytes, %v", written, err)
 		}
 		if !bytes.Equal(buf[:10], bytes.Repeat([]byte{0xAA}, 10)) {
-			t.Fatal("MarshalToSizedBufferVT wrote before the encoding")
+			t.Fatal("MarshalToSizedBufferCF wrote before the encoding")
 		}
 	}
 }
@@ -298,15 +298,15 @@ func TestRoundTrip(t *testing.T) {
 	r := rand.New(rand.NewSource(2))
 	for n := 0; n < 20000; n++ {
 		m := randomAll(r, 4)
-		data, err := m.MarshalVT()
+		data, err := m.MarshalCF()
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(data) != m.SizeVT() {
-			t.Fatalf("SizeVT = %d, the encoding has %d bytes", m.SizeVT(), len(data))
+		if len(data) != m.SizeCF() {
+			t.Fatalf("SizeCF = %d, the encoding has %d bytes", m.SizeCF(), len(data))
 		}
 		got := new(All)
-		if err := got.UnmarshalVT(data); err != nil {
+		if err := got.UnmarshalCF(data); err != nil {
 			t.Fatalf("%v: %x", err, data)
 		}
 		if !reflect.DeepEqual(got, m) {
@@ -324,29 +324,29 @@ func TestRoundTrip(t *testing.T) {
 
 func TestNil(t *testing.T) {
 	var m *All
-	data, err := m.MarshalVT()
+	data, err := m.MarshalCF()
 	if data != nil || err != nil {
-		t.Fatalf("MarshalVT of nil = %v, %v", data, err)
+		t.Fatalf("MarshalCF of nil = %v, %v", data, err)
 	}
-	if m.SizeVT() != 0 {
-		t.Fatal("SizeVT of nil is not 0")
+	if m.SizeCF() != 0 {
+		t.Fatal("SizeCF of nil is not 0")
 	}
-	if n, err := m.MarshalToSizedBufferVT(nil); n != 0 || err != nil {
-		t.Fatalf("MarshalToSizedBufferVT of nil = %d, %v", n, err)
+	if n, err := m.MarshalToSizedBufferCF(nil); n != 0 || err != nil {
+		t.Fatalf("MarshalToSizedBufferCF of nil = %d, %v", n, err)
 	}
-	data, _ = new(Empty).MarshalVT()
+	data, _ = new(Empty).MarshalCF()
 	if len(data) != 0 {
 		t.Fatalf("an empty message is %x", data)
 	}
 	// A nil element of a repeated field and a nil map value are empty
 	// messages.
 	m = &All{Leaves: []*Leaf{nil, {ID: 1}}, LeafMap: map[string]*Leaf{"k": nil}}
-	data, _ = m.MarshalVT()
+	data, _ = m.MarshalCF()
 	if want := refAll(m); !bytes.Equal(data, want) {
 		t.Fatalf("got %x, want %x", data, want)
 	}
 	got := new(All)
-	if err := got.UnmarshalVT(data); err != nil {
+	if err := got.UnmarshalCF(data); err != nil {
 		t.Fatal(err)
 	}
 	if len(got.Leaves) != 2 || got.Leaves[0] == nil || got.Leaves[1].ID != 1 {
@@ -360,10 +360,10 @@ func TestNil(t *testing.T) {
 // Decoding into a message which has something in it merges, the way Protobuf
 // defines it.
 func TestUnmarshalMerges(t *testing.T) {
-	first, _ := (&All{String: "a", Leaf: &Leaf{ID: 1}, Strings: []string{"x"}, StrMap: map[string]string{"k": "1", "only": "first"}, Bytes: []byte("b")}).MarshalVT()
-	second, _ := (&All{Int32: 5, Leaf: &Leaf{Text: "t"}, Strings: []string{"y"}, StrMap: map[string]string{"k": "2"}}).MarshalVT()
+	first, _ := (&All{String: "a", Leaf: &Leaf{ID: 1}, Strings: []string{"x"}, StrMap: map[string]string{"k": "1", "only": "first"}, Bytes: []byte("b")}).MarshalCF()
+	second, _ := (&All{Int32: 5, Leaf: &Leaf{Text: "t"}, Strings: []string{"y"}, StrMap: map[string]string{"k": "2"}}).MarshalCF()
 	m := new(All)
-	if err := m.UnmarshalVT(append(first, second...)); err != nil {
+	if err := m.UnmarshalCF(append(first, second...)); err != nil {
 		t.Fatal(err)
 	}
 	want := &All{String: "a", Int32: 5, Leaf: &Leaf{ID: 1, Text: "t"}, Strings: []string{"x", "y"},
@@ -372,7 +372,7 @@ func TestUnmarshalMerges(t *testing.T) {
 		t.Fatalf("got %+v", m)
 	}
 	// A bytes field which is present but empty is not nil.
-	if err := m.UnmarshalVT([]byte{0x12, 0x00, 0x1a, 0x00}); err != nil {
+	if err := m.UnmarshalCF([]byte{0x12, 0x00, 0x1a, 0x00}); err != nil {
 		t.Fatal(err)
 	}
 	if m.Bytes == nil || len(m.Bytes) != 0 || m.Raw == nil {
@@ -390,27 +390,27 @@ func TestUnknownFields(t *testing.T) {
 		0xbd, 0x06, 1, 2, 3, 4, // field 103, fixed32
 		0xc3, 0x06, 0x08, 0x01, 0xcb, 0x06, 0x10, 0x02, 0xcc, 0x06, 0xc4, 0x06, // field 104, a group with a group in it
 	}
-	known, _ := (&All{String: "s", Uint32: 7}).MarshalVT()
+	known, _ := (&All{String: "s", Uint32: 7}).MarshalCF()
 	m := new(All)
-	if err := m.UnmarshalVT(append(append([]byte{}, unknown...), known...)); err != nil {
+	if err := m.UnmarshalCF(append(append([]byte{}, unknown...), known...)); err != nil {
 		t.Fatal(err)
 	}
 	if m.String != "s" || m.Uint32 != 7 || !bytes.Equal(m.Unknown(), unknown) {
 		t.Fatalf("got %+v", m)
 	}
-	data, _ := m.MarshalVT()
+	data, _ := m.MarshalCF()
 	if want := append(append([]byte{}, known...), unknown...); !bytes.Equal(data, want) {
 		t.Fatalf("got %x, want %x", data, want)
 	}
-	if m.SizeVT() != len(data) {
-		t.Fatal("SizeVT does not count unknown fields")
+	if m.SizeCF() != len(data) {
+		t.Fatal("SizeCF does not count unknown fields")
 	}
 
 	var n NoUnknown
-	if err := n.UnmarshalVT(append([]byte{0x08, 0x03}, unknown...)); err != nil {
+	if err := n.UnmarshalCF(append([]byte{0x08, 0x03}, unknown...)); err != nil {
 		t.Fatal(err)
 	}
-	if data, _ := n.MarshalVT(); !bytes.Equal(data, []byte{0x08, 0x03}) {
+	if data, _ := n.MarshalCF(); !bytes.Equal(data, []byte{0x08, 0x03}) {
 		t.Fatalf("got %x", data)
 	}
 }
@@ -446,7 +446,7 @@ func TestUnmarshalErrors(t *testing.T) {
 		{"error in a map value", []byte{0x8a, 0x01, 0x05, 0x12, 0x03, 0x12, 0x01, 0xff}, cfprotobuf.ErrInvalidUTF8},
 	}
 	for _, tt := range tests {
-		if err := new(All).UnmarshalVT(tt.data); !errors.Is(err, tt.want) {
+		if err := new(All).UnmarshalCF(tt.data); !errors.Is(err, tt.want) {
 			t.Errorf("%s: got %v, want %v", tt.name, err, tt.want)
 		}
 	}
@@ -454,7 +454,7 @@ func TestUnmarshalErrors(t *testing.T) {
 	// error: it is kept as a field the message does not know.
 	for _, data := range [][]byte{{0x08, 0x01}, {0x22, 0x01, 0x01}, {0x55, 1, 2, 3, 4}, {0x60, 0x01}, {0x0b, 0x0c}} {
 		m := new(All)
-		if err := m.UnmarshalVT(data); err != nil {
+		if err := m.UnmarshalCF(data); err != nil {
 			t.Errorf("%x: %v", data, err)
 		}
 		if !bytes.Equal(m.Unknown(), data) || m.String != "" || m.Bool || m.Leaf != nil {
@@ -462,18 +462,18 @@ func TestUnmarshalErrors(t *testing.T) {
 		}
 	}
 	// An end of a group is an error whatever its number is.
-	if err := new(All).UnmarshalVT([]byte{0x0c}); !errors.Is(err, cfprotobuf.ErrInvalidTag) {
+	if err := new(All).UnmarshalCF([]byte{0x0c}); !errors.Is(err, cfprotobuf.ErrInvalidTag) {
 		t.Errorf("got %v, want ErrInvalidTag", err)
 	}
 	// Bytes fields may hold anything, only strings must be UTF-8.
 	m := new(All)
-	if err := m.UnmarshalVT([]byte{0x12, 0x02, 0xff, 0xfe, 0x1a, 0x01, 0xc3}); err != nil || !bytes.Equal(m.Bytes, []byte{0xff, 0xfe}) {
+	if err := m.UnmarshalCF([]byte{0x12, 0x02, 0xff, 0xfe, 0x1a, 0x01, 0xc3}); err != nil || !bytes.Equal(m.Bytes, []byte{0xff, 0xfe}) {
 		t.Fatalf("got %v, %v", m.Bytes, err)
 	}
 	// In a map entry a field with an unexpected number or wire type is
 	// skipped, a missing key or value is the zero value.
 	m = new(All)
-	if err := m.UnmarshalVT([]byte{0x82, 0x01, 0x07, 0x08, 0x05, 0x1a, 0x01, 'x', 0x10, 0x01}); err != nil {
+	if err := m.UnmarshalCF([]byte{0x82, 0x01, 0x07, 0x08, 0x05, 0x1a, 0x01, 'x', 0x10, 0x01}); err != nil {
 		t.Fatal(err)
 	}
 	if v, ok := m.StrMap[""]; !ok || v != "" || len(m.StrMap) != 1 {
@@ -494,7 +494,7 @@ func TestDepthLimit(t *testing.T) {
 		return data
 	}
 	m := new(All)
-	if err := m.UnmarshalVT(nested(cfprotobuf.MaxDepth)); err != nil {
+	if err := m.UnmarshalCF(nested(cfprotobuf.MaxDepth)); err != nil {
 		t.Fatal(err)
 	}
 	depth := 1
@@ -505,10 +505,10 @@ func TestDepthLimit(t *testing.T) {
 		t.Fatalf("decoded %d levels", depth)
 	}
 	// It must marshal back, however deep it is.
-	if data, err := m.MarshalVT(); err != nil || !bytes.Equal(data, nested(cfprotobuf.MaxDepth)) {
+	if data, err := m.MarshalCF(); err != nil || !bytes.Equal(data, nested(cfprotobuf.MaxDepth)) {
 		t.Fatalf("marshaling a deep message: %v", err)
 	}
-	if err := new(All).UnmarshalVT(nested(cfprotobuf.MaxDepth + 1)); !errors.Is(err, cfprotobuf.ErrTooDeep) {
+	if err := new(All).UnmarshalCF(nested(cfprotobuf.MaxDepth + 1)); !errors.Is(err, cfprotobuf.ErrTooDeep) {
 		t.Fatalf("got %v, want ErrTooDeep", err)
 	}
 
@@ -522,7 +522,7 @@ func TestDepthLimit(t *testing.T) {
 		}
 	}
 	// The last level added is a Ping.
-	if err := new(Ping).UnmarshalVT(data); !errors.Is(err, cfprotobuf.ErrTooDeep) {
+	if err := new(Ping).UnmarshalCF(data); !errors.Is(err, cfprotobuf.ErrTooDeep) {
 		t.Fatalf("got %v, want ErrTooDeep", err)
 	}
 
@@ -531,8 +531,8 @@ func TestDepthLimit(t *testing.T) {
 	for n := 0; n < 50000; n++ {
 		wide.Leaves = append(wide.Leaves, &Leaf{ID: 1})
 	}
-	data, _ = wide.MarshalVT()
-	if err := new(All).UnmarshalVT(data); err != nil {
+	data, _ = wide.MarshalCF()
+	if err := new(All).UnmarshalCF(data); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -542,7 +542,7 @@ func TestDepthLimit(t *testing.T) {
 func FuzzUnmarshal(f *testing.F) {
 	r := rand.New(rand.NewSource(3))
 	for n := 0; n < 50; n++ {
-		data, _ := randomAll(r, 2).MarshalVT()
+		data, _ := randomAll(r, 2).MarshalCF()
 		if len(data) < 4096 {
 			f.Add(data)
 		}
@@ -551,30 +551,30 @@ func FuzzUnmarshal(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
 		input := bytes.Clone(data)
 		m := new(All)
-		err := m.UnmarshalVT(data)
+		err := m.UnmarshalCF(data)
 		if !bytes.Equal(input, data) {
 			t.Fatal("decoding modified the input")
 		}
 		if err != nil {
 			return
 		}
-		encoded, err := m.MarshalVT()
+		encoded, err := m.MarshalCF()
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(encoded) != m.SizeVT() {
-			t.Fatalf("SizeVT = %d, the encoding has %d bytes", m.SizeVT(), len(encoded))
+		if len(encoded) != m.SizeCF() {
+			t.Fatalf("SizeCF = %d, the encoding has %d bytes", m.SizeCF(), len(encoded))
 		}
 		// The first round trip may change the message in one way: a bytes
 		// field which was present and empty is not written, so it comes back
 		// nil. After that nothing may change.
 		first := new(All)
-		if err := first.UnmarshalVT(encoded); err != nil {
+		if err := first.UnmarshalCF(encoded); err != nil {
 			t.Fatalf("own output does not decode: %v", err)
 		}
-		encoded, _ = first.MarshalVT()
+		encoded, _ = first.MarshalCF()
 		second := new(All)
-		if err := second.UnmarshalVT(encoded); err != nil {
+		if err := second.UnmarshalCF(encoded); err != nil {
 			t.Fatalf("own output does not decode: %v", err)
 		}
 		// NaN is not equal to itself, which DeepEqual respects.

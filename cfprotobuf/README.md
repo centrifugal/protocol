@@ -9,8 +9,9 @@ It was written to replace
 `github.com/centrifugal/protocol`. vtprotobuf is not a part of
 `google.golang.org/protobuf`, and the code it generates is what reads bytes
 from the network, so it is code worth having control over. The generated
-methods have the same names and produce the same bytes, which makes it a
-drop-in replacement.
+methods do the same and produce the same bytes. They are named after this
+package, `MarshalCF` where vtprotobuf has `MarshalVT`; generated with
+`-suffix VT` they are a drop-in replacement.
 
 The messages stay regular Protobuf messages: the structs still come from
 `protoc-gen-go`, and everything in `google.golang.org/protobuf` (reflection,
@@ -34,28 +35,28 @@ generated for every struct which has fields with a `protobuf` tag.
 | --- | --- |
 | `-out` | Output file. Defaults to the first input file with the `_cfprotobuf.go` suffix. |
 | `-types` | Comma-separated structs to generate code for. All messages of the input files by default. |
-| `-suffix` | What the names of generated methods end with, `VT` by default. |
+| `-suffix` | What the names of generated methods end with, `CF` by default. `VT` gives the names vtprotobuf uses. |
 | `-drop-unknown` | Do not keep the fields a message does not have when decoding. |
 | `-runtime` | Import path of this package, for when it is moved or vendored. |
 
 For every message the generator writes:
 
 ```go
-// MarshalVT returns the Protobuf encoding of m.
-func (m *T) MarshalVT() ([]byte, error)
+// MarshalCF returns the Protobuf encoding of m.
+func (m *T) MarshalCF() ([]byte, error)
 
-// MarshalToVT writes the encoding to the beginning of b, which must have
-// room for SizeVT bytes.
-func (m *T) MarshalToVT(b []byte) (int, error)
+// MarshalToCF writes the encoding to the beginning of b, which must have
+// room for SizeCF bytes.
+func (m *T) MarshalToCF(b []byte) (int, error)
 
-// MarshalToSizedBufferVT writes the encoding to the end of b.
-func (m *T) MarshalToSizedBufferVT(b []byte) (int, error)
+// MarshalToSizedBufferCF writes the encoding to the end of b.
+func (m *T) MarshalToSizedBufferCF(b []byte) (int, error)
 
-// SizeVT returns the size of the encoding.
-func (m *T) SizeVT() int
+// SizeCF returns the size of the encoding.
+func (m *T) SizeCF() int
 
-// UnmarshalVT decodes the encoding of a message from b into m.
-func (m *T) UnmarshalVT(b []byte) error
+// UnmarshalCF decodes the encoding of a message from b into m.
+func (m *T) UnmarshalCF(b []byte) error
 ```
 
 The generator reads field numbers and encodings from the struct tags

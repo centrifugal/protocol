@@ -138,16 +138,19 @@ func TestJSONStreamCommandDecoder_LimitAppliesToEveryCommand(t *testing.T) {
 }
 
 // A limit equal to the size of a command lets it through, one byte less does
-// not: around the size of the buffer of the reader too.
+// not: around the size of the buffer of the reader too. The delimiter after
+// a command is not a part of it, whether it is a newline or CRLF.
 func TestJSONStreamCommandDecoder_LimitBoundary(t *testing.T) {
 	for _, size := range []int{10, 4000, 4090, 4096, 4100, 9000} {
 		cmd := &Command{Id: 1, Publish: &PublishRequest{Channel: strings.Repeat("a", size), Data: Raw(`{}`)}}
 		frame := commandFrame(t, TypeJSON, cmd)
+		for _, delimiter := range []string{"", "\n", "\r\n"} {
+			delimited := append(bytes.Clone(frame), delimiter...)
+			requireCommands(t, []*Command{cmd}, readStream(t, newStream(t, TypeJSON, delimited, int64(len(frame)))))
 
-		requireCommands(t, []*Command{cmd}, readStream(t, newStream(t, TypeJSON, frame, int64(len(frame)))))
-
-		_, _, err := newStream(t, TypeJSON, frame, int64(len(frame))-1).Decode()
-		require.ErrorIs(t, err, ErrMessageTooLarge, "size %d", size)
+			_, _, err := newStream(t, TypeJSON, delimited, int64(len(frame))-1).Decode()
+			require.ErrorIs(t, err, ErrMessageTooLarge, "size %d, delimiter %q", size, delimiter)
+		}
 	}
 }
 

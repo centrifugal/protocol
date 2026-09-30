@@ -261,16 +261,25 @@ func Generate(cfg Config) ([]byte, error) {
 		return nil, methodsErr
 	}
 	if len(cfg.Types) > 0 {
+		order = order[:0]
 		for _, name := range cfg.Types {
+			// An alias is the struct it names.
 			d := local.decls[name]
+			for seen := 0; d != nil && d.alias && seen < 20; seen++ {
+				id, ok := d.expr.(*ast.Ident)
+				if !ok {
+					break
+				}
+				name, d = id.Name, local.decls[id.Name]
+			}
 			if d == nil {
 				return nil, fmt.Errorf("type %s is not a struct declared in the input files", name)
 			}
 			if _, ok := d.expr.(*ast.StructType); !ok {
 				return nil, fmt.Errorf("type %s is not a struct declared in the input files", name)
 			}
+			order = append(order, name)
 		}
-		order = cfg.Types
 	}
 	for _, name := range order {
 		if g.raw[name] {
@@ -390,6 +399,7 @@ func siblingMethods(p *pkgInfo, files []string, out string) error {
 			}
 		}
 	}
+	p.foldAliasMethods()
 	return nil
 }
 
@@ -400,14 +410,52 @@ func (p *pkgInfo) addMethod(d *ast.FuncDecl) {
 		return
 	}
 	recv := d.Recv.List[0].Type
-	if star, ok := recv.(*ast.StarExpr); ok {
-		recv = star.X
+	for {
+		switch r := recv.(type) {
+		case *ast.StarExpr:
+			recv = r.X
+			continue
+		case *ast.ParenExpr:
+			recv = r.X
+			continue
+		}
+		break
 	}
 	if id, ok := recv.(*ast.Ident); ok {
 		if p.methods[id.Name] == nil {
 			p.methods[id.Name] = map[string]bool{}
 		}
 		p.methods[id.Name][d.Name.Name] = true
+	}
+}
+
+// foldAliasMethods gives the methods declared on an alias to the type it is
+// an alias of: that is the type Go declares them on. An alias of a type of
+// another package cannot have methods.
+func (p *pkgInfo) foldAliasMethods() {
+	for name, d := range p.decls {
+		if !d.alias {
+			continue
+		}
+		// Through a chain of aliases to the type at its end.
+		target, ok := d.expr.(*ast.Ident)
+		for seen := 0; ok && seen < 20; seen++ {
+			next := p.decls[target.Name]
+			if next == nil || !next.alias {
+				break
+			}
+			target, ok = next.expr.(*ast.Ident)
+		}
+		if !ok || p.decls[target.Name] == nil {
+			continue
+		}
+		for method := range p.methods[name] {
+			if p.methods[target.Name] == nil {
+				p.methods[target.Name] = map[string]bool{}
+			}
+			p.methods[target.Name][method] = true
+		}
+		delete(p.methods, name)
 	}
 }
 
@@ -461,6 +509,7 @@ func parsePackage(path string, files []string) (*pkgInfo, []string, error) {
 	if p.name == "" {
 		return nil, nil, fmt.Errorf("no input files")
 	}
+	p.foldAliasMethods()
 	return p, order, nil
 }
 

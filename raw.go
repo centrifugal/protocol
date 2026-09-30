@@ -25,13 +25,17 @@ type Raw []byte
 //
 // The returned slice may alias r, so it must not be modified.
 func (r Raw) MarshalJSON() ([]byte, error) {
-	if r == nil {
-		return []byte("null"), nil
-	}
 	if !bytes.Contains(r, []byte("\n")) {
+		if len(r) == 0 {
+			return []byte("null"), nil
+		}
 		return r, nil
 	}
-	return bytes.ReplaceAll(r, []byte("\n"), []byte("")), nil
+	if stripped := bytes.ReplaceAll(r, []byte("\n"), []byte("")); len(stripped) > 0 {
+		return stripped, nil
+	}
+	// Nothing, or nothing but newlines: null, as cfjson.AppendRaw writes it.
+	return []byte("null"), nil
 }
 
 // UnmarshalJSON sets *r to a copy of data.

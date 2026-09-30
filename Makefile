@@ -23,10 +23,9 @@ bench:
 REF ?= master
 COUNT ?= 6
 bench-compare:
-	@dir=$$(mktemp -d) && git worktree add -q --detach "$$dir" "$(REF)" && \
-	cp bench_test.go "$$dir/" && \
-	(cd "$$dir" && go test -run=^$$ -bench=. -benchmem -count=$(COUNT) .) > bench.ref.txt; \
-	status=$$?; git worktree remove --force "$$dir"; [ $$status -eq 0 ] || exit $$status
+	@dir=$$(mktemp -d) && trap 'git worktree remove --force "$$dir" 2>/dev/null; rm -rf "$$dir"' EXIT INT TERM && \
+	git worktree add -q --detach "$$dir" "$(REF)" && cp bench_test.go "$$dir/" && \
+	(cd "$$dir" && go test -run=^$$ -bench=. -benchmem -count=$(COUNT) .) > bench.ref.txt
 	go test -run=^$$ -bench=. -benchmem -count=$(COUNT) . > bench.head.txt
 	benchstat bench.ref.txt bench.head.txt
 

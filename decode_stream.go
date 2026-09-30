@@ -195,10 +195,14 @@ func readBudget(messageSizeLimit int64) int64 {
 // the last command in a frame carries none, so counting it would make the size
 // limit depend on where in the frame a command sits.
 func commandLen(cmdBytes []byte) int {
-	if n := len(cmdBytes); n > 0 && cmdBytes[n-1] == '\n' {
-		return n - 1
+	n := len(cmdBytes)
+	if n > 0 && cmdBytes[n-1] == '\n' {
+		n--
 	}
-	return len(cmdBytes)
+	if n > 0 && cmdBytes[n-1] == '\r' {
+		n--
+	}
+	return n
 }
 
 // readLine returns the next `\n` terminated command, including the delimiter.

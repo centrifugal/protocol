@@ -28,6 +28,9 @@ func TestGeneratedJSONCodeIsUpToDate(t *testing.T) {
 		Files:          []string{"client.pb.go"},
 		RawTypes:       []string{"Raw"},
 		ValidRawMethod: "validRaw",
+		// As generate.sh runs it, the output file not counted as a file of
+		// the package.
+		Out: "client.pb_cfjson.go",
 	})
 	require.NoError(t, err)
 	got, err := os.ReadFile("client.pb_cfjson.go")

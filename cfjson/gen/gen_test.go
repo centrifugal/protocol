@@ -441,3 +441,43 @@ type Top struct {
 		t.Fatalf("got error %v", err)
 	}
 }
+
+// Methods declared on an alias are methods of the type it names: that is
+// where Go puts them, and where the generator must look for them.
+func TestGenerate_MethodsOnAlias(t *testing.T) {
+	out, err := generate(t, Config{Types: []string{"T"}}, `package p
+
+type B struct{ N int }
+
+type A = B
+
+func (v A) MarshalJSON() ([]byte, error) { return nil, nil }
+
+func (v *(A)) UnmarshalJSON([]byte) error { return nil }
+
+type T struct {
+	B B
+	A A
+}
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"cfjson.AppendMarshaler(b, &m.B)", "cfjson.AppendMarshaler(b, &m.A)", "cfjson.DecodeUnmarshaler(b, i, f, &m.B)"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("no %q in generated code", want)
+		}
+	}
+	if strings.Contains(out, "func (m *B)") {
+		t.Error("methods generated for a type which has its own")
+	}
+
+	// An alias in -types is the struct it names.
+	out, err = generate(t, Config{Types: []string{"P"}}, "package p\n\ntype S struct{ N int }\n\ntype P = S\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "func (m *S) AppendJSON(") || strings.Contains(out, "func (m *P)") {
+		t.Fatalf("wrong methods for an alias in Types:\n%s", out)
+	}
+}

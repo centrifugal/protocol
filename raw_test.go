@@ -18,13 +18,15 @@ func TestRaw_MarshalJSON(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(std), string(raw))
 
-	// Nothing is null.
-	data, err := Raw(nil).MarshalJSON()
-	require.NoError(t, err)
-	require.Equal(t, "null", string(data))
+	// Nothing is null, as cfjson.AppendRaw writes it.
+	for _, raw := range []Raw{nil, {}, Raw("\n\n")} {
+		data, nullErr := raw.MarshalJSON()
+		require.NoError(t, nullErr)
+		require.Equal(t, "null", string(data))
+	}
 
 	// Newlines are dropped: they delimit messages in a frame.
-	data, err = Raw("{\n  \"key\": \"value\"\n}").MarshalJSON()
+	data, err := Raw("{\n  \"key\": \"value\"\n}").MarshalJSON()
 	require.NoError(t, err)
 	require.Equal(t, `{  "key": "value"}`, string(data))
 }

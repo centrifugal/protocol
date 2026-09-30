@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -213,14 +214,18 @@ func BenchmarkEncodeCommand(b *testing.B) {
 	}
 }
 
-// decodeFrame is what a server does with a frame a client sent.
-func decodeFrame(b *testing.B, protoType protocol.Type, frame []byte, want int) {
+// decodeFrame is what a server does with a frame a client sent. It returns
+// the last command, for the caller to keep: a benchmark which runs in
+// parallel must not write to a variable all goroutines share, or it measures
+// the contention on it.
+func decodeFrame(b *testing.B, protoType protocol.Type, frame []byte, want int) *protocol.Command {
 	decoder := protocol.GetCommandDecoder(protoType, frame)
 	n := 0
+	var last *protocol.Command
 	for {
 		cmd, err := decoder.Decode()
 		if cmd != nil {
-			sinkCommand = cmd
+			last = cmd
 			n++
 		}
 		if err != nil {
@@ -234,6 +239,7 @@ func decodeFrame(b *testing.B, protoType protocol.Type, frame []byte, want int) 
 	if n != want {
 		b.Fatalf("%d commands decoded, want %d", n, want)
 	}
+	return last
 }
 
 func BenchmarkDecodeFrame(b *testing.B) {
@@ -244,7 +250,7 @@ func BenchmarkDecodeFrame(b *testing.B) {
 				b.ReportAllocs()
 				b.SetBytes(int64(len(frame)))
 				for b.Loop() {
-					decodeFrame(b, protoType, frame, len(f.cmds))
+					sinkCommand = decodeFrame(b, protoType, frame, len(f.cmds))
 				}
 			})
 		}
@@ -258,9 +264,11 @@ func BenchmarkDecodeFrameParallel(b *testing.B) {
 		b.Run("type="+string(protoType)+"/msg="+f.name, func(b *testing.B) {
 			b.ReportAllocs()
 			b.RunParallel(func(pb *testing.PB) {
+				var last *protocol.Command
 				for pb.Next() {
-					decodeFrame(b, protoType, frame, len(f.cmds))
+					last = decodeFrame(b, protoType, frame, len(f.cmds))
 				}
+				runtime.KeepAlive(last)
 			})
 		})
 	}
@@ -348,14 +356,15 @@ func BenchmarkEncodePushParallel(b *testing.B) {
 			b.ReportAllocs()
 			encoder := protocol.GetPushEncoder(protoType)
 			b.RunParallel(func(pb *testing.PB) {
+				var data []byte
 				for pb.Next() {
-					data, err := encoder.Encode(p.push)
-					if err != nil {
+					var err error
+					if data, err = encoder.Encode(p.push); err != nil {
 						b.Error(err)
 						return
 					}
-					sinkBytes = data
 				}
+				runtime.KeepAlive(data)
 			})
 		})
 	}

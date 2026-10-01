@@ -152,6 +152,27 @@ the output is byte for byte the same:
 One case where easyjson does not produce valid JSON is handled differently:
 NaN and infinite floats are written as `null` rather than as `NaN` and `+Inf`.
 
+Compared with `encoding/json` (v1, and v2 where it differs), the differences
+are deliberate:
+
+- map keys are not sorted (`encoding/json` sorts them);
+- a nil slice or map is `null`, as in v1 (v2 writes `[]` and `{}`);
+- HTML characters are escaped, as in v1 (v2 does not escape them);
+- NaN and infinite floats are `null` (`encoding/json` returns an error);
+- what a `MarshalJSON` method returns is written as it is, newlines dropped:
+  it is not compacted and its strings are not HTML-escaped;
+- a `MarshalJSON` which fails, or returns something which is not valid
+  JSON, is reported as `encoding/json` reports it: `cfjson.Marshal(v)`
+  returns a `*cfjson.MarshalerError`. Generated encoders append and have no
+  error to return, so `AppendJSON` itself panics with that error, which is
+  what `cfjson.Marshal` recovers. Encode values of types which have such
+  methods anywhere in them with `cfjson.Marshal`; a type without them cannot
+  fail to encode;
+- a `MarshalJSON` with a pointer receiver is called for every value of the
+  type, since generated encoders take values by pointer. `encoding/json`
+  does not call it for a value it cannot take the address of, a value of a
+  map, so a map of such values is an error at generation time.
+
 ## Decoding semantics
 
 The input must be valid JSON as RFC 8259 defines it, which includes being
@@ -172,13 +193,20 @@ the two rules about keys, which are the ones `encoding/json/v2` has:
   skipped values keys are not looked at;
 - `null` leaves a string, number, bool or struct untouched, and resets a
   pointer, slice or map to nil; a raw value gets the four bytes of `null`;
-- a map is replaced by the decoded one, a struct behind a pointer which is
-  there already is decoded into;
+- a map is replaced by the decoded one (`encoding/json` adds to a map which
+  is there already), a struct behind a pointer which is there already is
+  decoded into;
 - strings are unescaped, an escaped surrogate without its pair becomes
   U+FFFD;
 - a number with a fraction or an exponent, or one which does not fit, is an
   error for an integer field;
-- raw values and skipped values are checked as strictly as everything else;
+- raw values and skipped values are checked as strictly as everything else,
+  with one difference to `encoding/json`, which refuses any value nested
+  deeper than 10000 levels: here only values of recursive types are limited
+  (`MaxDepth`, 1024). A raw value may be nested as deep as its size allows,
+  since nothing here recurses on it;
+- `-fold-keys` folds the case of ASCII letters only (`encoding/json` also
+  folds a few other letters, such as the Kelvin sign to `k`);
 - with the `cfjson.ZeroCopy` flag strings which are plain ASCII without
   escape sequences point into the input; without it everything decoded is a
   copy. Raw values are always copied.

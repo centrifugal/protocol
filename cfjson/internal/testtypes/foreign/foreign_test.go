@@ -182,8 +182,9 @@ func TestDecodeForeign(t *testing.T) {
 	}
 }
 
-// A MarshalJSON which fails, or returns something which is not JSON, must not
-// damage what is around it.
+// A MarshalJSON which fails, or returns something which is not JSON, is
+// reported (a panic with a *cfjson.MarshalerError, which cfjson.Marshal
+// returns as an error), not written over with something else.
 type broken struct{ out string }
 
 func (b broken) MarshalJSON() ([]byte, error) {
@@ -194,11 +195,21 @@ func (b broken) MarshalJSON() ([]byte, error) {
 }
 
 func TestAppendMarshaler(t *testing.T) {
-	for out, want := range map[string]string{"": "[null]", "{": "[null]", "1 2": "[null]", `{"a":1}`: `[{"a":1}]`, " true ": "[ true ]"} {
-		got := append(cfjson.AppendMarshaler([]byte("["), broken{out}), ']')
-		if string(got) != want {
-			t.Errorf("MarshalJSON returning %q: got %s, want %s", out, got, want)
+	for _, tt := range []struct{ out, want string }{{`{"a":1}`, `[{"a":1}]`}, {" true ", "[ true ]"}} {
+		got := append(cfjson.AppendMarshaler([]byte("["), broken{tt.out}), ']')
+		if string(got) != tt.want {
+			t.Errorf("MarshalJSON returning %q: got %s, want %s", tt.out, got, tt.want)
 		}
+	}
+	for _, out := range []string{"", "{", "1 2"} {
+		func() {
+			defer func() {
+				if _, ok := recover().(*cfjson.MarshalerError); !ok {
+					t.Errorf("MarshalJSON returning %q is not reported", out)
+				}
+			}()
+			cfjson.AppendMarshaler(nil, broken{out})
+		}()
 	}
 }
 

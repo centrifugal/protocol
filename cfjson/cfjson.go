@@ -3,6 +3,7 @@ package cfjson
 import (
 	"bytes"
 	"errors"
+	"fmt"
 )
 
 // Appender is implemented by types with a generated encoder.
@@ -72,17 +73,39 @@ type Unmarshaler interface {
 	UnmarshalJSON([]byte) error
 }
 
+// MarshalerError is what a MarshalJSON method which failed, or returned
+// something which is not valid JSON, is reported with.
+type MarshalerError struct {
+	// Type is the type whose method it is.
+	Type string
+	// Err is the error the method returned, nil if what it returned is not
+	// valid JSON.
+	Err error
+}
+
+func (e *MarshalerError) Error() string {
+	if e.Err == nil {
+		return "cfjson: MarshalJSON of " + e.Type + " returned invalid JSON"
+	}
+	return "cfjson: MarshalJSON of " + e.Type + ": " + e.Err.Error()
+}
+
+func (e *MarshalerError) Unwrap() error { return e.Err }
+
 // AppendMarshaler appends the JSON a type produces for itself to b.
 // Generated code calls it for fields of types which have a MarshalJSON
-// method.
+// method. Newlines are dropped, as AppendRaw does.
 //
-// Appending cannot fail, so if MarshalJSON returns an error, or something
-// which is not valid JSON, null is written in place of the value. Newlines
-// are dropped, as AppendRaw does.
+// Generated encoders append and have no error to return, so if MarshalJSON
+// fails, or returns something which is not valid JSON, AppendMarshaler
+// panics with a *MarshalerError. Marshal turns that into the error it
+// returns: encode values of types with MarshalJSON methods with Marshal. A
+// type without such methods anywhere in it cannot fail to encode, and never
+// gets here.
 func AppendMarshaler(b []byte, m Marshaler) []byte {
 	data, err := m.MarshalJSON()
 	if err != nil || !Valid(data) {
-		return append(b, "null"...)
+		panic(&MarshalerError{Type: fmt.Sprintf("%T", m), Err: err})
 	}
 	// Like AppendRaw: what is written has no newlines in it. In valid JSON
 	// they are whitespace between tokens, which may go.
@@ -94,6 +117,21 @@ func AppendMarshaler(b []byte, m Marshaler) []byte {
 		b = append(b, data[:n]...)
 		data = data[n+1:]
 	}
+}
+
+// Marshal returns the JSON encoding of v, or the *MarshalerError of a
+// MarshalJSON method in it which failed, as encoding/json reports one.
+func Marshal(v Appender) (data []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			e, ok := r.(*MarshalerError)
+			if !ok {
+				panic(r)
+			}
+			data, err = nil, e
+		}
+	}()
+	return v.AppendJSON(nil), nil
 }
 
 // DecodeUnmarshaler hands the JSON value at b[i] to u and returns the index

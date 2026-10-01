@@ -39,6 +39,7 @@ func TestGenerate_Unsupported(t *testing.T) {
 		{"type which encodes itself as text", "package p\nimport \"net/netip\"\ntype T struct{ A netip.Addr }", "T.A: type netip.Addr encodes itself as text"},
 		{"struct of another package without exported fields", "package p\nimport \"sync\"\ntype T struct{ M sync.Mutex }", "type sync.Mutex has no exported fields"},
 		{"slice of a named byte type", "package p\ntype B uint8\ntype T struct{ V []B }", "T.V: unsupported type []B, a slice of bytes"},
+		{"map of values with a pointer MarshalJSON", "package p\ntype V struct{ N int }\nfunc (v *V) MarshalJSON() ([]byte, error) { return nil, nil }\nfunc (v *V) UnmarshalJSON([]byte) error { return nil }\ntype T struct{ M map[string]V }", "T.M: map values of type V are not supported"},
 		{"nested unsupported", "package p\ntype T struct{ M map[string][]chan int }", "T.M: unsupported type chan int"},
 	}
 	for _, tt := range tests {
@@ -479,5 +480,39 @@ type T struct {
 	}
 	if !strings.Contains(out, "func (m *S) AppendJSON(") || strings.Contains(out, "func (m *P)") {
 		t.Fatalf("wrong methods for an alias in Types:\n%s", out)
+	}
+}
+
+// A MarshalJSON with a pointer receiver is fine everywhere but in map values:
+// in a field, a slice, behind a pointer, encoding/json calls it as well.
+func TestGenerate_PointerMarshaler(t *testing.T) {
+	out, err := generate(t, Config{Types: []string{"T"}}, `package p
+
+type V struct{ N int }
+
+func (v *V) MarshalJSON() ([]byte, error) { return nil, nil }
+
+func (v *V) UnmarshalJSON([]byte) error { return nil }
+
+type W struct{ N int }
+
+func (w W) MarshalJSON() ([]byte, error) { return nil, nil }
+
+func (w *W) UnmarshalJSON([]byte) error { return nil }
+
+type T struct {
+	F  V
+	S  []V
+	P  map[string]*V
+	MW map[string]W
+}
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"cfjson.AppendMarshaler(b, &m.F)", "cfjson.AppendMarshaler(b, e"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("no %q in generated code", want)
+		}
 	}
 }

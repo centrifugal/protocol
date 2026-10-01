@@ -532,3 +532,66 @@ func TestAppendMarshaler_NoNewlines(t *testing.T) {
 		t.Fatalf("%q", got)
 	}
 }
+
+type failing struct{ err error }
+
+func (f failing) MarshalJSON() ([]byte, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return []byte(`{"a":`), nil
+}
+
+type withFailing struct{ f failing }
+
+func (w *withFailing) AppendJSON(b []byte) []byte {
+	b = append(b, `{"f":`...)
+	b = AppendMarshaler(b, w.f)
+	return append(b, '}')
+}
+
+// A MarshalJSON which fails is reported, as encoding/json reports it: not
+// written over with something else.
+func TestMarshal_MarshalerError(t *testing.T) {
+	boom := errors.New("boom")
+	for _, tt := range []struct {
+		f    failing
+		want error
+	}{{failing{boom}, boom}, {failing{}, nil}} {
+		func() {
+			defer func() {
+				if _, ok := recover().(*MarshalerError); !ok {
+					t.Errorf("AppendMarshaler of %v did not panic with a *MarshalerError", tt.f)
+				}
+			}()
+			AppendMarshaler(nil, tt.f)
+		}()
+
+		data, err := Marshal(&withFailing{tt.f})
+		var me *MarshalerError
+		if data != nil || !errors.As(err, &me) {
+			t.Fatalf("Marshal = %q, %v", data, err)
+		}
+		if me.Type != "cfjson.failing" || (tt.want != nil && !errors.Is(err, tt.want)) {
+			t.Fatalf("error %v of type %q", err, me.Type)
+		}
+	}
+
+	// Without a failing method Marshal is AppendJSON.
+	data, err := Marshal(appenderFunc(func(b []byte) []byte { return append(b, `{"a":1}`...) }))
+	if err != nil || string(data) != `{"a":1}` {
+		t.Fatalf("Marshal = %q, %v", data, err)
+	}
+
+	// Other panics are not Marshal's business.
+	defer func() {
+		if r := recover(); r != "other" {
+			t.Fatalf("recovered %v", r)
+		}
+	}()
+	_, _ = Marshal(appenderFunc(func([]byte) []byte { panic("other") }))
+}
+
+type appenderFunc func([]byte) []byte
+
+func (f appenderFunc) AppendJSON(b []byte) []byte { return f(b) }

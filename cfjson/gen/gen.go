@@ -113,6 +113,10 @@ type typ struct {
 	// MarshalJSON or the UnmarshalJSON method: that direction is then left
 	// to the method.
 	marshaler, unmarshaler bool
+	// pointerMarshaler is set if MarshalJSON has a pointer receiver:
+	// encoding/json does not call it for a value it cannot take the address
+	// of, a value of a map.
+	pointerMarshaler bool
 	// empty is the kind deciding when a kCustom value is empty for omitempty.
 	empty kind
 }
@@ -187,6 +191,8 @@ type pkgInfo struct {
 	decls map[string]*decl
 	// methods has the names of the JSON methods types of the package have.
 	methods map[string]map[string]bool
+	// valueMethods has those of them which have a value receiver.
+	valueMethods map[string]map[string]bool
 }
 
 type scope struct {
@@ -410,10 +416,11 @@ func (p *pkgInfo) addMethod(d *ast.FuncDecl) {
 		return
 	}
 	recv := d.Recv.List[0].Type
+	pointer := false
 	for {
 		switch r := recv.(type) {
 		case *ast.StarExpr:
-			recv = r.X
+			recv, pointer = r.X, true
 			continue
 		case *ast.ParenExpr:
 			recv = r.X
@@ -422,11 +429,18 @@ func (p *pkgInfo) addMethod(d *ast.FuncDecl) {
 		break
 	}
 	if id, ok := recv.(*ast.Ident); ok {
-		if p.methods[id.Name] == nil {
-			p.methods[id.Name] = map[string]bool{}
+		addTo(p.methods, id.Name, d.Name.Name)
+		if !pointer {
+			addTo(p.valueMethods, id.Name, d.Name.Name)
 		}
-		p.methods[id.Name][d.Name.Name] = true
 	}
+}
+
+func addTo(m map[string]map[string]bool, typeName, method string) {
+	if m[typeName] == nil {
+		m[typeName] = map[string]bool{}
+	}
+	m[typeName][method] = true
 }
 
 // foldAliasMethods gives the methods declared on an alias to the type it is
@@ -449,20 +463,19 @@ func (p *pkgInfo) foldAliasMethods() {
 		if !ok || p.decls[target.Name] == nil {
 			continue
 		}
-		for method := range p.methods[name] {
-			if p.methods[target.Name] == nil {
-				p.methods[target.Name] = map[string]bool{}
+		for _, m := range []map[string]map[string]bool{p.methods, p.valueMethods} {
+			for method := range m[name] {
+				addTo(m, target.Name, method)
 			}
-			p.methods[target.Name][method] = true
+			delete(m, name)
 		}
-		delete(p.methods, name)
 	}
 }
 
 // parsePackage reads the type declarations of the given files of one
 // package. It returns the names of the types in the order they are declared.
 func parsePackage(path string, files []string) (*pkgInfo, []string, error) {
-	p := &pkgInfo{path: path, decls: map[string]*decl{}, methods: map[string]map[string]bool{}}
+	p := &pkgInfo{path: path, decls: map[string]*decl{}, methods: map[string]map[string]bool{}, valueMethods: map[string]map[string]bool{}}
 	var order []string
 	fset := token.NewFileSet()
 	for _, name := range files {
@@ -838,9 +851,10 @@ func (g *generator) named(p *pkgInfo, name string, depth int) (*typ, error) {
 		return nil, fmt.Errorf("type %s of package %s is not exported", name, p.path)
 	}
 	marshaler, unmarshaler := p.methods[name]["MarshalJSON"], p.methods[name]["UnmarshalJSON"]
+	pointerMarshaler := marshaler && !p.valueMethods[name]["MarshalJSON"]
 	sc := scope{pkg: p, imports: d.imports}
 	if marshaler && unmarshaler {
-		return &typ{kind: kCustom, src: src, marshaler: true, unmarshaler: true, empty: g.emptyKind(d.expr, sc, 0)}, nil
+		return &typ{kind: kCustom, src: src, marshaler: true, unmarshaler: true, pointerMarshaler: pointerMarshaler, empty: g.emptyKind(d.expr, sc, 0)}, nil
 	}
 	// encoding/json writes such a type as the string it makes of itself.
 	// Reading its fields instead would be another encoding, and for most of
@@ -849,7 +863,7 @@ func (g *generator) named(p *pkgInfo, name string, depth int) (*typ, error) {
 		return nil, fmt.Errorf("type %s encodes itself as text (MarshalText), which is not supported", src)
 	}
 	if _, ok := d.expr.(*ast.StructType); ok {
-		t := &typ{kind: kStruct, src: src, pkg: p, name: name, marshaler: marshaler, unmarshaler: unmarshaler, empty: kStruct}
+		t := &typ{kind: kStruct, src: src, pkg: p, name: name, marshaler: marshaler, unmarshaler: unmarshaler, pointerMarshaler: pointerMarshaler, empty: kStruct}
 		// A struct of another package gets functions generated next to the
 		// methods of the structs of this one. A struct of this package
 		// which was not asked for gets its methods generated as well,
@@ -877,7 +891,7 @@ func (g *generator) named(p *pkgInfo, name string, depth int) (*typ, error) {
 	if t.kind <= kFloat {
 		t.named = true
 	}
-	t.marshaler, t.unmarshaler = marshaler, unmarshaler
+	t.marshaler, t.unmarshaler, t.pointerMarshaler = marshaler, unmarshaler, pointerMarshaler
 	t.empty = g.emptyKind(d.expr, sc, 0)
 	return &t, nil
 }
@@ -955,6 +969,12 @@ func (g *generator) resolve(expr ast.Expr, sc scope, depth int) (*typ, error) {
 		elem, err := g.resolve(e.Value, sc, depth)
 		if err != nil {
 			return nil, err
+		}
+		if elem.pointerMarshaler {
+			// encoding/json cannot take the address of a map value, so it
+			// encodes such a value without the method. Generated code would
+			// call it: a different encoding, without a word.
+			return nil, fmt.Errorf("map values of type %s are not supported: its MarshalJSON has a pointer receiver, which encoding/json does not call for a map value", elem.src)
 		}
 		return &typ{kind: kMap, src: "map[" + key.src + "]" + elem.src, elem: elem, keyNamed: key.named, keySrc: key.src}, nil
 	}

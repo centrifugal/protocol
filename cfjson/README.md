@@ -1,5 +1,13 @@
 # cfjson
 
+> **For the Centrifugal ecosystem only.** This is not a general-purpose
+> package. It is built for the needs of Centrifugal projects (Centrifugo,
+> centrifuge, their SDKs and tools), supports what their schemas use and
+> nothing more, and changes as they need it to: its API, the code it
+> generates and its behaviour may change in any release, without notice
+> and without a major version. Please do not depend on it outside of the
+> Centrifugal ecosystem.
+
 A code generator for JSON encoding and decoding of Go structs, and the small
 runtime package the generated code is built on.
 

@@ -2,6 +2,11 @@
 // cmd/cfjson): a small set of append-style encoding helpers and index-based
 // decoding helpers the generated methods are built from.
 //
+// It is not a general-purpose package: it is built for the needs of the
+// Centrifugal ecosystem (Centrifugo, centrifuge, their SDKs and tools) and
+// changes as they need it to, in any release. Do not depend on it outside of
+// that ecosystem.
+//
 // The package depends on the standard library only and knows nothing about
 // the types it is used with, so it can be moved to a module of its own by
 // changing a single import path (the generator's -runtime flag).

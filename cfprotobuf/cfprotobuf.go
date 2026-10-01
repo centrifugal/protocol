@@ -2,6 +2,11 @@
 // generator (see cmd/cfprotobuf): the few primitives of the Protobuf wire
 // format which generated marshalers and unmarshalers are built from.
 //
+// It is not a general-purpose package: it is built for the needs of the
+// Centrifugal ecosystem (Centrifugo, centrifuge, their SDKs and tools) and
+// changes as they need it to, in any release. Do not depend on it outside of
+// that ecosystem.
+//
 // The generator writes, for structs which protoc-gen-go produced, the methods
 // MarshalCF, MarshalToCF, MarshalToSizedBufferCF, SizeCF and UnmarshalCF.
 // They do what the methods github.com/planetscale/vtprotobuf writes do, with

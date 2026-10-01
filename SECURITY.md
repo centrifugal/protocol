@@ -24,7 +24,8 @@ Since this package implements protocol encoding and decoding, we are especially 
 Besides external reports, this package relies on:
 
 * **Fuzzing** – decoders are fuzzed continuously in CI, see [.github/workflows/fuzz.yml](.github/workflows/fuzz.yml). Inputs that trigger a failure are added to the seed corpus under `testdata/fuzz`.
-* **Static analysis and linters** – `golangci-lint` (including `gosec` and `govet`) runs on every push and pull request.
+* **Static analysis and linters** – `golangci-lint` (including `gosec` and `govet`) and CodeQL run on every push and pull request.
+* **Known vulnerabilities** – `govulncheck` checks the code against the Go vulnerability database on every push and pull request, and daily, see [.github/workflows/vulncheck.yml](.github/workflows/vulncheck.yml).
 * **Dependency updates** – dependencies are monitored and updated via Dependabot.
 
 ## Triage and Assessment

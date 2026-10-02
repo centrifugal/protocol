@@ -8,7 +8,7 @@ import (
 	"math"
 	"sync"
 
-	"github.com/segmentio/encoding/json"
+	"github.com/centrifugal/protocol/cfjson"
 )
 
 // maxMessageLength is a hard ceiling on the message length a Protobuf stream may
@@ -26,7 +26,7 @@ const maxMessageLength = math.MaxInt32
 const maxRetainedLineBuffer = 65536
 
 var (
-	streamJsonCommandDecoderPool     sync.Pool
+	streamJSONCommandDecoderPool     sync.Pool
 	streamProtobufCommandDecoderPool sync.Pool
 )
 
@@ -52,7 +52,7 @@ func GetStreamCommandDecoderLimited(protoType Type, reader io.Reader, messageSiz
 		panic(errNonPositiveMessageSizeLimit)
 	}
 	if protoType == TypeJSON {
-		e := streamJsonCommandDecoderPool.Get()
+		e := streamJSONCommandDecoderPool.Get()
 		if e == nil {
 			return NewJSONStreamCommandDecoder(reader, messageSizeLimit)
 		}
@@ -75,7 +75,7 @@ func GetStreamCommandDecoderLimited(protoType Type, reader io.Reader, messageSiz
 func PutStreamCommandDecoder(protoType Type, e StreamCommandDecoder) {
 	e.Reset(nil, 0)
 	if protoType == TypeJSON {
-		streamJsonCommandDecoderPool.Put(e)
+		streamJSONCommandDecoderPool.Put(e)
 		return
 	}
 	streamProtobufCommandDecoderPool.Put(e)
@@ -153,10 +153,9 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 		return nil, 0, ErrMessageTooLarge
 	}
 	if err != nil {
-		if err == io.EOF && len(cmdBytes) > 0 {
+		if errors.Is(err, io.EOF) && len(cmdBytes) > 0 {
 			var c Command
-			_, parseErr := json.Parse(cmdBytes, &c, 0)
-			if parseErr != nil {
+			if parseErr := cfjson.Unmarshal(cmdBytes, &c, 0); parseErr != nil {
 				return nil, 0, parseErr
 			}
 			return &c, len(cmdBytes), err
@@ -165,9 +164,8 @@ func (d *JSONStreamCommandDecoder) Decode() (*Command, int, error) {
 	}
 
 	var c Command
-	_, err = json.Parse(cmdBytes, &c, 0)
-	if err != nil {
-		return nil, 0, err
+	if parseErr := cfjson.Unmarshal(cmdBytes, &c, 0); parseErr != nil {
+		return nil, 0, parseErr
 	}
 	return &c, len(cmdBytes), nil
 }
@@ -197,21 +195,25 @@ func readBudget(messageSizeLimit int64) int64 {
 // the last command in a frame carries none, so counting it would make the size
 // limit depend on where in the frame a command sits.
 func commandLen(cmdBytes []byte) int {
-	if n := len(cmdBytes); n > 0 && cmdBytes[n-1] == '\n' {
-		return n - 1
+	n := len(cmdBytes)
+	if n > 0 && cmdBytes[n-1] == '\n' {
+		n--
 	}
-	return len(cmdBytes)
+	if n > 0 && cmdBytes[n-1] == '\r' {
+		n--
+	}
+	return n
 }
 
 // readLine returns the next `\n` terminated command, including the delimiter.
 //
 // The returned slice is only valid until the next Decode call - it may point
 // into the bufio.Reader buffer or into a buffer reused across calls. Callers
-// must copy anything they keep, which json.Parse does since it's used here
-// without the ZeroCopy flag.
+// must copy anything they keep, which DecodeJSON does: nothing it decodes
+// points into its input.
 func (d *JSONStreamCommandDecoder) readLine() ([]byte, error) {
 	chunk, err := d.reader.ReadSlice('\n')
-	if err != bufio.ErrBufferFull {
+	if !errors.Is(err, bufio.ErrBufferFull) {
 		// Fast path: the whole command was in the bufio.Reader buffer, so
 		// there is nothing to accumulate and nothing to allocate.
 		return chunk, err
@@ -223,7 +225,7 @@ func (d *JSONStreamCommandDecoder) readLine() ([]byte, error) {
 	for {
 		chunk, err = d.reader.ReadSlice('\n')
 		d.buf.B = append(d.buf.B, chunk...)
-		if err != bufio.ErrBufferFull {
+		if !errors.Is(err, bufio.ErrBufferFull) {
 			return d.buf.B, err
 		}
 	}
@@ -295,7 +297,7 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 
 	// Fast path: the whole message is already buffered, so it can be unmarshaled
 	// straight out of the bufio.Reader without copying it into a scratch buffer
-	// first. UnmarshalVT copies what it keeps, so the peeked slice may be
+	// first. UnmarshalCF copies what it keeps, so the peeked slice may be
 	// invalidated by the Discard below.
 	// Only worth trying when the message can fit in the bufio.Reader buffer:
 	// Peek fills the whole buffer before reporting that it cannot hold the
@@ -304,7 +306,7 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	if int64(msgLength) <= int64(d.reader.Size()) {
 		if msgBytes, peekErr := d.reader.Peek(int(msgLength)); peekErr == nil {
 			var c Command
-			err = c.UnmarshalVT(msgBytes) // Note, UnmarshalVTUnsafe here will result into issues.
+			err = c.UnmarshalCF(msgBytes) // Copies what it keeps: the buffer is reused.
 			// The message is consumed even when it failed to unmarshal, matching
 			// the scratch buffer path below, which reads it off the stream before
 			// unmarshaling it. A caller which keeps decoding after an error must
@@ -319,6 +321,10 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 		}
 	}
 
+	if msgLength > maxBufferLength {
+		return d.decodeLarge(int(msgLength))
+	}
+
 	bb := getByteBuffer(int(msgLength))
 	defer putByteBuffer(bb)
 
@@ -326,15 +332,46 @@ func (d *ProtobufStreamCommandDecoder) Decode() (*Command, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
-	if uint64(n) != msgLength {
+	if n != int(msgLength) {
 		return nil, 0, io.ErrShortBuffer
 	}
 	var c Command
-	err = c.UnmarshalVT(bb.B[:int(msgLength)]) // Note, UnmarshalVTUnsafe here will result into issues.
+	err = c.UnmarshalCF(bb.B[:int(msgLength)]) // Copies what it keeps: the buffer is reused.
 	if err != nil {
 		return nil, 0, err
 	}
 	return &c, int(msgLength) + 8, nil
+}
+
+// decodeLarge reads a message which is too large for a pooled buffer. The
+// length is what the other side says it is, and takes a few bytes to say: the
+// buffer grows as the bytes of the message arrive, so that memory is spent on
+// what was actually sent.
+func (d *ProtobufStreamCommandDecoder) decodeLarge(msgLength int) (*Command, int, error) {
+	buf := make([]byte, 0, maxBufferLength)
+	for len(buf) < msgLength {
+		read := len(buf)
+		size := msgLength
+		// Doubling, without going over msgLength (or over what an int holds
+		// where it is 32 bits).
+		if read <= msgLength/2 {
+			size = min(msgLength, max(2*read, maxBufferLength))
+		}
+		if size > cap(buf) {
+			grown := make([]byte, read, size)
+			copy(grown, buf)
+			buf = grown
+		}
+		buf = buf[:size]
+		if _, err := io.ReadFull(d.reader, buf[read:]); err != nil {
+			return nil, 0, err
+		}
+	}
+	var c Command
+	if err := c.UnmarshalCF(buf); err != nil { // Copies what it keeps: the buffer is reused.
+		return nil, 0, err
+	}
+	return &c, msgLength + 8, nil
 }
 
 // Reset makes the decoder read from the given reader, applying the given message

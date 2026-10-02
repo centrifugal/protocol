@@ -36,7 +36,7 @@ const maxBufferLength = 262144 // 2^18
 
 // Log of base two, round up (for v > 0).
 func nextLogBase2(v uint32) uint32 {
-	return uint32(bits.Len32(v - 1))
+	return uint32(bits.Len32(v - 1)) //nolint:gosec // G115: bits.Len32 returns 0..32.
 }
 
 // Log of base two, round down (for v > 0)

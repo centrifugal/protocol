@@ -1,0 +1,26 @@
+name: vulncheck
+# Known vulnerabilities are published without any change in this repository:
+# in the Go standard library or in a dependency. The Security job of the build
+# workflow only runs on pushes and pull requests, so this runs the same check
+# every day as well, against the latest stable Go.
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: stable
+
+      - name: govulncheck
+        run: make sec

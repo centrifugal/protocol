@@ -42,7 +42,8 @@ empty slices, maps and raw values, produce identical bytes.
 
 Decoding (`TestDecodeMatchesSegmentio_*`, `FuzzDecodeMatchesSegmentio`): both
 decoders must agree on whether an input is acceptable and on every field of
-the result, including nil versus empty, with and without zero-copy. Inputs
+the result, including nil versus empty, and cfjson must not leave a string
+pointing into the input. Inputs
 are everything the encoders produce, a few hundred hand-written edge cases
 decoded into every message type, and whatever the fuzzer comes up with.
 
@@ -94,17 +95,17 @@ The rest are details:
 
 1. **Backspace and form feed in strings are written as `\u0008` and
    `\u000c`**, as the old writer of `protocol` did. This only matters for
-   centrifuge, which uses segmentio's `Escape` directly: that one writes `\b`
-   and `\f`.
+   centrifuge, which used segmentio's `Escape` directly: that one writes `\b`
+   and `\f`. centrifuge escapes with `cfjson.AppendString` now; either way a
+   JSON parser reads the same string.
 2. **Recursive types have a nesting limit.** `FilterNode` can contain
    `FilterNode`s. segmentio recurses as deep as the input goes, cfjson stops
    with an error past 1024 levels, so that a
    client cannot make a server use an arbitrary amount of stack.
-3. **A string with the DEL byte (0x7f) is not copied in zero-copy mode.** With
-   zero-copy decoding both decoders leave plain ASCII strings pointing into
-   the input and copy the rest; segmentio counts DEL as "the rest", cfjson
-   does not. The tests check that for every other input the very same
-   strings point into the input.
+3. **Strings are always copied.** The frame decoder of `protocol` used
+   segmentio's zero-copy mode, which left plain ASCII strings pointing into
+   the frame. cfjson has no such mode: nothing decoded shares memory with
+   the input.
 
 Things which look like candidates for a difference but are not, because
 segmentio does the same and so does `encoding/json`: a top level `null` is an

@@ -184,57 +184,51 @@ var msgSink message
 func BenchmarkDecode(b *testing.B) {
 	for _, bm := range benchMessages {
 		data := oldEncode(bm.msg)
-		for _, zeroCopy := range []bool{false, true} {
-			mode := "copy"
-			if zeroCopy {
-				mode = "zerocopy"
-			}
-			prefix := "msg=" + bm.name + "/mode=" + mode
-			b.Run(prefix+"/impl=segmentio", func(b *testing.B) {
-				b.ReportAllocs()
-				b.SetBytes(int64(len(data)))
-				for i := 0; i < b.N; i++ {
-					m := bm.new()
-					if err := oldDecode(data, m, zeroCopy); err != nil {
-						b.Fatal(err)
-					}
-					msgSink = m
+		// mode=copy keeps the names of results recorded when there was a
+		// zero-copy mode as well.
+		prefix := "msg=" + bm.name + "/mode=copy"
+		b.Run(prefix+"/impl=segmentio", func(b *testing.B) {
+			b.ReportAllocs()
+			b.SetBytes(int64(len(data)))
+			for i := 0; i < b.N; i++ {
+				m := bm.new()
+				if err := oldDecode(data, m); err != nil {
+					b.Fatal(err)
 				}
-			})
-			if !zeroCopy {
-				b.Run(prefix+"/impl=easyjson", func(b *testing.B) {
-					b.ReportAllocs()
-					b.SetBytes(int64(len(data)))
-					for i := 0; i < b.N; i++ {
-						m := bm.new()
-						l := jlexer.Lexer{Data: data}
-						m.(interface{ UnmarshalEasyJSON(*jlexer.Lexer) }).UnmarshalEasyJSON(&l)
-						if err := l.Error(); err != nil {
-							b.Fatal(err)
-						}
-						msgSink = m
-					}
-				})
+				msgSink = m
 			}
-			b.Run(prefix+"/impl=cfjson", func(b *testing.B) {
-				b.ReportAllocs()
-				b.SetBytes(int64(len(data)))
-				for i := 0; i < b.N; i++ {
-					m := bm.new()
-					if err := newDecode(data, m, zeroCopy); err != nil {
-						b.Fatal(err)
-					}
-					msgSink = m
+		})
+		b.Run(prefix+"/impl=easyjson", func(b *testing.B) {
+			b.ReportAllocs()
+			b.SetBytes(int64(len(data)))
+			for i := 0; i < b.N; i++ {
+				m := bm.new()
+				l := jlexer.Lexer{Data: data}
+				m.(interface{ UnmarshalEasyJSON(*jlexer.Lexer) }).UnmarshalEasyJSON(&l)
+				if err := l.Error(); err != nil {
+					b.Fatal(err)
 				}
-			})
-		}
+				msgSink = m
+			}
+		})
+		b.Run(prefix+"/impl=cfjson", func(b *testing.B) {
+			b.ReportAllocs()
+			b.SetBytes(int64(len(data)))
+			for i := 0; i < b.N; i++ {
+				m := bm.new()
+				if err := newDecode(data, m); err != nil {
+					b.Fatal(err)
+				}
+				msgSink = m
+			}
+		})
 	}
 }
 
-// BenchmarkDecodeReuse measures the decoders alone: the message is decoded
-// into over and over, without copying strings, so that after the first
-// iteration there is next to nothing left to allocate. protocol never decodes
-// this way, a Command must be a new one every time.
+// BenchmarkDecodeReuse measures the decoders with less allocation around
+// them: the message is decoded into over and over, so that after the first
+// iteration only strings are allocated. protocol never decodes this way, a
+// Command must be a new one every time.
 func BenchmarkDecodeReuse(b *testing.B) {
 	for _, bm := range benchMessages {
 		data := oldEncode(bm.msg)
@@ -243,7 +237,7 @@ func BenchmarkDecodeReuse(b *testing.B) {
 			b.ReportAllocs()
 			b.SetBytes(int64(len(data)))
 			for i := 0; i < b.N; i++ {
-				if err := oldDecode(data, m, true); err != nil {
+				if err := oldDecode(data, m); err != nil {
 					b.Fatal(err)
 				}
 			}
@@ -253,7 +247,7 @@ func BenchmarkDecodeReuse(b *testing.B) {
 			b.ReportAllocs()
 			b.SetBytes(int64(len(data)))
 			for i := 0; i < b.N; i++ {
-				if err := newDecode(data, m, true); err != nil {
+				if err := newDecode(data, m); err != nil {
 					b.Fatal(err)
 				}
 			}
@@ -296,7 +290,7 @@ func BenchmarkDecodeFold(b *testing.B) {
 				b.SetBytes(int64(len(data)))
 				for i := 0; i < b.N; i++ {
 					m := bm.new()
-					if err := segmentioDecode(data, m, false); err != nil {
+					if err := segmentioDecode(data, m); err != nil {
 						b.Fatal(err)
 					}
 					msgSink = m
@@ -308,7 +302,7 @@ func BenchmarkDecodeFold(b *testing.B) {
 					b.SetBytes(int64(len(data)))
 					for i := 0; i < b.N; i++ {
 						m := bm.new()
-						if err := newDecode(data, m, false); err != nil {
+						if err := newDecode(data, m); err != nil {
 							b.Fatal(err)
 						}
 						msgSink = m
@@ -320,7 +314,7 @@ func BenchmarkDecodeFold(b *testing.B) {
 				b.SetBytes(int64(len(data)))
 				for i := 0; i < b.N; i++ {
 					m := bm.new()
-					if err := foldDecode(data, m, false); err != nil {
+					if err := foldDecode(data, m); err != nil {
 						b.Fatal(err)
 					}
 					msgSink = m

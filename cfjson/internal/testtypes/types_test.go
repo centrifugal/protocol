@@ -300,7 +300,7 @@ func TestMatchesEncodingJSON(t *testing.T) {
 			if err := stdjson.Unmarshal(data, want); err != nil {
 				t.Fatal(err)
 			}
-			for _, f := range []cfjson.Flags{0, cfjson.ZeroCopy} {
+			for _, f := range []cfjson.Flags{0, cfjson.Prescan(data, 0)} {
 				got := newValue()
 				if err := decode(data, got, f); err != nil {
 					t.Fatalf("%v: %s", err, data)
@@ -313,7 +313,7 @@ func TestMatchesEncodingJSON(t *testing.T) {
 	}
 }
 
-// Without ZeroCopy nothing decoded may point into the input.
+// Nothing decoded may point into the input.
 func TestDecodeCopies(t *testing.T) {
 	r := rand.New(rand.NewSource(2))
 	for n := 0; n < 5000; n++ {

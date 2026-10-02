@@ -150,13 +150,10 @@ generator, so the list could be an input of the generator instead, leaving
 
 ### 6. Decide the zero-copy rule explicitly
 
-`JSONCommandDecoder` leaves plain ASCII strings pointing into the frame, the
-stream decoder copies everything. centrifuge keeps channel names for the
-lifetime of a subscription and stores publish data into history, so which
-transports use which decoder decides whether a read buffer may be reused.
-
-It would be more robust to make this a visible choice (an option of the
-decoder) than a property of the decoder type.
+Decided: there is no zero-copy decoding. cfjson always copies, and
+`JSONCommandDecoder` copies like the stream decoder does. centrifuge keeps
+channel names for the lifetime of a subscription and stores publish data
+into history, so a decoded message must never depend on the read buffer.
 
 ### 7. HTML escaping
 

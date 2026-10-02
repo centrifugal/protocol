@@ -99,13 +99,13 @@ func TestJSONCommandDecoder(t *testing.T) {
 		require.Error(t, err)
 		require.NotErrorIs(t, err, io.EOF)
 	})
-	t.Run("zero-copy", func(t *testing.T) {
-		// Strings point into the frame, payloads are copied.
+	t.Run("copies", func(t *testing.T) {
+		// Nothing decoded points into the frame, which may be reused.
 		frame := []byte(`{"id":1,"publish":{"channel":"chan","data":{"a":1}}}`)
 		cmd, err := NewJSONCommandDecoder(frame).Decode()
 		require.ErrorIs(t, err, io.EOF)
 		copy(frame, `{"id":1,"publish":{"channel":"CHAN","data":{"A":1}}}`)
-		require.Equal(t, "CHAN", cmd.Publish.Channel)
+		require.Equal(t, "chan", cmd.Publish.Channel)
 		require.Equal(t, `{"a":1}`, string(cmd.Publish.Data))
 	})
 }

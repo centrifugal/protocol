@@ -14,17 +14,11 @@ import (
 type Flags uint
 
 const (
-	// ZeroCopy makes decoded strings (including map keys) point into the input
-	// instead of being copied out of it, when the JSON string is plain ASCII
-	// without escape sequences. The input must then stay unmodified for as
-	// long as the decoded value is in use. Raw values are always copied.
-	ZeroCopy Flags = 1 << iota
-
 	// plain is set by Prescan for input which has nothing but printable
 	// ASCII in it and no backslash. A string then ends at the next quote,
 	// whatever is in front of it, which makes finding its end all there is
 	// to do.
-	plain
+	plain Flags = 1 << iota
 )
 
 // Prescan looks at the whole input once and returns f with what it has found
@@ -666,11 +660,7 @@ func String(b []byte, i int, f Flags, p *string) int {
 		j = scanString(b, i, true)
 	}
 	if j < len(b) && b[j] == '"' {
-		if f&ZeroCopy != 0 {
-			*p = aliasString(b[i:j])
-		} else {
-			*p = string(b[i:j])
-		}
+		*p = string(b[i:j])
 		return j + 1
 	}
 	return stringSlow(b, i, j, p)
@@ -705,10 +695,6 @@ func stringSlow(b []byte, start, j int, p *string) int {
 	case escaped:
 		*p = unescape(s)
 	default:
-		// Strings which are not plain ASCII are copied even with ZeroCopy.
-		// There is no technical need for it, but it is what the decoder
-		// this one replaced did, and code may have come to rely on such
-		// strings outliving the input.
 		*p = string(s)
 	}
 	return j + 1

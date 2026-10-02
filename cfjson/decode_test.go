@@ -93,9 +93,9 @@ func TestString(t *testing.T) {
 		{"\"h\xc3\xa9llo\"", "h\xc3\xa9llo"}, {"\"a\\n\xc3\xa9b\"", "a\n\xc3\xa9b"}, {"\"\x7f\"", "\x7f"},
 	}
 	for _, tt := range tests {
-		for _, f := range []Flags{0, ZeroCopy} {
-			// Trailing data makes sure decoding stops at the closing quote.
-			in := []byte(tt.in + `,"next"`)
+		// Trailing data makes sure decoding stops at the closing quote.
+		in := []byte(tt.in + `,"next"`)
+		for _, f := range []Flags{0, Prescan(in, 0)} {
 			got := "unset"
 			n := String(in, 0, f, &got)
 			if n != len(tt.in) || got != tt.want {
@@ -116,22 +116,19 @@ func TestString(t *testing.T) {
 	}
 }
 
-// A string decoded without ZeroCopy must not point into the input. With it,
-// only plain ASCII strings do: anything else is copied, as the decoder cfjson
-// replaced did.
-func TestString_ZeroCopy(t *testing.T) {
-	for in, aliases := range map[string]bool{`"plain"`: true, "\"h\xc3\xa9llo\"": false, `"es\\caped"`: false} {
+// A decoded string never points into the input, plain ASCII included.
+func TestString_Copies(t *testing.T) {
+	for _, in := range []string{`"plain"`, "\"h\xc3\xa9llo\"", `"es\\caped"`, `"a plain string long enough to be prescanned"`} {
 		data := []byte(in)
-		var copied, zeroCopy, want string
-		String(data, 0, 0, &copied)
-		String(data, 0, ZeroCopy, &zeroCopy)
-		String([]byte(in), 0, 0, &want)
-		data[1] = 'X'
-		if copied != want {
-			t.Errorf("%s: copied string changed with the input", in)
-		}
-		if aliased := zeroCopy != want; aliased != aliases {
-			t.Errorf("%s: zero-copy string points into the input: %v, want %v", in, aliased, aliases)
+		for _, f := range []Flags{0, Prescan(data, 0)} {
+			var got, want string
+			String(data, 0, f, &got)
+			String([]byte(in), 0, 0, &want)
+			data[1] = 'X'
+			if got != want {
+				t.Errorf("%s: decoded string changed with the input", in)
+			}
+			data = []byte(in)
 		}
 	}
 }
@@ -239,7 +236,7 @@ func FuzzString(f *testing.F) {
 			// encoding/json replaces invalid UTF-8, cfjson rejects it.
 			wantErr = errors.New("invalid UTF-8")
 		}
-		for _, flags := range []Flags{0, ZeroCopy} {
+		for _, flags := range []Flags{0, Prescan(data, 0)} {
 			var got string
 			n := String(data, 0, flags, &got)
 			if n >= 0 && SkipSpace(data, n) != len(data) {
@@ -431,7 +428,7 @@ func TestPrescan(t *testing.T) {
 				if Prescan(b, 0)&plain != 0 {
 					t.Fatalf("size %d, %#x at %d: called plain", size, c, pos)
 				}
-				if Prescan(b, plain|ZeroCopy) != ZeroCopy {
+				if Prescan(b, plain) != 0 {
 					t.Fatalf("size %d, %#x at %d: flags not reset", size, c, pos)
 				}
 			}

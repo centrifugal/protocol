@@ -85,13 +85,3 @@ func hasRepeatedKey(data []byte) bool {
 func validDiffers(data []byte, cfjsonValid, segmentioValid bool) bool {
 	return segmentioValid && !cfjsonValid && !utf8.Valid(data)
 }
-
-// aliasingDiffers reports whether zero-copy decoding of data may leave
-// different strings pointing into the input.
-//
-// Both decoders copy a string which has an escape sequence or a byte outside
-// of ASCII, and point into the input otherwise. The one exception is DEL
-// (0x7f): segmentio copies a string which has it, cfjson does not.
-func aliasingDiffers(data []byte) bool {
-	return bytes.IndexByte(data, 0x7f) >= 0
-}

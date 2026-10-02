@@ -44,9 +44,9 @@ func TestJSONGolden(t *testing.T) {
 		require.Equal(t, golden, string(encodeJSON(msg)), name)
 
 		// The decoders must make the same message of it as encoding/json.
-		for _, flags := range []cfjson.Flags{0, cfjson.ZeroCopy} {
+		data := []byte(golden)
+		for _, flags := range []cfjson.Flags{0, cfjson.Prescan(data, 0)} {
 			decoded := newMessage()
-			data := []byte(golden)
 			n := decoded.DecodeJSON(data, 0, flags)
 			require.Equal(t, len(data), n, "%s: %s", name, golden)
 			require.True(t, reflect.DeepEqual(msg, decoded), "%s: %s", name, golden)

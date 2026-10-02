@@ -76,7 +76,7 @@ func (d *JSONCommandDecoder) Decode() (*Command, error) {
 		d.offset = len(d.data)
 	}
 	var c Command
-	if err := cfjson.Unmarshal(msg, &c, cfjson.ZeroCopy); err != nil {
+	if err := cfjson.Unmarshal(msg, &c, 0); err != nil {
 		return nil, err
 	}
 	if d.offset >= len(d.data) {

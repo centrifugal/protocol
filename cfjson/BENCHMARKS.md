@@ -202,6 +202,8 @@ geomean                        9.817        11.44        +16.52%                
 
 ### Decode, zero-copy
 
+Recorded before the zero-copy mode was removed: cfjson always copies now.
+
 ```
                              │   segmentio   │                cfjson                │
                              │    sec/op     │    sec/op     vs base                │

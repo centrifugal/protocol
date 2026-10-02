@@ -76,42 +76,31 @@ func TestEncodeMatchesEasyjson_MultiKeyMaps(t *testing.T) {
 // disagree on whether it is acceptable, or on the result.
 func compareDecode(t testing.TB, data []byte, proto message) {
 	t.Helper()
-	for _, zeroCopy := range []bool{false, true} {
-		// Each implementation gets its own copy of the input: neither may
-		// modify it, which is checked below.
-		oldData, newData := bytes.Clone(data), bytes.Clone(data)
-		oldMsg, newMsg := zero(proto), zero(proto)
-		oldErr := oldDecode(oldData, oldMsg, zeroCopy)
-		newErr := newDecode(newData, newMsg, zeroCopy)
-		if !bytes.Equal(newData, data) {
-			t.Fatalf("%T: decoding modified the input %q", proto, data)
+	// Each implementation gets its own copy of the input: neither may modify
+	// it, which is checked below.
+	oldData, newData := bytes.Clone(data), bytes.Clone(data)
+	oldMsg, newMsg := zero(proto), zero(proto)
+	oldErr := oldDecode(oldData, oldMsg)
+	newErr := newDecode(newData, newMsg)
+	if !bytes.Equal(newData, data) {
+		t.Fatalf("%T: decoding modified the input %q", proto, data)
+	}
+	if (oldErr == nil) != (newErr == nil) {
+		if knownDivergence(data, oldErr, newErr) {
+			return
 		}
-		if (oldErr == nil) != (newErr == nil) {
-			if knownDivergence(data, oldErr, newErr) {
-				continue
-			}
-			t.Fatalf("%T zeroCopy=%v input %q:\nold error: %v\nnew error: %v", proto, zeroCopy, data, oldErr, newErr)
-		}
-		if oldErr != nil {
-			continue
-		}
-		if !reflect.DeepEqual(oldMsg, newMsg) {
-			t.Fatalf("%T zeroCopy=%v input %q:\nold: %s\nnew: %s", proto, zeroCopy, data, dump(oldMsg), dump(newMsg))
-		}
-		// The same strings must point into the input and the same must be
-		// copies of it. Code using protocol may depend, knowingly or not, on
-		// which strings stay valid when the read buffer is reused.
-		if aliasingDiffers(data) {
-			continue
-		}
-		oldAliases, newAliases := aliases(oldMsg, oldData), aliases(newMsg, newData)
-		if !zeroCopy && strings.Contains(newAliases, "1") {
-			t.Fatalf("%T input %q: a string points into the input without zero-copy", proto, data)
-		}
-		if oldAliases != newAliases {
-			t.Fatalf("%T zeroCopy=%v input %q: different strings point into the input:\nold: %s\nnew: %s",
-				proto, zeroCopy, data, oldAliases, newAliases)
-		}
+		t.Fatalf("%T input %q:\nold error: %v\nnew error: %v", proto, data, oldErr, newErr)
+	}
+	if oldErr != nil {
+		return
+	}
+	if !reflect.DeepEqual(oldMsg, newMsg) {
+		t.Fatalf("%T input %q:\nold: %s\nnew: %s", proto, data, dump(oldMsg), dump(newMsg))
+	}
+	// No string may point into the input: code using protocol keeps strings
+	// of a message after the read buffer is reused.
+	if strings.Contains(aliases(newMsg, newData), "1") {
+		t.Fatalf("%T input %q: a decoded string points into the input", proto, data)
 	}
 }
 
@@ -386,21 +375,19 @@ func TestFoldKeysMatchesSegmentio(t *testing.T) {
 		m := randomMessage(r, 3)
 		exact := m.AppendJSON(nil)
 		for _, data := range [][]byte{exact, capitalizeKeys(exact)} {
-			for _, zeroCopy := range []bool{false, true} {
-				oldMsg, newMsg := zero(m), zero(m)
-				oldErr := segmentioDecode(bytes.Clone(data), oldMsg, zeroCopy)
-				newErr := foldDecode(bytes.Clone(data), newMsg, zeroCopy)
-				if oldErr != nil || newErr != nil {
-					// Map keys are capitalized as well, which may make two
-					// of them the same key.
-					if oldErr == nil && hasRepeatedKey(data) {
-						continue
-					}
-					t.Fatalf("%T input %q:\nold error: %v\nnew error: %v", m, data, oldErr, newErr)
+			oldMsg, newMsg := zero(m), zero(m)
+			oldErr := segmentioDecode(bytes.Clone(data), oldMsg)
+			newErr := foldDecode(bytes.Clone(data), newMsg)
+			if oldErr != nil || newErr != nil {
+				// Map keys are capitalized as well, which may make two
+				// of them the same key.
+				if oldErr == nil && hasRepeatedKey(data) {
+					continue
 				}
-				if !reflect.DeepEqual(oldMsg, newMsg) {
-					t.Fatalf("%T input %q:\nold: %s\nnew: %s", m, data, dump(oldMsg), dump(newMsg))
-				}
+				t.Fatalf("%T input %q:\nold error: %v\nnew error: %v", m, data, oldErr, newErr)
+			}
+			if !reflect.DeepEqual(oldMsg, newMsg) {
+				t.Fatalf("%T input %q:\nold: %s\nnew: %s", m, data, dump(oldMsg), dump(newMsg))
 			}
 		}
 	}

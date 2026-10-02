@@ -123,19 +123,19 @@ func FuzzProtobufStreamDecode(f *testing.F) {
 }
 
 // fuzzJSONRoundTrip checks what decoding of untrusted JSON must be, whatever
-// the input: it does not modify the input, copying and zero-copy decoding
-// agree, what is accepted is valid JSON and encodes to valid JSON, and that
+// the input: it does not modify the input, decoding with and without Prescan
+// agrees, what is accepted is valid JSON and encodes to valid JSON, and that
 // decodes back to the very same message.
 func fuzzJSONRoundTrip(t *testing.T, data []byte, newMessage func() message) {
 	input := bytes.Clone(data)
-	msg, zeroCopy := newMessage(), newMessage()
+	msg, prescanned := newMessage(), newMessage()
 	n := msg.DecodeJSON(data, cfjson.SkipSpace(data, 0), 0)
-	nz := zeroCopy.DecodeJSON(data, cfjson.SkipSpace(data, 0), cfjson.ZeroCopy)
+	np := prescanned.DecodeJSON(data, cfjson.SkipSpace(data, 0), cfjson.Prescan(data, 0))
 	if !bytes.Equal(input, data) {
 		t.Fatalf("decoding modified the input %q", input)
 	}
-	if n != nz {
-		t.Fatalf("decoding %q returned %d, with ZeroCopy %d", input, n, nz)
+	if n != np {
+		t.Fatalf("decoding %q returned %d, with Prescan %d", input, n, np)
 	}
 	if n < 0 {
 		if err := cfjson.Error(data, n); err == nil {
@@ -146,8 +146,8 @@ func fuzzJSONRoundTrip(t *testing.T, data []byte, newMessage func() message) {
 	if n > len(data) {
 		t.Fatalf("decoding %q returned %d", input, n)
 	}
-	if !reflect.DeepEqual(msg, zeroCopy) {
-		t.Fatalf("decoding %q with ZeroCopy gives a different message", input)
+	if !reflect.DeepEqual(msg, prescanned) {
+		t.Fatalf("decoding %q with Prescan gives a different message", input)
 	}
 	if !cfjson.Valid(data[:n]) {
 		t.Fatalf("decoded %q which is not valid JSON", data[:n])

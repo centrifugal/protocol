@@ -25,23 +25,15 @@ type message interface {
 
 // segmentioDecode is how protocol and Centrifugo decode with segmentio: with
 // its default, case-insensitive, matching of keys.
-func segmentioDecode(data []byte, m message, zeroCopy bool) error {
-	var flags segmentio.ParseFlags
-	if zeroCopy {
-		flags = segmentio.ZeroCopy
-	}
-	_, err := segmentio.Parse(data, m, flags)
+func segmentioDecode(data []byte, m message) error {
+	_, err := segmentio.Parse(data, m, 0)
 	return err
 }
 
 // foldDecode decodes with the case-insensitive decoder of cfjson.
-func foldDecode(data []byte, m message, zeroCopy bool) error {
-	var flags cfjson.Flags
-	if zeroCopy {
-		flags = cfjson.ZeroCopy
-	}
+func foldDecode(data []byte, m message) error {
 	// What cfjson.Unmarshal does, with the other method.
-	n := m.DecodeJSONFold(data, cfjson.SkipSpace(data, 0), cfjson.Prescan(data, flags))
+	n := m.DecodeJSONFold(data, cfjson.SkipSpace(data, 0), cfjson.Prescan(data, 0))
 	if n < 0 {
 		return cfjson.Error(data, n)
 	}
@@ -78,26 +70,20 @@ func newEncode(m message) []byte {
 	return ret
 }
 
-// oldDecode is how protocol decoded a message before cfjson, with one
-// exception: keys are matched exactly, which cfjson does and segmentio has a
-// flag for. protocol did not set it, so a key written in another case
-// (`{"ID":1}`) used to be matched to its field.
-func oldDecode(data []byte, m message, zeroCopy bool) error {
-	flags := segmentio.DontMatchCaseInsensitiveStructFields
-	if zeroCopy {
-		flags |= segmentio.ZeroCopy
-	}
-	_, err := segmentio.Parse(data, m, flags)
+// oldDecode is how protocol decoded a message before cfjson, with two
+// exceptions. Keys are matched exactly, which cfjson does and segmentio has a
+// flag for: protocol did not set it, so a key written in another case
+// (`{"ID":1}`) used to be matched to its field. And strings are copied: the
+// frame decoder of protocol used to decode with segmentio's ZeroCopy, which
+// left plain ASCII strings pointing into the frame. cfjson always copies.
+func oldDecode(data []byte, m message) error {
+	_, err := segmentio.Parse(data, m, segmentio.DontMatchCaseInsensitiveStructFields)
 	return err
 }
 
 // newDecode is how protocol decodes a message now.
-func newDecode(data []byte, m message, zeroCopy bool) error {
-	var flags cfjson.Flags
-	if zeroCopy {
-		flags = cfjson.ZeroCopy
-	}
-	return cfjson.Unmarshal(data, m, flags)
+func newDecode(data []byte, m message) error {
+	return cfjson.Unmarshal(data, m, 0)
 }
 
 var rawType = reflect.TypeOf(Raw(nil))

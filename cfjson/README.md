@@ -207,9 +207,8 @@ the two rules about keys, which are the ones `encoding/json/v2` has:
   since nothing here recurses on it;
 - `-fold-keys` folds the case of ASCII letters only (`encoding/json` also
   folds a few other letters, such as the Kelvin sign to `k`);
-- with the `cfjson.ZeroCopy` flag strings which are plain ASCII without
-  escape sequences point into the input; without it everything decoded is a
-  copy. Raw values are always copied.
+- everything decoded is a copy, strings and raw values alike: nothing points
+  into the input, which may be reused as soon as decoding returns.
 
 ## Safety
 
@@ -223,10 +222,8 @@ Decoders are meant for untrusted input:
   can contain themselves the depth comes from the input, so it is limited to
   `cfjson.MaxDepth`, 1024 levels;
 - everything is linear in the size of the input;
-- `unsafe` is used in exactly one place, `zerocopy.go`, to make a string share
-  memory with the input. It is only reached when the caller passes
-  `ZeroCopy`. Everything else is ordinary bounds-checked Go, and generated
-  code uses no `unsafe` at all.
+- no `unsafe`, in the package or in generated code: everything is ordinary
+  bounds-checked Go.
 
 How this is checked:
 

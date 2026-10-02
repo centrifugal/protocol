@@ -106,7 +106,7 @@ func TestStdlibTestInputs(t *testing.T) {
 			if err := stdjson.Unmarshal(data, &wantStr); err != nil {
 				t.Fatalf("%q: %v", s, err)
 			}
-			for _, f := range []Flags{0, ZeroCopy, Prescan(data, 0), Prescan(data, ZeroCopy)} {
+			for _, f := range []Flags{0, Prescan(data, 0)} {
 				var got string
 				if n := String(data, start, f, &got); n < 0 {
 					t.Errorf("String(%q) with flags %d: %v", s, f, Error(data, n))

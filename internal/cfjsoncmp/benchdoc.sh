@@ -87,10 +87,10 @@ How to read the sections:
   the generated code to compare.
 - **Decode** is decoding into a new message. `segmentio` is what `protocol`
   used. `easyjson` is the decoder easyjson generates, which `protocol` never
-  used; it is there because cfjson replaces easyjson as the generator. It
-  always copies, so it is only in the copying table.
-- **Decode, codec only** decodes into the same message over and over without
-  copying strings, so that there is next to nothing to allocate. `protocol`
+  used; it is there because cfjson replaces easyjson as the generator. All
+  of them copy strings out of the input.
+- **Decode, codec only** decodes into the same message over and over, so
+  that there is little besides strings to allocate. `protocol`
   never decodes this way. segmentio decodes into the elements a slice already
   has, where cfjson allocates new ones so that fields of a previous message
   cannot leak into the next: that is why cfjson is behind for the two replies
@@ -139,14 +139,6 @@ HEADER
     echo
     table "$file" ".name:Decode /mode:copy" "allocs/op"
 
-    echo
-    echo "### Decode, zero-copy"
-    echo
-    table "$file" ".name:Decode /mode:zerocopy" "sec/op"
-    echo
-    echo "Allocations:"
-    echo
-    table "$file" ".name:Decode /mode:zerocopy" "allocs/op"
 
     echo
     echo "### Decode, codec only"

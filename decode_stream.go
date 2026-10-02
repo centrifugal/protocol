@@ -209,8 +209,8 @@ func commandLen(cmdBytes []byte) int {
 //
 // The returned slice is only valid until the next Decode call - it may point
 // into the bufio.Reader buffer or into a buffer reused across calls. Callers
-// must copy anything they keep, which DecodeJSON does since it's used here
-// without the cfjson.ZeroCopy flag.
+// must copy anything they keep, which DecodeJSON does: nothing it decodes
+// points into its input.
 func (d *JSONStreamCommandDecoder) readLine() ([]byte, error) {
 	chunk, err := d.reader.ReadSlice('\n')
 	if !errors.Is(err, bufio.ErrBufferFull) {

@@ -117,7 +117,7 @@ func TestJSONTestSuite_Values(t *testing.T) {
 		switch want := doc[0].(type) {
 		case string:
 			stringsSeen++
-			for _, f := range []Flags{0, ZeroCopy, Prescan(data, 0), Prescan(data, ZeroCopy)} {
+			for _, f := range []Flags{0, Prescan(data, 0)} {
 				var got string
 				if n := String(data, i, f, &got); n < 0 {
 					t.Errorf("%s: String with flags %d: %v", name, f, Error(data, n))

@@ -8,11 +8,16 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"math/rand"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/centrifugal/protocol/cfjson"
 	"github.com/centrifugal/protocol/cfjson/gen"
@@ -238,4 +243,138 @@ func protoLength(n int) []byte {
 		n >>= 7
 	}
 	return append(out, byte(n))
+}
+
+// jsonPayloads are values random payloads are given for the JSON encoding,
+// which writes a payload as it is and so needs it to be JSON.
+var jsonPayloads = []string{
+	`null`, `0`, `-1.5e10`, `""`, `"h\u00e9llo \ud83d\ude00"`, `[]`, `[1,"a",null,true]`,
+	`{}`, `{"a":{"b":[{"c":"<&>"}]}}`, `{ "spaced" : [ 1 ] }`,
+}
+
+// setJSONPayloads replaces every payload in v which is not empty with a JSON
+// value.
+func setJSONPayloads(r *rand.Rand, v reflect.Value) {
+	switch v.Kind() {
+	case reflect.Pointer:
+		if !v.IsNil() {
+			setJSONPayloads(r, v.Elem())
+		}
+	case reflect.Struct:
+		for i := 0; i < v.NumField(); i++ {
+			if v.Type().Field(i).IsExported() {
+				setJSONPayloads(r, v.Field(i))
+			}
+		}
+	case reflect.Slice:
+		if v.Type() == reflect.TypeFor[Raw]() {
+			if v.Len() > 0 {
+				v.SetBytes([]byte(jsonPayloads[r.Intn(len(jsonPayloads))]))
+			}
+			return
+		}
+		for i := 0; i < v.Len(); i++ {
+			setJSONPayloads(r, v.Index(i))
+		}
+	case reflect.Map:
+		for iter := v.MapRange(); iter.Next(); {
+			elem := reflect.New(v.Type().Elem()).Elem()
+			elem.Set(iter.Value())
+			setJSONPayloads(r, elem)
+			v.SetMapIndex(iter.Key(), elem)
+		}
+	}
+}
+
+// What the encoders of the package write, its decoders read back as the same
+// message: for every message type, with random values, in both encodings.
+// proto.Equal does not tell an empty slice, map or payload from a missing
+// one, which encoders may drop.
+func TestRoundTrip(t *testing.T) {
+	forEachType(t, func(t *testing.T, protoType Type) {
+		r := rand.New(rand.NewSource(7))
+		for n := 0; n < 20000; n++ {
+			name, m := randomPBMessage(r, 3)
+			var got message
+			if protoType == TypeJSON {
+				setJSONPayloads(r, reflect.ValueOf(m))
+				data := m.AppendJSON(nil)
+				require.True(t, cfjson.Valid(data), "%s: %s", name, data)
+				got = newMessage(name)
+				// Payloads are written as they are and come back as they
+				// were written, spaces inside of them too (spaces around a
+				// value are not a part of it, and do not come back).
+				require.NoError(t, cfjson.Unmarshal(data, got, 0), "%s: %s", name, data)
+			} else {
+				data, err := m.MarshalCF()
+				require.NoError(t, err, name)
+				got = newMessage(name)
+				require.NoError(t, got.UnmarshalCF(data), "%s: %x", name, data)
+			}
+			require.True(t, proto.Equal(m, got), "%s:\nencoded %v\ndecoded %v", name, m, got)
+		}
+	})
+}
+
+// The two encodings of a message mean the same: a message which goes through
+// JSON and one which goes through Protobuf come out equal. A field the
+// generator lost or got wrong in one of the codecs shows up here.
+func TestCrossFormat(t *testing.T) {
+	r := rand.New(rand.NewSource(11))
+	for n := 0; n < 20000; n++ {
+		name, m := randomPBMessage(r, 3)
+		setJSONPayloads(r, reflect.ValueOf(m))
+
+		viaJSON := newMessage(name)
+		require.NoError(t, cfjson.Unmarshal(m.AppendJSON(nil), viaJSON, 0), name)
+
+		data, err := m.MarshalCF()
+		require.NoError(t, err, name)
+		viaProtobuf := newMessage(name)
+		require.NoError(t, viaProtobuf.UnmarshalCF(data), name)
+
+		require.True(t, proto.Equal(viaJSON, viaProtobuf), "%s:\nvia JSON     %v\nvia Protobuf %v", name, viaJSON, viaProtobuf)
+	}
+}
+
+// generate.sh is what generates the code: the freshness tests above call the
+// generators as libraries, this runs their commands with the very flags of
+// generate.sh and compares what they write with the files in the repository.
+func TestGenerateScript(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds the generators")
+	}
+	script, err := os.ReadFile("generate.sh")
+	require.NoError(t, err)
+	commands := 0
+	for _, line := range strings.Split(string(script), "\n") {
+		if !strings.HasPrefix(line, "go run ./cfjson/cmd/cfjson ") && !strings.HasPrefix(line, "go run ./cfprotobuf/cmd/cfprotobuf ") {
+			continue
+		}
+		commands++
+		args := strings.Fields(line)[2:]
+		var committed string
+		for i := range args {
+			if args[i] == "-out" {
+				committed = args[i+1]
+				args[i+1] = filepath.Join(t.TempDir(), committed)
+			}
+		}
+		require.NotEmpty(t, committed, line)
+		out, err := exec.Command("go", append([]string{"run"}, args...)...).CombinedOutput() //nolint:gosec // G204: the commands of generate.sh.
+		require.NoError(t, err, "%s: %s", line, out)
+
+		var written string
+		for i := range args {
+			if args[i] == "-out" {
+				written = args[i+1]
+			}
+		}
+		want, err := os.ReadFile(committed) //nolint:gosec // G304: a file generate.sh names.
+		require.NoError(t, err)
+		got, err := os.ReadFile(written) //nolint:gosec // G304: a file of t.TempDir.
+		require.NoError(t, err)
+		require.True(t, bytes.Equal(want, got), "%s differs from what generate.sh writes, run make generate", committed)
+	}
+	require.Equal(t, 2, commands, "generate.sh has no longer the commands this test runs")
 }

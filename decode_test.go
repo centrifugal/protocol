@@ -1,8 +1,10 @@
 package protocol
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -223,4 +225,73 @@ func TestReplyDecoder_Malformed(t *testing.T) {
 			require.ErrorIs(t, err, tt.err)
 		})
 	}
+}
+
+// What decoding a frame allocates: the Command, the request in it, and
+// whatever the request has which can't point into the frame. A change which
+// adds an allocation per command shows up here.
+func TestCommandDecoder_Allocations(t *testing.T) {
+	if raceEnabled {
+		t.Skip("the race detector allocates")
+	}
+	cmds := []*Command{
+		{Id: 1, Connect: &ConnectRequest{Token: "token", Name: "js", Version: "5.0.0"}},
+		{Id: 2, Subscribe: &SubscribeRequest{Channel: "a", Recover: true, Epoch: "e", Offset: 5}},
+		{Id: 3, Subscribe: &SubscribeRequest{Channel: "b"}},
+	}
+	for _, tt := range []struct {
+		protoType Type
+		allocs    float64
+	}{
+		// A Command, a request and a copied channel name each, for both.
+		{TypeJSON, 9},
+		{TypeProtobuf, 9},
+	} {
+		frame := commandFrame(t, tt.protoType, cmds...)
+		allocs := testing.AllocsPerRun(100, func() {
+			decoder := GetCommandDecoder(tt.protoType, frame)
+			for {
+				if _, err := decoder.Decode(); err != nil {
+					break
+				}
+			}
+			PutCommandDecoder(tt.protoType, decoder)
+		})
+		require.Equal(t, tt.allocs, allocs, string(tt.protoType))
+	}
+}
+
+// Decoders come from pools. Used from many goroutines at once, each must
+// decode its own frame and nothing of another.
+func TestCommandDecoder_Concurrent(t *testing.T) {
+	forEachType(t, func(t *testing.T, protoType Type) {
+		var wg sync.WaitGroup
+		for g := 0; g < 8; g++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for i := 0; i < 300; i++ {
+					cmds := []*Command{publishCommand(uint32(g*1000+i), "c", 10+i*37%5000), {Id: uint32(g*1000 + i + 1)}}
+					frame := commandFrame(t, protoType, cmds...)
+
+					decoder := GetCommandDecoder(protoType, frame)
+					got := readCommands(t, decoder)
+					PutCommandDecoder(protoType, decoder)
+
+					stream := GetStreamCommandDecoderLimited(protoType, bytes.NewReader(frame), 1<<20)
+					streamed := readStream(t, stream)
+					PutStreamCommandDecoder(protoType, stream)
+
+					for _, decoded := range [][]*Command{got, streamed} {
+						if len(decoded) != 2 || decoded[0].Id != cmds[0].Id ||
+							string(decoded[0].Publish.Data) != string(cmds[0].Publish.Data) || decoded[1].Id != cmds[1].Id {
+							t.Errorf("frame of %d decoded to %v", cmds[0].Id, decoded)
+							return
+						}
+					}
+				}
+			}()
+		}
+		wg.Wait()
+	})
 }

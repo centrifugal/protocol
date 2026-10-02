@@ -1,7 +1,9 @@
 package protocol
 
 import (
+	"reflect"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -497,5 +499,169 @@ func TestEncodeJSON(t *testing.T) {
 	t.Run("larger than the pool keeps", func(t *testing.T) {
 		channel := strings.Repeat("c", maxBufferLength+1)
 		require.Equal(t, `{"channel":"`+channel+`"}`, string(encodeJSON(&Push{Channel: channel})))
+	})
+}
+
+// payloadPath is how a payload is reached from a message: field indexes,
+// with -1 for an element of a slice or a value of a map.
+type payloadPath []int
+
+// payloadPaths returns the paths to every payload in a value of type t,
+// through pointers, slices and maps. A type is not entered again while it is
+// being walked, so recursive types end.
+func payloadPaths(t reflect.Type, walking map[reflect.Type]bool) []payloadPath {
+	if t == reflect.TypeFor[Raw]() {
+		return []payloadPath{nil}
+	}
+	switch t.Kind() {
+	case reflect.Pointer, reflect.Slice, reflect.Map:
+		var paths []payloadPath
+		for _, p := range payloadPaths(t.Elem(), walking) {
+			if t.Kind() == reflect.Pointer {
+				paths = append(paths, p)
+			} else {
+				paths = append(paths, append(payloadPath{-1}, p...))
+			}
+		}
+		return paths
+	case reflect.Struct:
+		if walking[t] {
+			return nil
+		}
+		walking[t] = true
+		defer delete(walking, t)
+		var paths []payloadPath
+		for i := 0; i < t.NumField(); i++ {
+			if !t.Field(i).IsExported() {
+				continue
+			}
+			for _, p := range payloadPaths(t.Field(i).Type, walking) {
+				paths = append(paths, append(payloadPath{i}, p...))
+			}
+		}
+		return paths
+	}
+	return nil
+}
+
+// setPayload sets the payload at the end of path in v, making what is on the
+// way there, and returns how the payload is reached, for messages.
+func setPayload(v reflect.Value, path payloadPath, raw Raw) string {
+	if v.Type() == reflect.TypeFor[Raw]() {
+		v.SetBytes(raw)
+		return ""
+	}
+	switch v.Kind() {
+	case reflect.Pointer:
+		if v.IsNil() {
+			v.Set(reflect.New(v.Type().Elem()))
+		}
+		return setPayload(v.Elem(), path, raw)
+	case reflect.Slice:
+		v.Set(reflect.MakeSlice(v.Type(), 1, 1))
+		return "[0]" + setPayload(v.Index(0), path[1:], raw)
+	case reflect.Map:
+		// A value of a map cannot be set in place: it is filled first.
+		elem := reflect.New(v.Type().Elem()).Elem()
+		where := setPayload(elem, path[1:], raw)
+		v.Set(reflect.MakeMap(v.Type()))
+		v.SetMapIndex(reflect.ValueOf("k").Convert(v.Type().Key()), elem)
+		return "[k]" + where
+	case reflect.Struct:
+		return "." + v.Type().Field(path[0]).Name + setPayload(v.Field(path[0]), path[1:], raw)
+	}
+	panic("no payload at the end of the path in " + v.Type().String())
+}
+
+// Every payload a reply or a push can have is checked by the JSON encoders,
+// wherever it is. The places are found by reflection, so a payload field
+// added to the schema is covered without a change here. See also
+// TestJSONEncoder_Payloads for which payloads are refused.
+func TestJSONEncoder_EveryPayloadIsChecked(t *testing.T) {
+	encode := map[reflect.Type]func(v any) error{
+		reflect.TypeFor[*Reply](): func(v any) error { _, err := NewJSONReplyEncoder().Encode(v.(*Reply)); return err },
+		reflect.TypeFor[*Push]():  func(v any) error { _, err := NewJSONPushEncoder().Encode(v.(*Push)); return err },
+	}
+	total := 0
+	for typ, enc := range encode {
+		paths := payloadPaths(typ, map[reflect.Type]bool{})
+		require.NotEmpty(t, paths, typ.String())
+		for _, path := range paths {
+			total++
+			bad := reflect.New(typ.Elem())
+			where := setPayload(bad, path, Raw(`1,"x":2`))
+			require.ErrorIs(t, enc(bad.Interface()), errInvalidJSON, "%s%s", typ.Elem().Name(), where)
+
+			good := reflect.New(typ.Elem())
+			setPayload(good, path, Raw(`{"a":1}`))
+			require.NoError(t, enc(good.Interface()), "%s%s", typ.Elem().Name(), where)
+		}
+	}
+	// 51 places in a Reply and 20 in a Push today. Fewer would mean the walk
+	// above lost some.
+	require.GreaterOrEqual(t, total, 71)
+}
+
+// The encoders of replies and pushes allocate the result and nothing else:
+// that is what keeps a broadcast to many subscribers cheap. Checked so that a
+// change which adds an allocation shows up here, not in production.
+func TestEncoder_Allocations(t *testing.T) {
+	if raceEnabled {
+		t.Skip("the race detector allocates")
+	}
+	reply := &Reply{Id: 1, Connect: &ConnectResult{Client: "client", Version: "6.0.0", Ping: 25, Pong: true, Data: Raw(`{"a":1}`)}}
+	push := &Push{Channel: "chat", Pub: &Publication{Data: Raw(`{"text":"hello"}`), Offset: 5,
+		Info: &ClientInfo{User: "u", Client: "c", ConnInfo: Raw(`{"name":"n"}`)}, Tags: map[string]string{"k": "v"}}}
+	forEachType(t, func(t *testing.T, protoType Type) {
+		replyEncoder, pushEncoder := GetReplyEncoder(protoType), GetPushEncoder(protoType)
+		allocs := testing.AllocsPerRun(100, func() {
+			if _, err := replyEncoder.Encode(reply); err != nil {
+				t.Fatal(err)
+			}
+		})
+		require.Equal(t, 1.0, allocs, "reply")
+		allocs = testing.AllocsPerRun(100, func() {
+			if _, err := pushEncoder.Encode(push); err != nil {
+				t.Fatal(err)
+			}
+		})
+		require.Equal(t, 1.0, allocs, "push")
+	})
+}
+
+// The encoders share pooled buffers. Used from many goroutines at once, each
+// must still get its own result, never one written over by another.
+func TestEncoder_Concurrent(t *testing.T) {
+	forEachType(t, func(t *testing.T, protoType Type) {
+		var wg sync.WaitGroup
+		for g := 0; g < 8; g++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for i := 0; i < 500; i++ {
+					id := uint32(g*1000 + i)
+					reply := &Reply{Id: id, Push: &Push{Channel: "c", Pub: &Publication{Data: textPayload(10+i%300, int64(id)), Offset: uint64(id)}}}
+					data, err := GetReplyEncoder(protoType).Encode(reply)
+					if err != nil {
+						t.Error(err)
+						return
+					}
+					encoder := GetDataEncoder(protoType)
+					if err := encoder.Encode(data); err != nil {
+						t.Error(err)
+						return
+					}
+					frame := encoder.Finish()
+					PutDataEncoder(protoType, encoder)
+					replies := readReplies(t, newReplyDecoder(protoType, frame))
+					if len(replies) != 1 || replies[0].Id != id || replies[0].Push.Pub.Offset != uint64(id) ||
+						string(replies[0].Push.Pub.Data) != string(reply.Push.Pub.Data) {
+						t.Errorf("reply %d came back as %v", id, replies)
+						return
+					}
+				}
+			}()
+		}
+		wg.Wait()
 	})
 }

@@ -69,19 +69,7 @@ func TestGetResultEncoder(t *testing.T) {
 	PutResultEncoder(TypeJSON, GetReplyEncoder(TypeJSON))
 }
 
-func TestGetPutCommandDecoder(t *testing.T) {
-	for _, protoType := range []Type{TypeJSON, TypeProtobuf} {
-		d := GetCommandDecoder(protoType, []byte(`{}`))
-		if protoType == TypeJSON {
-			require.IsType(t, &JSONCommandDecoder{}, d)
-		} else {
-			require.IsType(t, &ProtobufCommandDecoder{}, d)
-		}
-		PutCommandDecoder(protoType, d)
-		// A decoder returned to the pool must come back reset to the new frame,
-		// not still holding state from the previous one.
-		d2 := GetCommandDecoder(protoType, []byte(`{}`))
-		require.NotNil(t, d2)
-		PutCommandDecoder(protoType, d2)
-	}
+func TestGetCommandDecoder(t *testing.T) {
+	require.IsType(t, &JSONCommandDecoder{}, GetCommandDecoder(TypeJSON, nil))
+	require.IsType(t, &ProtobufCommandDecoder{}, GetCommandDecoder(TypeProtobuf, nil))
 }

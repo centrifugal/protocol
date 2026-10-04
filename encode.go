@@ -4,22 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-
-	fastJSON "github.com/segmentio/encoding/json"
 )
 
 var errInvalidJSON = errors.New("invalid JSON data")
-
-// checks that JSON is valid.
-func isValidJSON(b []byte) error {
-	if b == nil {
-		return nil
-	}
-	if !fastJSON.Valid(b) {
-		return errInvalidJSON
-	}
-	return nil
-}
 
 // PushEncoder encodes Push and its parts to bytes.
 //
@@ -58,79 +45,58 @@ func NewJSONPushEncoder() *JSONPushEncoder {
 
 // Encode Push to bytes.
 func (e *JSONPushEncoder) Encode(message *Push) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	res, err := jw.BuildBytes()
-	if err != nil {
-		return nil, err
+	// Payloads are given by the application and may be anything. The rest
+	// of a message is written by generated code, so payloads which are
+	// valid JSON values are all it takes for the message to be valid.
+	if !message.validRaw() {
+		return nil, errInvalidJSON
 	}
-	if err := isValidJSON(res); err != nil {
-		return nil, err
-	}
-	return res, nil
+	return encodeJSON(message), nil
 }
 
 // EncodePublication to bytes.
 func (e *JSONPushEncoder) EncodePublication(message *Publication, reuse ...[]byte) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes(reuse...)
+	return encodeJSON(message, reuse...), nil
 }
 
 // EncodeMessage to bytes.
 func (e *JSONPushEncoder) EncodeMessage(message *Message, reuse ...[]byte) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes(reuse...)
+	return encodeJSON(message, reuse...), nil
 }
 
 // EncodeJoin to bytes.
 func (e *JSONPushEncoder) EncodeJoin(message *Join, reuse ...[]byte) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes(reuse...)
+	return encodeJSON(message, reuse...), nil
 }
 
 // EncodeLeave to bytes.
 func (e *JSONPushEncoder) EncodeLeave(message *Leave, reuse ...[]byte) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes(reuse...)
+	return encodeJSON(message, reuse...), nil
 }
 
 // EncodeUnsubscribe to bytes.
 func (e *JSONPushEncoder) EncodeUnsubscribe(message *Unsubscribe, reuse ...[]byte) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes(reuse...)
+	return encodeJSON(message, reuse...), nil
 }
 
 // EncodeSubscribe to bytes.
 func (e *JSONPushEncoder) EncodeSubscribe(message *Subscribe, reuse ...[]byte) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes(reuse...)
+	return encodeJSON(message, reuse...), nil
 }
 
 // EncodeConnect to bytes.
 func (e *JSONPushEncoder) EncodeConnect(message *Connect, reuse ...[]byte) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes(reuse...)
+	return encodeJSON(message, reuse...), nil
 }
 
 // EncodeDisconnect to bytes.
 func (e *JSONPushEncoder) EncodeDisconnect(message *Disconnect, reuse ...[]byte) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes(reuse...)
+	return encodeJSON(message, reuse...), nil
 }
 
 // EncodeRefresh to bytes.
 func (e *JSONPushEncoder) EncodeRefresh(message *Refresh, reuse ...[]byte) ([]byte, error) {
-	jw := newWriter()
-	message.MarshalEasyJSON(jw)
-	return jw.BuildBytes(reuse...)
+	return encodeJSON(message, reuse...), nil
 }
 
 // ProtobufPushEncoder is a PushEncoder which encodes to Protobuf.
@@ -145,142 +111,142 @@ func NewProtobufPushEncoder() *ProtobufPushEncoder {
 
 // Encode Push to bytes.
 func (e *ProtobufPushEncoder) Encode(message *Push) ([]byte, error) {
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodePublication to bytes.
 func (e *ProtobufPushEncoder) EncodePublication(message *Publication, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeMessage to bytes.
 func (e *ProtobufPushEncoder) EncodeMessage(message *Message, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeJoin to bytes.
 func (e *ProtobufPushEncoder) EncodeJoin(message *Join, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeLeave to bytes.
 func (e *ProtobufPushEncoder) EncodeLeave(message *Leave, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeUnsubscribe to bytes.
 func (e *ProtobufPushEncoder) EncodeUnsubscribe(message *Unsubscribe, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeSubscribe to bytes.
 func (e *ProtobufPushEncoder) EncodeSubscribe(message *Subscribe, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeConnect to bytes.
 func (e *ProtobufPushEncoder) EncodeConnect(message *Connect, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeDisconnect to bytes.
 func (e *ProtobufPushEncoder) EncodeDisconnect(message *Disconnect, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // EncodeRefresh to bytes.
 func (e *ProtobufPushEncoder) EncodeRefresh(message *Refresh, reuse ...[]byte) ([]byte, error) {
 	if len(reuse) == 1 {
-		size := message.SizeVT()
+		size := message.SizeCF()
 		if cap(reuse[0]) >= size {
-			n, err := message.MarshalToSizedBufferVT(reuse[0][:size])
+			n, err := message.MarshalToSizedBufferCF(reuse[0][:size])
 			if err != nil {
 				return nil, err
 			}
 			return reuse[0][:n], nil
 		}
 	}
-	return message.MarshalVT()
+	return message.MarshalCF()
 }
 
 // ReplyEncoder encodes Reply to bytes. Use GetReplyEncoder to get an
@@ -300,16 +266,11 @@ func NewJSONReplyEncoder() *JSONReplyEncoder {
 
 // Encode Reply to bytes.
 func (e *JSONReplyEncoder) Encode(r *Reply) ([]byte, error) {
-	jw := newWriter()
-	r.MarshalEasyJSON(jw)
-	result, err := jw.BuildBytes()
-	if err != nil {
-		return nil, err
+	// See JSONPushEncoder.Encode.
+	if !r.validRaw() {
+		return nil, errInvalidJSON
 	}
-	if err := isValidJSON(result); err != nil {
-		return nil, err
-	}
-	return result, nil
+	return encodeJSON(r), nil
 }
 
 // ProtobufReplyEncoder is a ReplyEncoder which encodes to Protobuf.
@@ -323,7 +284,7 @@ func NewProtobufReplyEncoder() *ProtobufReplyEncoder {
 
 // Encode Reply to bytes.
 func (e *ProtobufReplyEncoder) Encode(r *Reply) ([]byte, error) {
-	return r.MarshalVT()
+	return r.MarshalCF()
 }
 
 // DataEncoder concatenates already encoded messages into a single transport
@@ -458,79 +419,57 @@ func NewJSONResultEncoder() *JSONResultEncoder {
 
 // EncodeConnectResult encodes ConnectResult to bytes.
 func (e *JSONResultEncoder) EncodeConnectResult(res *ConnectResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodeRefreshResult encodes RefreshResult to bytes.
 func (e *JSONResultEncoder) EncodeRefreshResult(res *RefreshResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodeSubscribeResult encodes SubscribeResult to bytes.
 func (e *JSONResultEncoder) EncodeSubscribeResult(res *SubscribeResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodeSubRefreshResult encodes SubRefreshResult to bytes.
 func (e *JSONResultEncoder) EncodeSubRefreshResult(res *SubRefreshResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodeUnsubscribeResult encodes UnsubscribeResult to bytes.
 func (e *JSONResultEncoder) EncodeUnsubscribeResult(res *UnsubscribeResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodePublishResult encodes PublishResult to bytes.
 func (e *JSONResultEncoder) EncodePublishResult(res *PublishResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodePresenceResult encodes PresenceResult to bytes.
 func (e *JSONResultEncoder) EncodePresenceResult(res *PresenceResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodePresenceStatsResult encodes PresenceStatsResult to bytes.
 func (e *JSONResultEncoder) EncodePresenceStatsResult(res *PresenceStatsResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodeHistoryResult encodes HistoryResult to bytes.
 func (e *JSONResultEncoder) EncodeHistoryResult(res *HistoryResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodePingResult encodes PingResult to bytes.
 func (e *JSONResultEncoder) EncodePingResult(res *PingResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // EncodeRPCResult encodes RPCResult to bytes.
 func (e *JSONResultEncoder) EncodeRPCResult(res *RPCResult) ([]byte, error) {
-	jw := newWriter()
-	res.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(res), nil
 }
 
 // ProtobufResultEncoder is a ResultEncoder which encodes to Protobuf.
@@ -544,57 +483,57 @@ func NewProtobufResultEncoder() *ProtobufResultEncoder {
 
 // EncodeConnectResult encodes ConnectResult to bytes.
 func (e *ProtobufResultEncoder) EncodeConnectResult(res *ConnectResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeRefreshResult encodes RefreshResult to bytes.
 func (e *ProtobufResultEncoder) EncodeRefreshResult(res *RefreshResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeSubscribeResult encodes SubscribeResult to bytes.
 func (e *ProtobufResultEncoder) EncodeSubscribeResult(res *SubscribeResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeSubRefreshResult encodes SubRefreshResult to bytes.
 func (e *ProtobufResultEncoder) EncodeSubRefreshResult(res *SubRefreshResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeUnsubscribeResult encodes UnsubscribeResult to bytes.
 func (e *ProtobufResultEncoder) EncodeUnsubscribeResult(res *UnsubscribeResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodePublishResult encodes PublishResult to bytes.
 func (e *ProtobufResultEncoder) EncodePublishResult(res *PublishResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodePresenceResult encodes PresenceResult to bytes.
 func (e *ProtobufResultEncoder) EncodePresenceResult(res *PresenceResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodePresenceStatsResult encodes PresenceStatsResult to bytes.
 func (e *ProtobufResultEncoder) EncodePresenceStatsResult(res *PresenceStatsResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeHistoryResult encodes HistoryResult to bytes.
 func (e *ProtobufResultEncoder) EncodeHistoryResult(res *HistoryResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodePingResult encodes PingResult to bytes.
 func (e *ProtobufResultEncoder) EncodePingResult(res *PingResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // EncodeRPCResult encodes RPCResult to bytes.
 func (e *ProtobufResultEncoder) EncodeRPCResult(res *RPCResult) ([]byte, error) {
-	return res.MarshalVT()
+	return res.MarshalCF()
 }
 
 // CommandEncoder encodes Command to bytes. It's the client-side counterpart of
@@ -616,9 +555,7 @@ func NewJSONCommandEncoder() *JSONCommandEncoder {
 // Encode Command to bytes. The result contains no framing: to send several
 // commands in one frame join them with a `\n` delimiter, see JSONDataEncoder.
 func (e *JSONCommandEncoder) Encode(cmd *Command) ([]byte, error) {
-	jw := newWriter()
-	cmd.MarshalEasyJSON(jw)
-	return jw.BuildBytes()
+	return encodeJSON(cmd), nil
 }
 
 // ProtobufCommandEncoder is a CommandEncoder which encodes to Protobuf.
@@ -634,12 +571,12 @@ func NewProtobufCommandEncoder() *ProtobufCommandEncoder {
 // Encode Command to bytes prefixed with the command length encoded as a varint,
 // so that encoded commands may be sent one after another in a single frame.
 func (e *ProtobufCommandEncoder) Encode(cmd *Command) ([]byte, error) {
-	size := cmd.SizeVT()
+	size := cmd.SizeCF()
 	var prefix [binary.MaxVarintLen64]byte
-	prefixLen := binary.PutUvarint(prefix[:], uint64(size))
+	prefixLen := binary.PutUvarint(prefix[:], uint64(size)) //nolint:gosec // G115: a size is never negative.
 	out := make([]byte, prefixLen+size)
 	copy(out, prefix[:prefixLen])
-	if _, err := cmd.MarshalToSizedBufferVT(out[prefixLen:]); err != nil {
+	if _, err := cmd.MarshalToSizedBufferCF(out[prefixLen:]); err != nil {
 		return nil, err
 	}
 	return out, nil

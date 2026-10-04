@@ -3,75 +3,42 @@ package protocol
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-type DataRawMessage struct {
-	Data *json.RawMessage
+// Raw is how payloads are held: an already encoded JSON value for JSON, any
+// bytes for Protobuf. Its JSON methods are what encoding/json uses for it.
+
+func TestRaw_MarshalJSON(t *testing.T) {
+	// Like json.RawMessage.
+	std, err := json.Marshal(struct{ Data *json.RawMessage }{Data: &json.RawMessage{'{', '}'}})
+	require.NoError(t, err)
+	raw, err := json.Marshal(struct{ Data *Raw }{Data: &Raw{'{', '}'}})
+	require.NoError(t, err)
+	require.Equal(t, string(std), string(raw))
+
+	// Nothing is null, as cfjson.AppendRaw writes it.
+	for _, raw := range []Raw{nil, {}, Raw("\n\n")} {
+		data, nullErr := raw.MarshalJSON()
+		require.NoError(t, nullErr)
+		require.Equal(t, "null", string(data))
+	}
+
+	// Newlines are dropped: they delimit messages in a frame.
+	data, err := Raw("{\n  \"key\": \"value\"\n}").MarshalJSON()
+	require.NoError(t, err)
+	require.Equal(t, `{  "key": "value"}`, string(data))
 }
 
-type DataRaw struct {
-	Data *Raw
-}
+func TestRaw_UnmarshalJSON(t *testing.T) {
+	var nilRaw *Raw
+	require.Error(t, nilRaw.UnmarshalJSON([]byte(`{}`)))
 
-func TestRaw(t *testing.T) {
-	data1 := json.RawMessage(`{"key": "value"}`)
-	stdJsonData1, err := json.Marshal(DataRawMessage{
-		Data: &data1,
-	})
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	data2 := Raw(`{"key": "value"}`)
-	stdJsonData2, err := json.Marshal(DataRaw{
-		Data: &data2,
-	})
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	if string(stdJsonData1) != string(stdJsonData2) {
-		t.Fatalf("no match: %v", err)
-	}
-}
-
-func TestRaw_MarshalJSON_Nil(t *testing.T) {
-	var r Raw
-	data, err := r.MarshalJSON()
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	if string(data) != "null" {
-		t.Fatalf("expected null, got %s", data)
-	}
-}
-
-func TestRaw_MarshalJSON_StripsNewlines(t *testing.T) {
-	r := Raw("{\n  \"key\": \"value\"\n}")
-	data, err := r.MarshalJSON()
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	if string(data) != `{  "key": "value"}` {
-		t.Fatalf("unexpected result: %s", data)
-	}
-}
-
-func TestRaw_UnmarshalJSON_NilPointer(t *testing.T) {
-	var r *Raw
-	err := r.UnmarshalJSON([]byte(`{}`))
-	if err == nil {
-		t.Fatal("expected error on nil pointer")
-	}
-}
-
-func TestRaw_UnmarshalJSON_CopiesData(t *testing.T) {
+	// A Raw holds a copy of what it was decoded from.
 	var r Raw
 	data := []byte(`{"key": "value"}`)
-	if err := r.UnmarshalJSON(data); err != nil {
-		t.Fatalf("%v", err)
-	}
+	require.NoError(t, r.UnmarshalJSON(data))
 	data[0] = 'X'
-	if r[0] == 'X' {
-		t.Fatal("Raw should hold a copy, not alias the input slice")
-	}
+	require.Equal(t, `{"key": "value"}`, string(r))
 }

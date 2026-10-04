@@ -63,13 +63,13 @@ For a description of the protocol from the client point of view see the [client 
 
 ## Generated code
 
-`client.pb.go`, `client_vtproto.pb.go` and `client.pb_easyjson.go` are generated and committed to the repo. After changing `client.proto`, regenerate them with:
+`client.pb.go`, `client.pb_cfprotobuf.go` and `client.pb_cfjson.go` are generated and committed to the repo. After changing `client.proto`, regenerate them with:
 
 ```bash
 make generate
 ```
 
-The required tools and their pinned versions are listed at the top of [generate.sh](generate.sh). Note that the `easyjson` binary version must match the `github.com/mailru/easyjson` version in `go.mod`.
+The required tools and their pinned versions are listed at the top of [generate.sh](generate.sh). The structs come from `protoc-gen-go`; the JSON and the Protobuf encoding and decoding code is produced by generators which live in this repo, see [cfjson](cfjson) and [cfprotobuf](cfprotobuf).
 
 ## Development
 

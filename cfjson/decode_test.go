@@ -444,9 +444,17 @@ func TestPrescan(t *testing.T) {
 }
 
 // With and without the prescan the outcome must be the same, for valid and
-// for invalid input alike.
+// for invalid input alike - including the offset of an error.
 func TestPrescanDoesNotChangeResults(t *testing.T) {
 	inputs := append(append([]string{}, validCases...), invalidCases...)
+	// The prescan treats trailing whitespace as outside any string; in an
+	// unterminated string it is inside one, and a control character there is
+	// what the error must point at.
+	inputs = append(inputs,
+		`"an unterminated string ending in a control character`+"\r  ",
+		`"an unterminated string ending in a tab and spaces`+"\t  ",
+		`{"an unterminated key ending in a control character`+"\r\n",
+	)
 	// The prescan is skipped for short input, so every case is also tried
 	// inside of a document which is long enough.
 	for _, s := range append([]string{}, inputs...) {
@@ -460,13 +468,21 @@ func TestPrescanDoesNotChangeResults(t *testing.T) {
 		b := []byte(s)
 		i := SkipSpace(b, 0)
 		slow, fast := Skip(b, i, 0), Skip(b, i, Prescan(b, 0))
-		if (slow < 0) != (fast < 0) || (slow >= 0 && slow != fast) {
+		if slow != fast {
 			t.Errorf("Skip(%q): %d without the prescan, %d with it", s, slow, fast)
 		}
 		var slowString, fastString string
 		slow, fast = String(b, i, 0, &slowString), String(b, i, Prescan(b, 0), &fastString)
-		if (slow < 0) != (fast < 0) || (slow >= 0 && slow != fast) || slowString != fastString {
+		if slow != fast || slowString != fastString {
 			t.Errorf("String(%q): %d %q without the prescan, %d %q with it", s, slow, slowString, fast, fastString)
+		}
+		if i < len(b) && b[i] == '{' {
+			k := SkipSpace(b, i+1)
+			slowKey, slow := Key(b, k, 0)
+			fastKey, fast := Key(b, k, Prescan(b, 0))
+			if slow != fast || !bytes.Equal(slowKey, fastKey) {
+				t.Errorf("Key(%q): %d %q without the prescan, %d %q with it", s, slow, slowKey, fast, fastKey)
+			}
 		}
 		if got, want := Valid(b), stdjson.Valid(b) && utf8.Valid(b); got != want {
 			t.Errorf("Valid(%q) = %v, want %v", s, got, want)

@@ -480,7 +480,7 @@ func TestPrescanDoesNotChangeResults(t *testing.T) {
 			k := SkipSpace(b, i+1)
 			slowKey, slow := Key(b, k, 0)
 			fastKey, fast := Key(b, k, Prescan(b, 0))
-			if slow != fast || string(slowKey) != string(fastKey) {
+			if slow != fast || !bytes.Equal(slowKey, fastKey) {
 				t.Errorf("Key(%q): %d %q without the prescan, %d %q with it", s, slow, slowKey, fast, fastKey)
 			}
 		}

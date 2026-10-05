@@ -320,10 +320,11 @@ func scanControl(s []byte, hi uint64) int {
 func skipString(b []byte, i int, f Flags) int {
 	i++
 	if f&plain != 0 {
-		if i = scanQuote(b, i); i >= len(b) {
-			return ^i
+		if q := scanQuote(b, i); q < len(b) {
+			return q + 1
 		}
-		return i + 1
+		// Unterminated: report the first invalid byte as without Prescan
+		// (which may treat trailing whitespace inside it as outside a string).
 	}
 	start := i
 	// Plain ASCII strings, which is most of them, are done in one scan.
@@ -589,7 +590,9 @@ func Key(b []byte, i int, f Flags) ([]byte, int) {
 	var key []byte
 	var j int
 	if f&plain != 0 {
-		j = scanQuote(b, i)
+		if j = scanQuote(b, i); j >= len(b) {
+			j = i // Unterminated: see String.
+		}
 	} else {
 		j = scanString(b, i, true)
 	}
@@ -655,7 +658,13 @@ func String(b []byte, i int, f Flags, p *string) int {
 	i++
 	var j int
 	if f&plain != 0 {
-		j = scanQuote(b, i)
+		if j = scanQuote(b, i); j >= len(b) {
+			// Unterminated: scan it again as without Prescan, which treats
+			// trailing whitespace of the input as outside any string – here it
+			// is inside one, so the error is at its first invalid byte, the
+			// same with and without Prescan.
+			j = i
+		}
 	} else {
 		j = scanString(b, i, true)
 	}

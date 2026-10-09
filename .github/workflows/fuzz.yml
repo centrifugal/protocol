@@ -62,7 +62,7 @@ jobs:
         run: echo "dir=$(go env GOCACHE)/fuzz" >> "$GITHUB_OUTPUT"
 
       - name: Restore fuzz corpus
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.fuzzcache.outputs.dir }}
           key: fuzz-corpus-${{ matrix.target }}-${{ github.run_id }}
